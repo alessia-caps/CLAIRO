@@ -81,10 +81,11 @@ export function CSVUploadDialog({ onDataUploaded, trigger }: CSVUploadDialogProp
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-sm">
-              <strong>Expected CSV formats:</strong>
+              <strong>Expected Excel sheets:</strong>
               <ul className="mt-2 space-y-1 text-xs">
-                <li>• <strong>Daily Logs:</strong> Employee Name, Department, Posts Created, Comments Made, Reactions Given, Shares</li>
-                <li>• <strong>Quad Scores:</strong> Employee Name, Department, Event Score, VE Score, Survey Score</li>
+                <li>• <strong>Daily VE tracker:</strong> Date, BU/GBU, Employee Name, Posts Created, Comments Made, Reactions Given, Posts of Others Shared, Daily Points, Week Number</li>
+                <li>• <strong>VE Weekly Summary:</strong> Employee Name, Sum of Daily Points, Rank</li>
+                <li>• <strong>Quad Engagement Scores:</strong> Employee Name, Event Participation Score (out of 100), Viva Engage Score (out of 100), Pulse Survey Score (out of 100), Weighted Score, Engagement Level</li>
               </ul>
             </AlertDescription>
           </Alert>
