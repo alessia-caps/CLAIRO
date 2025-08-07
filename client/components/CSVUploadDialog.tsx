@@ -113,9 +113,9 @@ export function CSVUploadDialog({ onDataUploaded, trigger }: CSVUploadDialogProp
           </div>
 
           <Input
-            id="csv-upload"
+            id="excel-upload"
             type="file"
-            accept=".csv"
+            accept=".xlsx,.xls,.csv"
             onChange={handleFileInputChange}
             className="hidden"
           />
