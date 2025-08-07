@@ -72,7 +72,7 @@ export function CSVUploadDialog({ onDataUploaded, trigger }: CSVUploadDialogProp
         <DialogHeader>
           <DialogTitle className="flex items-center">
             <FileText className="h-5 w-5 mr-2 text-primary" />
-            Upload Engagement Data
+            Upload Excel Engagement Tracker
           </DialogTitle>
         </DialogHeader>
         
