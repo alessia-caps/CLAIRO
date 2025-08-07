@@ -27,10 +27,24 @@ export function useCSVUpload() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadedData, setUploadedData] = useState<UploadedData | null>(null);
 
+  const parseExcel = async (file: File): Promise<{ [sheetName: string]: any[] }> => {
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer);
+    const result: { [sheetName: string]: any[] } = {};
+
+    workbook.SheetNames.forEach(sheetName => {
+      const worksheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(worksheet);
+      result[sheetName] = data;
+    });
+
+    return result;
+  };
+
   const parseCSV = (text: string): any[] => {
     const lines = text.trim().split('\n');
     if (lines.length < 2) return [];
-    
+
     const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
     const data = lines.slice(1).map(line => {
       const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
@@ -40,7 +54,7 @@ export function useCSVUpload() {
       });
       return row;
     });
-    
+
     return data;
   };
 
