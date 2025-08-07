@@ -39,7 +39,7 @@ export function CSVUploadDialog({ onDataUploaded, trigger }: CSVUploadDialogProp
   };
 
   const handleFileUpload = async (file: File) => {
-    if (!file.name.endsWith('.csv')) {
+    if (!file.name.endsWith('.csv') && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
       return;
     }
 
