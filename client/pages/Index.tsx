@@ -339,25 +339,37 @@ export default function Index() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {departmentData.map((dept) => (
-                  <div key={dept.name} className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">{dept.name}</span>
-                      <span className="text-slate-600">{dept.totalPoints}</span>
-                    </div>
-                    <div className="w-full bg-slate-200 rounded-full h-3">
-                      <div
-                        className="h-3 rounded-full transition-all duration-300"
-                        style={{
-                          width: `${(dept.totalPoints / maxDeptPoints) * 100}%`,
-                          backgroundColor: dept.color,
-                        }}
-                      />
+              {departmentData.length === 0 ? (
+                <div className="py-12 text-center text-slate-500">
+                  <div className="flex flex-col items-center space-y-3">
+                    <BarChart3 className="h-12 w-12 text-slate-300" />
+                    <div>
+                      <p className="font-medium">No department data available</p>
+                      <p className="text-sm">Upload engagement data to see department performance</p>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {departmentData.map((dept) => (
+                    <div key={dept.name} className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{dept.name}</span>
+                        <span className="text-slate-600">{dept.totalPoints}</span>
+                      </div>
+                      <div className="w-full bg-slate-200 rounded-full h-3">
+                        <div
+                          className="h-3 rounded-full transition-all duration-300"
+                          style={{
+                            width: `${(dept.totalPoints / maxDeptPoints) * 100}%`,
+                            backgroundColor: dept.color,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -370,62 +382,74 @@ export default function Index() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      {engagementData.engagementDistribution.highlyEngaged}%
+              {uploadedEmployees.length === 0 ? (
+                <div className="py-12 text-center text-slate-500">
+                  <div className="flex flex-col items-center space-y-3">
+                    <PieChart className="h-12 w-12 text-slate-300" />
+                    <div>
+                      <p className="font-medium">No engagement data available</p>
+                      <p className="text-sm">Upload engagement data to see engagement level distribution</p>
                     </div>
-                    <div className="text-sm text-slate-600">Highly Engaged</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {engagementData.engagementDistribution.engaged}%
-                    </div>
-                    <div className="text-sm text-slate-600">Engaged</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-600">
-                      {engagementData.engagementDistribution.needsImprovement}%
-                    </div>
-                    <div className="text-sm text-slate-600">
-                      Needs Improvement
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-red-600">
-                      {engagementData.engagementDistribution.atRisk}%
-                    </div>
-                    <div className="text-sm text-slate-600">At-Risk</div>
                   </div>
                 </div>
-                <div className="flex h-4 rounded-full overflow-hidden">
-                  <div
-                    className="bg-green-500"
-                    style={{
-                      width: `${engagementData.engagementDistribution.highlyEngaged}%`,
-                    }}
-                  />
-                  <div
-                    className="bg-blue-500"
-                    style={{
-                      width: `${engagementData.engagementDistribution.engaged}%`,
-                    }}
-                  />
-                  <div
-                    className="bg-orange-500"
-                    style={{
-                      width: `${engagementData.engagementDistribution.needsImprovement}%`,
-                    }}
-                  />
-                  <div
-                    className="bg-red-500"
-                    style={{
-                      width: `${engagementData.engagementDistribution.atRisk}%`,
-                    }}
-                  />
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {engagementData.engagementDistribution.highlyEngaged}%
+                      </div>
+                      <div className="text-sm text-slate-600">Highly Engaged</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {engagementData.engagementDistribution.engaged}%
+                      </div>
+                      <div className="text-sm text-slate-600">Engaged</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-600">
+                        {engagementData.engagementDistribution.needsImprovement}%
+                      </div>
+                      <div className="text-sm text-slate-600">
+                        Needs Improvement
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-red-600">
+                        {engagementData.engagementDistribution.atRisk}%
+                      </div>
+                      <div className="text-sm text-slate-600">At-Risk</div>
+                    </div>
+                  </div>
+                  <div className="flex h-4 rounded-full overflow-hidden">
+                    <div
+                      className="bg-green-500"
+                      style={{
+                        width: `${engagementData.engagementDistribution.highlyEngaged}%`,
+                      }}
+                    />
+                    <div
+                      className="bg-blue-500"
+                      style={{
+                        width: `${engagementData.engagementDistribution.engaged}%`,
+                      }}
+                    />
+                    <div
+                      className="bg-orange-500"
+                      style={{
+                        width: `${engagementData.engagementDistribution.needsImprovement}%`,
+                      }}
+                    />
+                    <div
+                      className="bg-red-500"
+                      style={{
+                        width: `${engagementData.engagementDistribution.atRisk}%`,
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
