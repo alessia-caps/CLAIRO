@@ -517,28 +517,6 @@ export default function Index() {
           </Card>
         </div>
 
-        {/* AI Summary Panel */}
-        <Card className="mb-6 bg-gradient-to-r from-violet-50 to-purple-50 border-violet-200">
-          <CardHeader>
-            <CardTitle className="flex items-center text-violet-700">
-              <Brain className="h-5 w-5 mr-2" />
-              AI Engagement Insights
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-violet-700">
-              📈 <strong>Marketing leads this week</strong> with 3 employees in
-              the top 5 performers, contributing 1,850 total points. Sarah Chen
-              maintains the #1 position with exceptional event participation
-              (95/100). 📊 <strong>35% of employees are Highly Engaged</strong>,
-              indicating strong overall team morale. ⚠️{" "}
-              <strong>5% are classified as At-Risk</strong> - consider targeted
-              interventions for these individuals. 🎯 Engineering shows
-              consistent growth in Viva Engage participation over the past 3
-              weeks.
-            </p>
-          </CardContent>
-        </Card>
 
         {/* Data Tables */}
         <Tabs defaultValue="leaderboard" className="space-y-4">
