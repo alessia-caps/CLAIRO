@@ -788,6 +788,33 @@ export default function Index() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* AI Summary Panel - Moved to Bottom */}
+        <Card className="mt-6 bg-gradient-to-r from-violet-50 to-purple-50 border-violet-200">
+          <CardHeader>
+            <CardTitle className="flex items-center text-violet-700">
+              <Brain className="h-5 w-5 mr-2" />
+              AI Engagement Insights
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {uploadedEmployees.length === 0 ? (
+              <p className="text-violet-600 italic">
+                📊 Upload your engagement data to get AI-powered insights about team performance, trends, and recommendations.
+              </p>
+            ) : (
+              <p className="text-violet-700">
+                📈 <strong>{engagementData.topDepartment} leads this week</strong> with the highest engagement scores, contributing {departmentData[0]?.totalPoints || 0} total points.
+                {filteredEmployees[0]?.name} maintains the #1 position with {filteredEmployees[0]?.weeklyPoints} weekly points.
+                📊 <strong>{engagementData.engagementDistribution.engaged + engagementData.engagementDistribution.highlyEngaged}% of employees are engaged or highly engaged</strong>, indicating positive team morale.
+                {engagementData.engagementDistribution.atRisk > 0 && (
+                  <>⚠️ <strong>{engagementData.engagementDistribution.atRisk}% are classified as At-Risk</strong> - consider targeted interventions for these individuals. </>
+                )}
+                🎯 Focus on maintaining momentum in top-performing departments while supporting growth in others.
+              </p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
