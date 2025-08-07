@@ -80,19 +80,25 @@ export default function Index() {
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedWeek, setSelectedWeek] = useState("current");
   const [uploadedEmployees, setUploadedEmployees] = useState<Employee[]>([]);
-  const [dataSource, setDataSource] = useState<"mock" | "uploaded">("mock");
+  const [dataSource, setDataSource] = useState<"empty" | "uploaded">("empty");
 
-  // Mock data - in a real app, this would come from your backend
-  const engagementData: EngagementData = {
-    totalParticipants: 247,
-    avgDailyPoints: 18.5,
-    topDepartment: "Marketing",
-    highestScorer: "Sarah Chen",
+  // Calculate engagement data from uploaded employees
+  const engagementData: EngagementData = uploadedEmployees.length > 0 ? {
+    totalParticipants: uploadedEmployees.length,
+    avgDailyPoints: Math.round((uploadedEmployees.reduce((sum, emp) => sum + emp.dailyPoints, 0) / uploadedEmployees.length) * 10) / 10,
+    topDepartment: getTopDepartment(),
+    highestScorer: uploadedEmployees.sort((a, b) => b.weeklyPoints - a.weeklyPoints)[0]?.name || "N/A",
+    engagementDistribution: calculateEngagementDistribution(),
+  } : {
+    totalParticipants: 0,
+    avgDailyPoints: 0,
+    topDepartment: "N/A",
+    highestScorer: "N/A",
     engagementDistribution: {
-      highlyEngaged: 35,
-      engaged: 42,
-      needsImprovement: 18,
-      atRisk: 5,
+      highlyEngaged: 0,
+      engaged: 0,
+      needsImprovement: 0,
+      atRisk: 0,
     },
   };
 
