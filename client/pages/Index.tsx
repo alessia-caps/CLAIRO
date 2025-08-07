@@ -715,7 +715,10 @@ export default function Index() {
           <TabsContent value="mini-games">
             <Card>
               <CardHeader>
-                <CardTitle>Mini-Game Participation Tracker</CardTitle>
+                <CardTitle className="flex items-center">
+                  <Activity className="h-5 w-5 mr-2 text-primary" />
+                  Activity Participation Tracker
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
