@@ -1,61 +1,473 @@
-import { DemoResponse } from "@shared/api";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Upload, Users, Trophy, TrendingUp, Target, Search, Filter,
+  BarChart3, PieChart, Activity, Star, Award, Brain
+} from "lucide-react";
+
+interface EngagementData {
+  totalParticipants: number;
+  avgDailyPoints: number;
+  topDepartment: string;
+  highestScorer: string;
+  engagementDistribution: {
+    highlyEngaged: number;
+    engaged: number;
+    needsImprovement: number;
+    atRisk: number;
+  };
+}
+
+interface Employee {
+  id: string;
+  name: string;
+  department: string;
+  dailyPoints: number;
+  weeklyPoints: number;
+  rank: number;
+  eventScore: number;
+  veScore: number;
+  surveyScore: number;
+  weightedScore: number;
+  engagementLevel: 'Highly Engaged' | 'Engaged' | 'Needs Improvement' | 'At-Risk';
+}
+
+interface DepartmentData {
+  name: string;
+  totalPoints: number;
+  color: string;
+}
+
+interface MiniGame {
+  week: number;
+  gameType: string;
+  participants: number;
+  winningDept: string;
+  winningEmployee: string;
+}
 
 export default function Index() {
-  const [exampleFromServer, setExampleFromServer] = useState("");
-  // Fetch users on component mount
-  useEffect(() => {
-    fetchDemo();
-  }, []);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [selectedWeek, setSelectedWeek] = useState("current");
 
-  // Example of how to fetch data from the server (if needed)
-  const fetchDemo = async () => {
-    try {
-      const response = await fetch("/api/demo");
-      const data = (await response.json()) as DemoResponse;
-      setExampleFromServer(data.message);
-    } catch (error) {
-      console.error("Error fetching hello:", error);
+  // Mock data - in a real app, this would come from your backend
+  const engagementData: EngagementData = {
+    totalParticipants: 247,
+    avgDailyPoints: 18.5,
+    topDepartment: "Marketing",
+    highestScorer: "Sarah Chen",
+    engagementDistribution: {
+      highlyEngaged: 35,
+      engaged: 42,
+      needsImprovement: 18,
+      atRisk: 5
     }
   };
 
+  const topEmployees: Employee[] = [
+    { id: "1", name: "Sarah Chen", department: "Marketing", dailyPoints: 45, weeklyPoints: 315, rank: 1, eventScore: 95, veScore: 87, surveyScore: 92, weightedScore: 91.2, engagementLevel: "Highly Engaged" },
+    { id: "2", name: "Alex Rodriguez", department: "Sales", dailyPoints: 42, weeklyPoints: 294, rank: 2, eventScore: 88, veScore: 94, surveyScore: 85, weightedScore: 89.1, engagementLevel: "Highly Engaged" },
+    { id: "3", name: "Maya Patel", department: "Engineering", dailyPoints: 38, weeklyPoints: 266, rank: 3, eventScore: 92, veScore: 78, surveyScore: 88, weightedScore: 86.4, engagementLevel: "Highly Engaged" },
+    { id: "4", name: "Jordan Kim", department: "Design", dailyPoints: 35, weeklyPoints: 245, rank: 4, eventScore: 85, veScore: 82, surveyScore: 90, weightedScore: 85.1, engagementLevel: "Engaged" },
+    { id: "5", name: "Taylor Brooks", department: "Marketing", dailyPoints: 33, weeklyPoints: 231, rank: 5, eventScore: 80, veScore: 85, surveyScore: 83, weightedScore: 82.3, engagementLevel: "Engaged" },
+  ];
+
+  const departmentData: DepartmentData[] = [
+    { name: "Marketing", totalPoints: 1850, color: "#8B5CF6" },
+    { name: "Sales", totalPoints: 1650, color: "#06B6D4" },
+    { name: "Engineering", totalPoints: 1420, color: "#10B981" },
+    { name: "Design", totalPoints: 980, color: "#F59E0B" },
+    { name: "HR", totalPoints: 720, color: "#EF4444" },
+  ];
+
+  const miniGames: MiniGame[] = [
+    { week: 12, gameType: "Innovation Challenge", participants: 45, winningDept: "Engineering", winningEmployee: "Alex Kim" },
+    { week: 11, gameType: "Team Trivia", participants: 78, winningDept: "Marketing", winningEmployee: "Sarah Chen" },
+    { week: 10, gameType: "Wellness Challenge", participants: 92, winningDept: "Sales", winningEmployee: "Maria Lopez" },
+  ];
+
+  const maxDeptPoints = Math.max(...departmentData.map(d => d.totalPoints));
+
+  const filteredEmployees = topEmployees.filter(employee => {
+    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         employee.department.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDepartment = selectedDepartment === "all" || employee.department === selectedDepartment;
+    return matchesSearch && matchesDepartment;
+  });
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
-      <div className="text-center">
-        {/* TODO: FUSION_GENERATION_APP_PLACEHOLDER replace everything here with the actual app! */}
-        <h1 className="text-2xl font-semibold text-slate-800 flex items-center justify-center gap-3">
-          <svg
-            className="animate-spin h-8 w-8 text-slate-400"
-            viewBox="0 0 50 50"
-          >
-            <circle
-              className="opacity-30"
-              cx="25"
-              cy="25"
-              r="20"
-              stroke="currentColor"
-              strokeWidth="5"
-              fill="none"
-            />
-            <circle
-              className="text-slate-600"
-              cx="25"
-              cy="25"
-              r="20"
-              stroke="currentColor"
-              strokeWidth="5"
-              fill="none"
-              strokeDasharray="100"
-              strokeDashoffset="75"
-            />
-          </svg>
-          Generating your app...
-        </h1>
-        <p className="mt-4 text-slate-600 max-w-md">
-          Watch the chat on the left for updates that might need your attention
-          to finish generating
-        </p>
-        <p className="mt-4 hidden max-w-md">{exampleFromServer}</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-10 h-10 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
+                  <Activity className="h-6 w-6 text-white" />
+                </div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  CLAIRO
+                </h1>
+              </div>
+              <Badge variant="outline" className="text-xs">
+                Engagement Dashboard
+              </Badge>
+            </div>
+            <Button className="bg-primary hover:bg-primary/90">
+              <Upload className="h-4 w-4 mr-2" />
+              Upload CSV
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 py-6">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+          <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-blue-700 flex items-center">
+                <Users className="h-4 w-4 mr-1" />
+                Total Participants
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-900">{engagementData.totalParticipants}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-green-700 flex items-center">
+                <TrendingUp className="h-4 w-4 mr-1" />
+                Avg Daily Points
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-900">{engagementData.avgDailyPoints}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-purple-700 flex items-center">
+                <Trophy className="h-4 w-4 mr-1" />
+                Top Department
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-bold text-purple-900">{engagementData.topDepartment}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-orange-700 flex items-center">
+                <Star className="h-4 w-4 mr-1" />
+                Top Scorer
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-bold text-orange-900">{engagementData.highestScorer}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-pink-50 to-pink-100 border-pink-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-pink-700 flex items-center">
+                <Target className="h-4 w-4 mr-1" />
+                Highly Engaged %
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-pink-900">{engagementData.engagementDistribution.highlyEngaged}%</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="Search employees..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Departments</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="Sales">Sales</SelectItem>
+                  <SelectItem value="Engineering">Engineering</SelectItem>
+                  <SelectItem value="Design">Design</SelectItem>
+                  <SelectItem value="HR">HR</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={selectedWeek} onValueChange={setSelectedWeek}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="Week" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="current">Current Week</SelectItem>
+                  <SelectItem value="last">Last Week</SelectItem>
+                  <SelectItem value="month">This Month</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Charts and Visualizations */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Department Points Bar Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <BarChart3 className="h-5 w-5 mr-2 text-primary" />
+                Total Engagement Points by Department
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {departmentData.map((dept) => (
+                  <div key={dept.name} className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium">{dept.name}</span>
+                      <span className="text-slate-600">{dept.totalPoints}</span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-3">
+                      <div
+                        className="h-3 rounded-full transition-all duration-300"
+                        style={{
+                          width: `${(dept.totalPoints / maxDeptPoints) * 100}%`,
+                          backgroundColor: dept.color,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Engagement Level Distribution Pie Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <PieChart className="h-5 w-5 mr-2 text-primary" />
+                Engagement Level Distribution
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">{engagementData.engagementDistribution.highlyEngaged}%</div>
+                    <div className="text-sm text-slate-600">Highly Engaged</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">{engagementData.engagementDistribution.engaged}%</div>
+                    <div className="text-sm text-slate-600">Engaged</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-orange-600">{engagementData.engagementDistribution.needsImprovement}%</div>
+                    <div className="text-sm text-slate-600">Needs Improvement</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-red-600">{engagementData.engagementDistribution.atRisk}%</div>
+                    <div className="text-sm text-slate-600">At-Risk</div>
+                  </div>
+                </div>
+                <div className="flex h-4 rounded-full overflow-hidden">
+                  <div className="bg-green-500" style={{ width: `${engagementData.engagementDistribution.highlyEngaged}%` }} />
+                  <div className="bg-blue-500" style={{ width: `${engagementData.engagementDistribution.engaged}%` }} />
+                  <div className="bg-orange-500" style={{ width: `${engagementData.engagementDistribution.needsImprovement}%` }} />
+                  <div className="bg-red-500" style={{ width: `${engagementData.engagementDistribution.atRisk}%` }} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* AI Summary Panel */}
+        <Card className="mb-6 bg-gradient-to-r from-violet-50 to-purple-50 border-violet-200">
+          <CardHeader>
+            <CardTitle className="flex items-center text-violet-700">
+              <Brain className="h-5 w-5 mr-2" />
+              AI Engagement Insights
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-violet-700">
+              📈 <strong>Marketing leads this week</strong> with 3 employees in the top 5 performers, contributing 1,850 total points. 
+              Sarah Chen maintains the #1 position with exceptional event participation (95/100). 
+              📊 <strong>35% of employees are Highly Engaged</strong>, indicating strong overall team morale. 
+              ⚠️ <strong>5% are classified as At-Risk</strong> - consider targeted interventions for these individuals.
+              🎯 Engineering shows consistent growth in Viva Engage participation over the past 3 weeks.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Data Tables */}
+        <Tabs defaultValue="leaderboard" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+            <TabsTrigger value="quad-scores">Quad Engagement Scores</TabsTrigger>
+            <TabsTrigger value="mini-games">Mini-Game Tracker</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="leaderboard">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Award className="h-5 w-5 mr-2 text-primary" />
+                  Employee Leaderboard
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4">Rank</th>
+                        <th className="text-left py-3 px-4">Name</th>
+                        <th className="text-left py-3 px-4">Department</th>
+                        <th className="text-right py-3 px-4">Daily Points</th>
+                        <th className="text-right py-3 px-4">Weekly Points</th>
+                        <th className="text-left py-3 px-4">Level</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredEmployees.map((employee) => (
+                        <tr key={employee.id} className="border-b hover:bg-slate-50">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center">
+                              <span className="font-bold text-primary">#{employee.rank}</span>
+                              {employee.rank <= 3 && (
+                                <Trophy className="h-4 w-4 ml-2 text-yellow-500" />
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 font-medium">{employee.name}</td>
+                          <td className="py-3 px-4">{employee.department}</td>
+                          <td className="py-3 px-4 text-right font-bold">{employee.dailyPoints}</td>
+                          <td className="py-3 px-4 text-right font-bold">{employee.weeklyPoints}</td>
+                          <td className="py-3 px-4">
+                            <Badge 
+                              variant={employee.engagementLevel === 'Highly Engaged' ? 'default' : 
+                                     employee.engagementLevel === 'Engaged' ? 'secondary' : 
+                                     employee.engagementLevel === 'Needs Improvement' ? 'outline' : 'destructive'}
+                              className="text-xs"
+                            >
+                              {employee.engagementLevel}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="quad-scores">
+            <Card>
+              <CardHeader>
+                <CardTitle>Quad Engagement Score Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4">Name</th>
+                        <th className="text-right py-3 px-4">Event Score</th>
+                        <th className="text-right py-3 px-4">VE Score</th>
+                        <th className="text-right py-3 px-4">Survey Score</th>
+                        <th className="text-right py-3 px-4">Weighted Score</th>
+                        <th className="text-left py-3 px-4">Level</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredEmployees.map((employee) => (
+                        <tr key={employee.id} className="border-b hover:bg-slate-50">
+                          <td className="py-3 px-4 font-medium">{employee.name}</td>
+                          <td className="py-3 px-4 text-right">{employee.eventScore}/100</td>
+                          <td className="py-3 px-4 text-right">{employee.veScore}/100</td>
+                          <td className="py-3 px-4 text-right">{employee.surveyScore}/100</td>
+                          <td className="py-3 px-4 text-right font-bold">{employee.weightedScore}</td>
+                          <td className="py-3 px-4">
+                            <Badge 
+                              variant={employee.engagementLevel === 'Highly Engaged' ? 'default' : 
+                                     employee.engagementLevel === 'Engaged' ? 'secondary' : 
+                                     employee.engagementLevel === 'Needs Improvement' ? 'outline' : 'destructive'}
+                              className="text-xs"
+                            >
+                              {employee.engagementLevel}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="mini-games">
+            <Card>
+              <CardHeader>
+                <CardTitle>Mini-Game Participation Tracker</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4">Week</th>
+                        <th className="text-left py-3 px-4">Game Type</th>
+                        <th className="text-right py-3 px-4">Participants</th>
+                        <th className="text-left py-3 px-4">Winning Department</th>
+                        <th className="text-left py-3 px-4">Winning Employee</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {miniGames.map((game) => (
+                        <tr key={game.week} className="border-b hover:bg-slate-50">
+                          <td className="py-3 px-4 font-medium">Week {game.week}</td>
+                          <td className="py-3 px-4">{game.gameType}</td>
+                          <td className="py-3 px-4 text-right">{game.participants}</td>
+                          <td className="py-3 px-4">
+                            <Badge variant="outline">{game.winningDept}</Badge>
+                          </td>
+                          <td className="py-3 px-4 font-medium">{game.winningEmployee}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
