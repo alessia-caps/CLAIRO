@@ -106,8 +106,8 @@ export function CSVUploadDialog({ onDataUploaded, trigger }: CSVUploadDialogProp
             <div className="space-y-2">
               <Upload className="h-8 w-8 mx-auto text-slate-400" />
               <div>
-                <p className="text-sm font-medium">Drop your CSV file here</p>
-                <p className="text-xs text-slate-600">or click to browse</p>
+                <p className="text-sm font-medium">Drop your Excel file here</p>
+                <p className="text-xs text-slate-600">Supports .xlsx and .csv files</p>
               </div>
             </div>
           </div>
