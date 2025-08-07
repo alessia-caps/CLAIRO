@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
@@ -25,7 +26,9 @@ import {
   Star,
   Award,
   Brain,
+  CheckCircle,
 } from "lucide-react";
+import { CSVUploadDialog } from "@/components/CSVUploadDialog";
 
 interface EngagementData {
   totalParticipants: number;
