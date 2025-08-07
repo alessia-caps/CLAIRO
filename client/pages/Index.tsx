@@ -83,78 +83,126 @@ export default function Index() {
   const [dataSource, setDataSource] = useState<"empty" | "uploaded">("empty");
 
   // Calculate engagement data from uploaded employees
-  const engagementData: EngagementData = uploadedEmployees.length > 0 ? {
-    totalParticipants: uploadedEmployees.length,
-    avgDailyPoints: Math.round((uploadedEmployees.reduce((sum, emp) => sum + emp.dailyPoints, 0) / uploadedEmployees.length) * 10) / 10,
-    topDepartment: getTopDepartment(),
-    highestScorer: uploadedEmployees.sort((a, b) => b.weeklyPoints - a.weeklyPoints)[0]?.name || "N/A",
-    engagementDistribution: calculateEngagementDistribution(),
-  } : {
-    totalParticipants: 0,
-    avgDailyPoints: 0,
-    topDepartment: "N/A",
-    highestScorer: "N/A",
-    engagementDistribution: {
-      highlyEngaged: 0,
-      engaged: 0,
-      needsImprovement: 0,
-      atRisk: 0,
-    },
-  };
+  const engagementData: EngagementData =
+    uploadedEmployees.length > 0
+      ? {
+          totalParticipants: uploadedEmployees.length,
+          avgDailyPoints:
+            Math.round(
+              (uploadedEmployees.reduce(
+                (sum, emp) => sum + emp.dailyPoints,
+                0,
+              ) /
+                uploadedEmployees.length) *
+                10,
+            ) / 10,
+          topDepartment: getTopDepartment(),
+          highestScorer:
+            uploadedEmployees.sort((a, b) => b.weeklyPoints - a.weeklyPoints)[0]
+              ?.name || "N/A",
+          engagementDistribution: calculateEngagementDistribution(),
+        }
+      : {
+          totalParticipants: 0,
+          avgDailyPoints: 0,
+          topDepartment: "N/A",
+          highestScorer: "N/A",
+          engagementDistribution: {
+            highlyEngaged: 0,
+            engaged: 0,
+            needsImprovement: 0,
+            atRisk: 0,
+          },
+        };
 
   // Helper functions for calculating metrics
   function getTopDepartment(): string {
     if (uploadedEmployees.length === 0) return "N/A";
-    const deptPoints = uploadedEmployees.reduce((acc, emp) => {
-      acc[emp.department] = (acc[emp.department] || 0) + emp.weeklyPoints;
-      return acc;
-    }, {} as Record<string, number>);
-    return Object.entries(deptPoints).sort(([,a], [,b]) => b - a)[0]?.[0] || "N/A";
+    const deptPoints = uploadedEmployees.reduce(
+      (acc, emp) => {
+        acc[emp.department] = (acc[emp.department] || 0) + emp.weeklyPoints;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+    return (
+      Object.entries(deptPoints).sort(([, a], [, b]) => b - a)[0]?.[0] || "N/A"
+    );
   }
 
   function calculateEngagementDistribution() {
-    if (uploadedEmployees.length === 0) return { highlyEngaged: 0, engaged: 0, needsImprovement: 0, atRisk: 0 };
+    if (uploadedEmployees.length === 0)
+      return { highlyEngaged: 0, engaged: 0, needsImprovement: 0, atRisk: 0 };
     const total = uploadedEmployees.length;
-    const distribution = uploadedEmployees.reduce((acc, emp) => {
-      const level = emp.engagementLevel.replace(/\s+/g, '').toLowerCase();
-      if (level === 'highlyengaged') acc.highlyEngaged++;
-      else if (level === 'engaged') acc.engaged++;
-      else if (level === 'needsimprovement') acc.needsImprovement++;
-      else acc.atRisk++;
-      return acc;
-    }, { highlyEngaged: 0, engaged: 0, needsImprovement: 0, atRisk: 0 });
+    const distribution = uploadedEmployees.reduce(
+      (acc, emp) => {
+        const level = emp.engagementLevel.replace(/\s+/g, "").toLowerCase();
+        if (level === "highlyengaged") acc.highlyEngaged++;
+        else if (level === "engaged") acc.engaged++;
+        else if (level === "needsimprovement") acc.needsImprovement++;
+        else acc.atRisk++;
+        return acc;
+      },
+      { highlyEngaged: 0, engaged: 0, needsImprovement: 0, atRisk: 0 },
+    );
 
     return {
       highlyEngaged: Math.round((distribution.highlyEngaged / total) * 100),
       engaged: Math.round((distribution.engaged / total) * 100),
-      needsImprovement: Math.round((distribution.needsImprovement / total) * 100),
+      needsImprovement: Math.round(
+        (distribution.needsImprovement / total) * 100,
+      ),
       atRisk: Math.round((distribution.atRisk / total) * 100),
     };
   }
 
   // Calculate department data from uploaded employees
-  const departmentData: DepartmentData[] = uploadedEmployees.length > 0
-    ? Object.entries(uploadedEmployees.reduce((acc, emp) => {
-        if (!acc[emp.department]) {
-          acc[emp.department] = { name: emp.department, totalPoints: 0, color: getDepartmentColor(emp.department) };
-        }
-        acc[emp.department].totalPoints += emp.weeklyPoints;
-        return acc;
-      }, {} as Record<string, DepartmentData>))
-      .map(([_, dept]) => dept)
-      .sort((a, b) => b.totalPoints - a.totalPoints)
-    : [];
+  const departmentData: DepartmentData[] =
+    uploadedEmployees.length > 0
+      ? Object.entries(
+          uploadedEmployees.reduce(
+            (acc, emp) => {
+              if (!acc[emp.department]) {
+                acc[emp.department] = {
+                  name: emp.department,
+                  totalPoints: 0,
+                  color: getDepartmentColor(emp.department),
+                };
+              }
+              acc[emp.department].totalPoints += emp.weeklyPoints;
+              return acc;
+            },
+            {} as Record<string, DepartmentData>,
+          ),
+        )
+          .map(([_, dept]) => dept)
+          .sort((a, b) => b.totalPoints - a.totalPoints)
+      : [];
 
   function getDepartmentColor(department: string): string {
-    const colors = ["#8B5CF6", "#06B6D4", "#10B981", "#F59E0B", "#EF4444", "#8B5A2B", "#6366F1", "#EC4899"];
-    const index = department.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % colors.length;
+    const colors = [
+      "#8B5CF6",
+      "#06B6D4",
+      "#10B981",
+      "#F59E0B",
+      "#EF4444",
+      "#8B5A2B",
+      "#6366F1",
+      "#EC4899",
+    ];
+    const index =
+      department.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0) %
+      colors.length;
     return colors[index];
   }
 
   // Sample mini-games - these would typically come from a separate data source
   const miniGames: MiniGame[] = [];
 
-  const maxDeptPoints = departmentData.length > 0 ? Math.max(...departmentData.map((d) => d.totalPoints)) : 1;
+  const maxDeptPoints =
+    departmentData.length > 0
+      ? Math.max(...departmentData.map((d) => d.totalPoints))
+      : 1;
 
   // Sort uploaded employees by weekly points and assign ranks
   const sortedEmployees = [...uploadedEmployees]
@@ -206,7 +254,8 @@ export default function Index() {
           <Alert className="mb-6 bg-green-50 border-green-200">
             <CheckCircle className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-700">
-              <strong>Live Data:</strong> Dashboard updated with your uploaded CSV data ({uploadedEmployees.length} employees processed)
+              <strong>Live Data:</strong> Dashboard updated with your uploaded
+              CSV data ({uploadedEmployees.length} employees processed)
             </AlertDescription>
           </Alert>
         )}
@@ -344,8 +393,12 @@ export default function Index() {
                   <div className="flex flex-col items-center space-y-3">
                     <BarChart3 className="h-12 w-12 text-slate-300" />
                     <div>
-                      <p className="font-medium">No department data available</p>
-                      <p className="text-sm">Upload engagement data to see department performance</p>
+                      <p className="font-medium">
+                        No department data available
+                      </p>
+                      <p className="text-sm">
+                        Upload engagement data to see department performance
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -355,7 +408,9 @@ export default function Index() {
                     <div key={dept.name} className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="font-medium">{dept.name}</span>
-                        <span className="text-slate-600">{dept.totalPoints}</span>
+                        <span className="text-slate-600">
+                          {dept.totalPoints}
+                        </span>
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-3">
                         <div
@@ -387,8 +442,13 @@ export default function Index() {
                   <div className="flex flex-col items-center space-y-3">
                     <PieChart className="h-12 w-12 text-slate-300" />
                     <div>
-                      <p className="font-medium">No engagement data available</p>
-                      <p className="text-sm">Upload engagement data to see engagement level distribution</p>
+                      <p className="font-medium">
+                        No engagement data available
+                      </p>
+                      <p className="text-sm">
+                        Upload engagement data to see engagement level
+                        distribution
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -399,7 +459,9 @@ export default function Index() {
                       <div className="text-2xl font-bold text-green-600">
                         {engagementData.engagementDistribution.highlyEngaged}%
                       </div>
-                      <div className="text-sm text-slate-600">Highly Engaged</div>
+                      <div className="text-sm text-slate-600">
+                        Highly Engaged
+                      </div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
@@ -409,7 +471,8 @@ export default function Index() {
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-orange-600">
-                        {engagementData.engagementDistribution.needsImprovement}%
+                        {engagementData.engagementDistribution.needsImprovement}
+                        %
                       </div>
                       <div className="text-sm text-slate-600">
                         Needs Improvement
@@ -511,12 +574,20 @@ export default function Index() {
                     <tbody>
                       {filteredEmployees.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="py-12 text-center text-slate-500">
+                          <td
+                            colSpan={6}
+                            className="py-12 text-center text-slate-500"
+                          >
                             <div className="flex flex-col items-center space-y-3">
                               <Upload className="h-12 w-12 text-slate-300" />
                               <div>
-                                <p className="font-medium">No engagement data available</p>
-                                <p className="text-sm">Upload your Excel engagement tracker to view employee rankings</p>
+                                <p className="font-medium">
+                                  No engagement data available
+                                </p>
+                                <p className="text-sm">
+                                  Upload your Excel engagement tracker to view
+                                  employee rankings
+                                </p>
                               </div>
                             </div>
                           </td>
@@ -595,12 +666,20 @@ export default function Index() {
                     <tbody>
                       {filteredEmployees.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="py-12 text-center text-slate-500">
+                          <td
+                            colSpan={6}
+                            className="py-12 text-center text-slate-500"
+                          >
                             <div className="flex flex-col items-center space-y-3">
                               <Upload className="h-12 w-12 text-slate-300" />
                               <div>
-                                <p className="font-medium">No engagement data available</p>
-                                <p className="text-sm">Upload your Excel engagement tracker to view quad scores</p>
+                                <p className="font-medium">
+                                  No engagement data available
+                                </p>
+                                <p className="text-sm">
+                                  Upload your Excel engagement tracker to view
+                                  quad scores
+                                </p>
                               </div>
                             </div>
                           </td>
@@ -677,12 +756,20 @@ export default function Index() {
                     <tbody>
                       {miniGames.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="py-12 text-center text-slate-500">
+                          <td
+                            colSpan={5}
+                            className="py-12 text-center text-slate-500"
+                          >
                             <div className="flex flex-col items-center space-y-3">
                               <Activity className="h-12 w-12 text-slate-300" />
                               <div>
-                                <p className="font-medium">No mini-game data available</p>
-                                <p className="text-sm">Mini-game participation data will appear here when available</p>
+                                <p className="font-medium">
+                                  No mini-game data available
+                                </p>
+                                <p className="text-sm">
+                                  Mini-game participation data will appear here
+                                  when available
+                                </p>
                               </div>
                             </div>
                           </td>
@@ -701,7 +788,9 @@ export default function Index() {
                               {game.participants}
                             </td>
                             <td className="py-3 px-4">
-                              <Badge variant="outline">{game.winningDept}</Badge>
+                              <Badge variant="outline">
+                                {game.winningDept}
+                              </Badge>
                             </td>
                             <td className="py-3 px-4 font-medium">
                               {game.winningEmployee}

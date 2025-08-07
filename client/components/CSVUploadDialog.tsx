@@ -1,6 +1,12 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -13,7 +19,10 @@ interface CSVUploadDialogProps {
   trigger?: React.ReactNode;
 }
 
-export function CSVUploadDialog({ onDataUploaded, trigger }: CSVUploadDialogProps) {
+export function CSVUploadDialog({
+  onDataUploaded,
+  trigger,
+}: CSVUploadDialogProps) {
   const [open, setOpen] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const { uploadFile, isUploading, uploadError, clearError } = useCSVUpload();
@@ -32,14 +41,18 @@ export function CSVUploadDialog({ onDataUploaded, trigger }: CSVUploadDialogProp
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileUpload(e.dataTransfer.files[0]);
     }
   };
 
   const handleFileUpload = async (file: File) => {
-    if (!file.name.endsWith('.csv') && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+    if (
+      !file.name.endsWith(".csv") &&
+      !file.name.endsWith(".xlsx") &&
+      !file.name.endsWith(".xls")
+    ) {
       return;
     }
 
@@ -75,7 +88,7 @@ export function CSVUploadDialog({ onDataUploaded, trigger }: CSVUploadDialogProp
             Upload Excel Engagement Tracker
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* Expected Format Info */}
           <Alert>
@@ -83,9 +96,21 @@ export function CSVUploadDialog({ onDataUploaded, trigger }: CSVUploadDialogProp
             <AlertDescription className="text-sm">
               <strong>Expected Excel sheets:</strong>
               <ul className="mt-2 space-y-1 text-xs">
-                <li>• <strong>Daily VE tracker:</strong> Date, BU/GBU, Employee Name, Posts Created, Comments Made, Reactions Given, Posts of Others Shared, Daily Points, Week Number</li>
-                <li>• <strong>VE Weekly Summary:</strong> Employee Name, Sum of Daily Points, Rank</li>
-                <li>• <strong>Quad Engagement Scores:</strong> Employee Name, Event Participation Score (out of 100), Viva Engage Score (out of 100), Pulse Survey Score (out of 100), Weighted Score, Engagement Level</li>
+                <li>
+                  • <strong>Daily VE tracker:</strong> Date, BU/GBU, Employee
+                  Name, Posts Created, Comments Made, Reactions Given, Posts of
+                  Others Shared, Daily Points, Week Number
+                </li>
+                <li>
+                  • <strong>VE Weekly Summary:</strong> Employee Name, Sum of
+                  Daily Points, Rank
+                </li>
+                <li>
+                  • <strong>Quad Engagement Scores:</strong> Employee Name,
+                  Event Participation Score (out of 100), Viva Engage Score (out
+                  of 100), Pulse Survey Score (out of 100), Weighted Score,
+                  Engagement Level
+                </li>
               </ul>
             </AlertDescription>
           </Alert>
@@ -94,20 +119,22 @@ export function CSVUploadDialog({ onDataUploaded, trigger }: CSVUploadDialogProp
           <div
             className={`
               border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-              ${dragActive ? 'border-primary bg-primary/5' : 'border-slate-300 hover:border-primary/50'}
-              ${isUploading ? 'pointer-events-none opacity-50' : ''}
+              ${dragActive ? "border-primary bg-primary/5" : "border-slate-300 hover:border-primary/50"}
+              ${isUploading ? "pointer-events-none opacity-50" : ""}
             `}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            onClick={() => document.getElementById('excel-upload')?.click()}
+            onClick={() => document.getElementById("excel-upload")?.click()}
           >
             <div className="space-y-2">
               <Upload className="h-8 w-8 mx-auto text-slate-400" />
               <div>
                 <p className="text-sm font-medium">Drop your Excel file here</p>
-                <p className="text-xs text-slate-600">Supports .xlsx and .csv files</p>
+                <p className="text-xs text-slate-600">
+                  Supports .xlsx and .csv files
+                </p>
               </div>
             </div>
           </div>
@@ -137,11 +164,7 @@ export function CSVUploadDialog({ onDataUploaded, trigger }: CSVUploadDialogProp
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="flex items-center justify-between">
                 <span>{uploadError}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearError}
-                >
+                <Button variant="ghost" size="sm" onClick={clearError}>
                   <X className="h-3 w-3" />
                 </Button>
               </AlertDescription>
