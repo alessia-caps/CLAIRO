@@ -216,40 +216,67 @@ export function useCSVUpload() {
   const uploadFile = async (file: File): Promise<ParsedEmployee[]> => {
     setIsUploading(true);
     setUploadError(null);
-    
+
     try {
-      const text = await file.text();
-      const data = parseCSV(text);
-      
-      if (data.length === 0) {
-        throw new Error('No valid data found in the CSV file');
+      let processedData: ParsedEmployee[] = [];
+
+      if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+        // Handle Excel files
+        const sheets = await parseExcel(file);
+
+        if (Object.keys(sheets).length === 0) {
+          throw new Error('No valid sheets found in the Excel file');
+        }
+
+        processedData = processExcelData(sheets);
+
+        if (processedData.length === 0) {
+          throw new Error('No valid employee data found. Please ensure your Excel file has the expected sheets and columns.');
+        }
+
+        setUploadedData(prev => ({
+          ...prev,
+          dailyLogs: processedData,
+          quadScores: processedData
+        }));
+
+      } else if (file.name.endsWith('.csv')) {
+        // Handle CSV files
+        const text = await file.text();
+        const data = parseCSV(text);
+
+        if (data.length === 0) {
+          throw new Error('No valid data found in the CSV file');
+        }
+
+        // Determine data type based on headers
+        const headers = Object.keys(data[0]);
+        let dataType = 'unknown';
+
+        if (headers.includes('Posts Created') || headers.includes('Comments Made') || headers.includes('Daily Points')) {
+          dataType = 'daily-logs';
+        } else if (headers.includes('Event Participation Score (out of 100)') || headers.includes('Viva Engage Score (out of 100)')) {
+          dataType = 'quad-scores';
+        }
+
+        if (dataType === 'unknown') {
+          throw new Error('Unrecognized CSV format. Please ensure your CSV has the expected columns.');
+        }
+
+        processedData = processUploadedData(data, dataType);
+
+        setUploadedData(prev => ({
+          ...prev,
+          [dataType === 'daily-logs' ? 'dailyLogs' : 'quadScores']: processedData
+        }));
+      } else {
+        throw new Error('Please upload an Excel (.xlsx) or CSV (.csv) file');
       }
-      
-      // Determine data type based on headers
-      const headers = Object.keys(data[0]);
-      let dataType = 'unknown';
-      
-      if (headers.includes('Posts Created') || headers.includes('Comments Made')) {
-        dataType = 'daily-logs';
-      } else if (headers.includes('Event Score') || headers.includes('VE Score')) {
-        dataType = 'quad-scores';
-      }
-      
-      if (dataType === 'unknown') {
-        throw new Error('Unrecognized CSV format. Please ensure your CSV has the expected columns.');
-      }
-      
-      const processedData = processUploadedData(data, dataType);
-      
-      setUploadedData(prev => ({
-        ...prev,
-        [dataType === 'daily-logs' ? 'dailyLogs' : 'quadScores']: processedData
-      }));
-      
+
       return processedData;
-      
+
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to process the CSV file';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process the file';
       setUploadError(errorMessage);
       throw error;
     } finally {
