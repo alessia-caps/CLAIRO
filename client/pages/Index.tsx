@@ -198,7 +198,10 @@ export default function Index() {
 
   const maxDeptPoints = Math.max(...departmentData.map((d) => d.totalPoints));
 
-  const filteredEmployees = topEmployees.filter((employee) => {
+  // Use uploaded data if available, otherwise use mock data
+  const currentEmployees = dataSource === "uploaded" && uploadedEmployees.length > 0 ? uploadedEmployees : topEmployees;
+
+  const filteredEmployees = currentEmployees.filter((employee) => {
     const matchesSearch =
       employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.department.toLowerCase().includes(searchTerm.toLowerCase());
