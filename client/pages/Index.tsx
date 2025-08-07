@@ -102,73 +102,35 @@ export default function Index() {
     },
   };
 
-  const topEmployees: Employee[] = [
-    {
-      id: "1",
-      name: "Sarah Chen",
-      department: "Marketing",
-      dailyPoints: 45,
-      weeklyPoints: 315,
-      rank: 1,
-      eventScore: 95,
-      veScore: 87,
-      surveyScore: 92,
-      weightedScore: 91.2,
-      engagementLevel: "Highly Engaged",
-    },
-    {
-      id: "2",
-      name: "Alex Rodriguez",
-      department: "Sales",
-      dailyPoints: 42,
-      weeklyPoints: 294,
-      rank: 2,
-      eventScore: 88,
-      veScore: 94,
-      surveyScore: 85,
-      weightedScore: 89.1,
-      engagementLevel: "Highly Engaged",
-    },
-    {
-      id: "3",
-      name: "Maya Patel",
-      department: "Engineering",
-      dailyPoints: 38,
-      weeklyPoints: 266,
-      rank: 3,
-      eventScore: 92,
-      veScore: 78,
-      surveyScore: 88,
-      weightedScore: 86.4,
-      engagementLevel: "Highly Engaged",
-    },
-    {
-      id: "4",
-      name: "Jordan Kim",
-      department: "Design",
-      dailyPoints: 35,
-      weeklyPoints: 245,
-      rank: 4,
-      eventScore: 85,
-      veScore: 82,
-      surveyScore: 90,
-      weightedScore: 85.1,
-      engagementLevel: "Engaged",
-    },
-    {
-      id: "5",
-      name: "Taylor Brooks",
-      department: "Marketing",
-      dailyPoints: 33,
-      weeklyPoints: 231,
-      rank: 5,
-      eventScore: 80,
-      veScore: 85,
-      surveyScore: 83,
-      weightedScore: 82.3,
-      engagementLevel: "Engaged",
-    },
-  ];
+  // Helper functions for calculating metrics
+  function getTopDepartment(): string {
+    if (uploadedEmployees.length === 0) return "N/A";
+    const deptPoints = uploadedEmployees.reduce((acc, emp) => {
+      acc[emp.department] = (acc[emp.department] || 0) + emp.weeklyPoints;
+      return acc;
+    }, {} as Record<string, number>);
+    return Object.entries(deptPoints).sort(([,a], [,b]) => b - a)[0]?.[0] || "N/A";
+  }
+
+  function calculateEngagementDistribution() {
+    if (uploadedEmployees.length === 0) return { highlyEngaged: 0, engaged: 0, needsImprovement: 0, atRisk: 0 };
+    const total = uploadedEmployees.length;
+    const distribution = uploadedEmployees.reduce((acc, emp) => {
+      const level = emp.engagementLevel.replace(/\s+/g, '').toLowerCase();
+      if (level === 'highlyengaged') acc.highlyEngaged++;
+      else if (level === 'engaged') acc.engaged++;
+      else if (level === 'needsimprovement') acc.needsImprovement++;
+      else acc.atRisk++;
+      return acc;
+    }, { highlyEngaged: 0, engaged: 0, needsImprovement: 0, atRisk: 0 });
+
+    return {
+      highlyEngaged: Math.round((distribution.highlyEngaged / total) * 100),
+      engaged: Math.round((distribution.engaged / total) * 100),
+      needsImprovement: Math.round((distribution.needsImprovement / total) * 100),
+      atRisk: Math.round((distribution.atRisk / total) * 100),
+    };
+  }
 
   const departmentData: DepartmentData[] = [
     { name: "Marketing", totalPoints: 1850, color: "#8B5CF6" },
