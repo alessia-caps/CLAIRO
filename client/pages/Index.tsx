@@ -241,6 +241,16 @@ export default function Index() {
       </header>
 
       <div className="container mx-auto px-4 py-6">
+        {/* Data Source Indicator */}
+        {dataSource === "uploaded" && (
+          <Alert className="mb-6 bg-green-50 border-green-200">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-700">
+              <strong>Live Data:</strong> Dashboard updated with your uploaded CSV data ({uploadedEmployees.length} employees processed)
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
