@@ -235,10 +235,7 @@ export default function Index() {
                 Engagement Dashboard
               </Badge>
             </div>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Upload className="h-4 w-4 mr-2" />
-              Upload CSV
-            </Button>
+            <CSVUploadDialog onDataUploaded={handleDataUploaded} />
           </div>
         </div>
       </header>
