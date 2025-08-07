@@ -211,6 +211,11 @@ export default function Index() {
     return matchesSearch && matchesDepartment;
   });
 
+  const handleDataUploaded = (data: Employee[]) => {
+    setUploadedEmployees(data);
+    setDataSource("uploaded");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
