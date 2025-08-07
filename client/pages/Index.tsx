@@ -4,10 +4,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Upload, Users, Trophy, TrendingUp, Target, Search, Filter,
-  BarChart3, PieChart, Activity, Star, Award, Brain
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Upload,
+  Users,
+  Trophy,
+  TrendingUp,
+  Target,
+  Search,
+  Filter,
+  BarChart3,
+  PieChart,
+  Activity,
+  Star,
+  Award,
+  Brain,
 } from "lucide-react";
 
 interface EngagementData {
@@ -34,7 +51,11 @@ interface Employee {
   veScore: number;
   surveyScore: number;
   weightedScore: number;
-  engagementLevel: 'Highly Engaged' | 'Engaged' | 'Needs Improvement' | 'At-Risk';
+  engagementLevel:
+    | "Highly Engaged"
+    | "Engaged"
+    | "Needs Improvement"
+    | "At-Risk";
 }
 
 interface DepartmentData {
@@ -66,16 +87,76 @@ export default function Index() {
       highlyEngaged: 35,
       engaged: 42,
       needsImprovement: 18,
-      atRisk: 5
-    }
+      atRisk: 5,
+    },
   };
 
   const topEmployees: Employee[] = [
-    { id: "1", name: "Sarah Chen", department: "Marketing", dailyPoints: 45, weeklyPoints: 315, rank: 1, eventScore: 95, veScore: 87, surveyScore: 92, weightedScore: 91.2, engagementLevel: "Highly Engaged" },
-    { id: "2", name: "Alex Rodriguez", department: "Sales", dailyPoints: 42, weeklyPoints: 294, rank: 2, eventScore: 88, veScore: 94, surveyScore: 85, weightedScore: 89.1, engagementLevel: "Highly Engaged" },
-    { id: "3", name: "Maya Patel", department: "Engineering", dailyPoints: 38, weeklyPoints: 266, rank: 3, eventScore: 92, veScore: 78, surveyScore: 88, weightedScore: 86.4, engagementLevel: "Highly Engaged" },
-    { id: "4", name: "Jordan Kim", department: "Design", dailyPoints: 35, weeklyPoints: 245, rank: 4, eventScore: 85, veScore: 82, surveyScore: 90, weightedScore: 85.1, engagementLevel: "Engaged" },
-    { id: "5", name: "Taylor Brooks", department: "Marketing", dailyPoints: 33, weeklyPoints: 231, rank: 5, eventScore: 80, veScore: 85, surveyScore: 83, weightedScore: 82.3, engagementLevel: "Engaged" },
+    {
+      id: "1",
+      name: "Sarah Chen",
+      department: "Marketing",
+      dailyPoints: 45,
+      weeklyPoints: 315,
+      rank: 1,
+      eventScore: 95,
+      veScore: 87,
+      surveyScore: 92,
+      weightedScore: 91.2,
+      engagementLevel: "Highly Engaged",
+    },
+    {
+      id: "2",
+      name: "Alex Rodriguez",
+      department: "Sales",
+      dailyPoints: 42,
+      weeklyPoints: 294,
+      rank: 2,
+      eventScore: 88,
+      veScore: 94,
+      surveyScore: 85,
+      weightedScore: 89.1,
+      engagementLevel: "Highly Engaged",
+    },
+    {
+      id: "3",
+      name: "Maya Patel",
+      department: "Engineering",
+      dailyPoints: 38,
+      weeklyPoints: 266,
+      rank: 3,
+      eventScore: 92,
+      veScore: 78,
+      surveyScore: 88,
+      weightedScore: 86.4,
+      engagementLevel: "Highly Engaged",
+    },
+    {
+      id: "4",
+      name: "Jordan Kim",
+      department: "Design",
+      dailyPoints: 35,
+      weeklyPoints: 245,
+      rank: 4,
+      eventScore: 85,
+      veScore: 82,
+      surveyScore: 90,
+      weightedScore: 85.1,
+      engagementLevel: "Engaged",
+    },
+    {
+      id: "5",
+      name: "Taylor Brooks",
+      department: "Marketing",
+      dailyPoints: 33,
+      weeklyPoints: 231,
+      rank: 5,
+      eventScore: 80,
+      veScore: 85,
+      surveyScore: 83,
+      weightedScore: 82.3,
+      engagementLevel: "Engaged",
+    },
   ];
 
   const departmentData: DepartmentData[] = [
@@ -87,17 +168,38 @@ export default function Index() {
   ];
 
   const miniGames: MiniGame[] = [
-    { week: 12, gameType: "Innovation Challenge", participants: 45, winningDept: "Engineering", winningEmployee: "Alex Kim" },
-    { week: 11, gameType: "Team Trivia", participants: 78, winningDept: "Marketing", winningEmployee: "Sarah Chen" },
-    { week: 10, gameType: "Wellness Challenge", participants: 92, winningDept: "Sales", winningEmployee: "Maria Lopez" },
+    {
+      week: 12,
+      gameType: "Innovation Challenge",
+      participants: 45,
+      winningDept: "Engineering",
+      winningEmployee: "Alex Kim",
+    },
+    {
+      week: 11,
+      gameType: "Team Trivia",
+      participants: 78,
+      winningDept: "Marketing",
+      winningEmployee: "Sarah Chen",
+    },
+    {
+      week: 10,
+      gameType: "Wellness Challenge",
+      participants: 92,
+      winningDept: "Sales",
+      winningEmployee: "Maria Lopez",
+    },
   ];
 
-  const maxDeptPoints = Math.max(...departmentData.map(d => d.totalPoints));
+  const maxDeptPoints = Math.max(...departmentData.map((d) => d.totalPoints));
 
-  const filteredEmployees = topEmployees.filter(employee => {
-    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         employee.department.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = selectedDepartment === "all" || employee.department === selectedDepartment;
+  const filteredEmployees = topEmployees.filter((employee) => {
+    const matchesSearch =
+      employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.department.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDepartment =
+      selectedDepartment === "all" ||
+      employee.department === selectedDepartment;
     return matchesSearch && matchesDepartment;
   });
 
@@ -139,7 +241,9 @@ export default function Index() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-900">{engagementData.totalParticipants}</div>
+              <div className="text-2xl font-bold text-blue-900">
+                {engagementData.totalParticipants}
+              </div>
             </CardContent>
           </Card>
 
@@ -151,7 +255,9 @@ export default function Index() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-900">{engagementData.avgDailyPoints}</div>
+              <div className="text-2xl font-bold text-green-900">
+                {engagementData.avgDailyPoints}
+              </div>
             </CardContent>
           </Card>
 
@@ -163,7 +269,9 @@ export default function Index() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-bold text-purple-900">{engagementData.topDepartment}</div>
+              <div className="text-lg font-bold text-purple-900">
+                {engagementData.topDepartment}
+              </div>
             </CardContent>
           </Card>
 
@@ -175,7 +283,9 @@ export default function Index() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-bold text-orange-900">{engagementData.highestScorer}</div>
+              <div className="text-lg font-bold text-orange-900">
+                {engagementData.highestScorer}
+              </div>
             </CardContent>
           </Card>
 
@@ -187,7 +297,9 @@ export default function Index() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-pink-900">{engagementData.engagementDistribution.highlyEngaged}%</div>
+              <div className="text-2xl font-bold text-pink-900">
+                {engagementData.engagementDistribution.highlyEngaged}%
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -205,7 +317,10 @@ export default function Index() {
                   className="pl-9"
                 />
               </div>
-              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+              <Select
+                value={selectedDepartment}
+                onValueChange={setSelectedDepartment}
+              >
                 <SelectTrigger className="w-full sm:w-48">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Department" />
@@ -278,27 +393,57 @@ export default function Index() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">{engagementData.engagementDistribution.highlyEngaged}%</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {engagementData.engagementDistribution.highlyEngaged}%
+                    </div>
                     <div className="text-sm text-slate-600">Highly Engaged</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">{engagementData.engagementDistribution.engaged}%</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {engagementData.engagementDistribution.engaged}%
+                    </div>
                     <div className="text-sm text-slate-600">Engaged</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-600">{engagementData.engagementDistribution.needsImprovement}%</div>
-                    <div className="text-sm text-slate-600">Needs Improvement</div>
+                    <div className="text-2xl font-bold text-orange-600">
+                      {engagementData.engagementDistribution.needsImprovement}%
+                    </div>
+                    <div className="text-sm text-slate-600">
+                      Needs Improvement
+                    </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-red-600">{engagementData.engagementDistribution.atRisk}%</div>
+                    <div className="text-2xl font-bold text-red-600">
+                      {engagementData.engagementDistribution.atRisk}%
+                    </div>
                     <div className="text-sm text-slate-600">At-Risk</div>
                   </div>
                 </div>
                 <div className="flex h-4 rounded-full overflow-hidden">
-                  <div className="bg-green-500" style={{ width: `${engagementData.engagementDistribution.highlyEngaged}%` }} />
-                  <div className="bg-blue-500" style={{ width: `${engagementData.engagementDistribution.engaged}%` }} />
-                  <div className="bg-orange-500" style={{ width: `${engagementData.engagementDistribution.needsImprovement}%` }} />
-                  <div className="bg-red-500" style={{ width: `${engagementData.engagementDistribution.atRisk}%` }} />
+                  <div
+                    className="bg-green-500"
+                    style={{
+                      width: `${engagementData.engagementDistribution.highlyEngaged}%`,
+                    }}
+                  />
+                  <div
+                    className="bg-blue-500"
+                    style={{
+                      width: `${engagementData.engagementDistribution.engaged}%`,
+                    }}
+                  />
+                  <div
+                    className="bg-orange-500"
+                    style={{
+                      width: `${engagementData.engagementDistribution.needsImprovement}%`,
+                    }}
+                  />
+                  <div
+                    className="bg-red-500"
+                    style={{
+                      width: `${engagementData.engagementDistribution.atRisk}%`,
+                    }}
+                  />
                 </div>
               </div>
             </CardContent>
@@ -315,11 +460,15 @@ export default function Index() {
           </CardHeader>
           <CardContent>
             <p className="text-violet-700">
-              📈 <strong>Marketing leads this week</strong> with 3 employees in the top 5 performers, contributing 1,850 total points. 
-              Sarah Chen maintains the #1 position with exceptional event participation (95/100). 
-              📊 <strong>35% of employees are Highly Engaged</strong>, indicating strong overall team morale. 
-              ⚠️ <strong>5% are classified as At-Risk</strong> - consider targeted interventions for these individuals.
-              🎯 Engineering shows consistent growth in Viva Engage participation over the past 3 weeks.
+              📈 <strong>Marketing leads this week</strong> with 3 employees in
+              the top 5 performers, contributing 1,850 total points. Sarah Chen
+              maintains the #1 position with exceptional event participation
+              (95/100). 📊 <strong>35% of employees are Highly Engaged</strong>,
+              indicating strong overall team morale. ⚠️{" "}
+              <strong>5% are classified as At-Risk</strong> - consider targeted
+              interventions for these individuals. 🎯 Engineering shows
+              consistent growth in Viva Engage participation over the past 3
+              weeks.
             </p>
           </CardContent>
         </Card>
@@ -328,7 +477,9 @@ export default function Index() {
         <Tabs defaultValue="leaderboard" className="space-y-4">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-            <TabsTrigger value="quad-scores">Quad Engagement Scores</TabsTrigger>
+            <TabsTrigger value="quad-scores">
+              Quad Engagement Scores
+            </TabsTrigger>
             <TabsTrigger value="mini-games">Mini-Game Tracker</TabsTrigger>
           </TabsList>
 
@@ -355,24 +506,42 @@ export default function Index() {
                     </thead>
                     <tbody>
                       {filteredEmployees.map((employee) => (
-                        <tr key={employee.id} className="border-b hover:bg-slate-50">
+                        <tr
+                          key={employee.id}
+                          className="border-b hover:bg-slate-50"
+                        >
                           <td className="py-3 px-4">
                             <div className="flex items-center">
-                              <span className="font-bold text-primary">#{employee.rank}</span>
+                              <span className="font-bold text-primary">
+                                #{employee.rank}
+                              </span>
                               {employee.rank <= 3 && (
                                 <Trophy className="h-4 w-4 ml-2 text-yellow-500" />
                               )}
                             </div>
                           </td>
-                          <td className="py-3 px-4 font-medium">{employee.name}</td>
+                          <td className="py-3 px-4 font-medium">
+                            {employee.name}
+                          </td>
                           <td className="py-3 px-4">{employee.department}</td>
-                          <td className="py-3 px-4 text-right font-bold">{employee.dailyPoints}</td>
-                          <td className="py-3 px-4 text-right font-bold">{employee.weeklyPoints}</td>
+                          <td className="py-3 px-4 text-right font-bold">
+                            {employee.dailyPoints}
+                          </td>
+                          <td className="py-3 px-4 text-right font-bold">
+                            {employee.weeklyPoints}
+                          </td>
                           <td className="py-3 px-4">
-                            <Badge 
-                              variant={employee.engagementLevel === 'Highly Engaged' ? 'default' : 
-                                     employee.engagementLevel === 'Engaged' ? 'secondary' : 
-                                     employee.engagementLevel === 'Needs Improvement' ? 'outline' : 'destructive'}
+                            <Badge
+                              variant={
+                                employee.engagementLevel === "Highly Engaged"
+                                  ? "default"
+                                  : employee.engagementLevel === "Engaged"
+                                    ? "secondary"
+                                    : employee.engagementLevel ===
+                                        "Needs Improvement"
+                                      ? "outline"
+                                      : "destructive"
+                              }
                               className="text-xs"
                             >
                               {employee.engagementLevel}
@@ -407,17 +576,37 @@ export default function Index() {
                     </thead>
                     <tbody>
                       {filteredEmployees.map((employee) => (
-                        <tr key={employee.id} className="border-b hover:bg-slate-50">
-                          <td className="py-3 px-4 font-medium">{employee.name}</td>
-                          <td className="py-3 px-4 text-right">{employee.eventScore}/100</td>
-                          <td className="py-3 px-4 text-right">{employee.veScore}/100</td>
-                          <td className="py-3 px-4 text-right">{employee.surveyScore}/100</td>
-                          <td className="py-3 px-4 text-right font-bold">{employee.weightedScore}</td>
+                        <tr
+                          key={employee.id}
+                          className="border-b hover:bg-slate-50"
+                        >
+                          <td className="py-3 px-4 font-medium">
+                            {employee.name}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            {employee.eventScore}/100
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            {employee.veScore}/100
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            {employee.surveyScore}/100
+                          </td>
+                          <td className="py-3 px-4 text-right font-bold">
+                            {employee.weightedScore}
+                          </td>
                           <td className="py-3 px-4">
-                            <Badge 
-                              variant={employee.engagementLevel === 'Highly Engaged' ? 'default' : 
-                                     employee.engagementLevel === 'Engaged' ? 'secondary' : 
-                                     employee.engagementLevel === 'Needs Improvement' ? 'outline' : 'destructive'}
+                            <Badge
+                              variant={
+                                employee.engagementLevel === "Highly Engaged"
+                                  ? "default"
+                                  : employee.engagementLevel === "Engaged"
+                                    ? "secondary"
+                                    : employee.engagementLevel ===
+                                        "Needs Improvement"
+                                      ? "outline"
+                                      : "destructive"
+                              }
                               className="text-xs"
                             >
                               {employee.engagementLevel}
@@ -445,20 +634,33 @@ export default function Index() {
                         <th className="text-left py-3 px-4">Week</th>
                         <th className="text-left py-3 px-4">Game Type</th>
                         <th className="text-right py-3 px-4">Participants</th>
-                        <th className="text-left py-3 px-4">Winning Department</th>
-                        <th className="text-left py-3 px-4">Winning Employee</th>
+                        <th className="text-left py-3 px-4">
+                          Winning Department
+                        </th>
+                        <th className="text-left py-3 px-4">
+                          Winning Employee
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {miniGames.map((game) => (
-                        <tr key={game.week} className="border-b hover:bg-slate-50">
-                          <td className="py-3 px-4 font-medium">Week {game.week}</td>
+                        <tr
+                          key={game.week}
+                          className="border-b hover:bg-slate-50"
+                        >
+                          <td className="py-3 px-4 font-medium">
+                            Week {game.week}
+                          </td>
                           <td className="py-3 px-4">{game.gameType}</td>
-                          <td className="py-3 px-4 text-right">{game.participants}</td>
+                          <td className="py-3 px-4 text-right">
+                            {game.participants}
+                          </td>
                           <td className="py-3 px-4">
                             <Badge variant="outline">{game.winningDept}</Badge>
                           </td>
-                          <td className="py-3 px-4 font-medium">{game.winningEmployee}</td>
+                          <td className="py-3 px-4 font-medium">
+                            {game.winningEmployee}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
