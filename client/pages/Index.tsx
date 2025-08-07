@@ -132,37 +132,27 @@ export default function Index() {
     };
   }
 
-  const departmentData: DepartmentData[] = [
-    { name: "Marketing", totalPoints: 1850, color: "#8B5CF6" },
-    { name: "Sales", totalPoints: 1650, color: "#06B6D4" },
-    { name: "Engineering", totalPoints: 1420, color: "#10B981" },
-    { name: "Design", totalPoints: 980, color: "#F59E0B" },
-    { name: "HR", totalPoints: 720, color: "#EF4444" },
-  ];
+  // Calculate department data from uploaded employees
+  const departmentData: DepartmentData[] = uploadedEmployees.length > 0
+    ? Object.entries(uploadedEmployees.reduce((acc, emp) => {
+        if (!acc[emp.department]) {
+          acc[emp.department] = { name: emp.department, totalPoints: 0, color: getDepartmentColor(emp.department) };
+        }
+        acc[emp.department].totalPoints += emp.weeklyPoints;
+        return acc;
+      }, {} as Record<string, DepartmentData>))
+      .map(([_, dept]) => dept)
+      .sort((a, b) => b.totalPoints - a.totalPoints)
+    : [];
 
-  const miniGames: MiniGame[] = [
-    {
-      week: 12,
-      gameType: "Innovation Challenge",
-      participants: 45,
-      winningDept: "Engineering",
-      winningEmployee: "Alex Kim",
-    },
-    {
-      week: 11,
-      gameType: "Team Trivia",
-      participants: 78,
-      winningDept: "Marketing",
-      winningEmployee: "Sarah Chen",
-    },
-    {
-      week: 10,
-      gameType: "Wellness Challenge",
-      participants: 92,
-      winningDept: "Sales",
-      winningEmployee: "Maria Lopez",
-    },
-  ];
+  function getDepartmentColor(department: string): string {
+    const colors = ["#8B5CF6", "#06B6D4", "#10B981", "#F59E0B", "#EF4444", "#8B5A2B", "#6366F1", "#EC4899"];
+    const index = department.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % colors.length;
+    return colors[index];
+  }
+
+  // Sample mini-games - these would typically come from a separate data source
+  const miniGames: MiniGame[] = [];
 
   const maxDeptPoints = Math.max(...departmentData.map((d) => d.totalPoints));
 
