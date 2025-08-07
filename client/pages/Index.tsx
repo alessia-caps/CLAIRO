@@ -651,26 +651,40 @@ export default function Index() {
                       </tr>
                     </thead>
                     <tbody>
-                      {miniGames.map((game) => (
-                        <tr
-                          key={game.week}
-                          className="border-b hover:bg-slate-50"
-                        >
-                          <td className="py-3 px-4 font-medium">
-                            Week {game.week}
-                          </td>
-                          <td className="py-3 px-4">{game.gameType}</td>
-                          <td className="py-3 px-4 text-right">
-                            {game.participants}
-                          </td>
-                          <td className="py-3 px-4">
-                            <Badge variant="outline">{game.winningDept}</Badge>
-                          </td>
-                          <td className="py-3 px-4 font-medium">
-                            {game.winningEmployee}
+                      {miniGames.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-12 text-center text-slate-500">
+                            <div className="flex flex-col items-center space-y-3">
+                              <Activity className="h-12 w-12 text-slate-300" />
+                              <div>
+                                <p className="font-medium">No mini-game data available</p>
+                                <p className="text-sm">Mini-game participation data will appear here when available</p>
+                              </div>
+                            </div>
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        miniGames.map((game) => (
+                          <tr
+                            key={game.week}
+                            className="border-b hover:bg-slate-50"
+                          >
+                            <td className="py-3 px-4 font-medium">
+                              Week {game.week}
+                            </td>
+                            <td className="py-3 px-4">{game.gameType}</td>
+                            <td className="py-3 px-4 text-right">
+                              {game.participants}
+                            </td>
+                            <td className="py-3 px-4">
+                              <Badge variant="outline">{game.winningDept}</Badge>
+                            </td>
+                            <td className="py-3 px-4 font-medium">
+                              {game.winningEmployee}
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
