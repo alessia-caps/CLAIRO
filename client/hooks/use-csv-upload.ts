@@ -69,20 +69,111 @@ export function useCSVUpload() {
     return (posts * 5) + (comments * 4) + (reactions * 2) + (shares * 2);
   };
 
+  const processExcelData = (sheets: { [sheetName: string]: any[] }): ParsedEmployee[] => {
+    const employees: Map<string, Partial<ParsedEmployee>> = new Map();
+
+    // Process Daily VE tracker sheet
+    const dailyVETracker = sheets['Daily VE tracker'] || sheets['Daily VE Tracker'] || [];
+    dailyVETracker.forEach((row: any) => {
+      const employeeName = row['Employee Name'];
+      if (!employeeName) return;
+
+      const posts = parseInt(row['Posts Created'] || '0');
+      const comments = parseInt(row['Comments Made'] || '0');
+      const reactions = parseInt(row['Reactions Given'] || '0');
+      const shares = parseInt(row['Posts of Others Shared'] || '0');
+      const dailyPoints = parseInt(row['Daily Points'] || '0') || calculateDailyPoints(posts, comments, reactions, shares);
+
+      if (!employees.has(employeeName)) {
+        employees.set(employeeName, {
+          name: employeeName,
+          department: row['BU/GBU'] || 'Unknown',
+          dailyPoints: 0,
+          weeklyPoints: 0,
+          rank: 0,
+          eventScore: 0,
+          veScore: 0,
+          surveyScore: 0,
+          weightedScore: 0,
+          engagementLevel: 'Engaged'
+        });
+      }
+
+      const employee = employees.get(employeeName)!;
+      employee.dailyPoints = Math.max(employee.dailyPoints || 0, dailyPoints);
+      employee.weeklyPoints = (employee.weeklyPoints || 0) + dailyPoints;
+    });
+
+    // Process VE Weekly Summary sheet
+    const weeklyData = sheets['VE Weekly Summary'] || sheets['VE Weekly SUmmary'] || [];
+    weeklyData.forEach((row: any) => {
+      const employeeName = row['Employee Name'];
+      if (!employeeName || !employees.has(employeeName)) return;
+
+      const employee = employees.get(employeeName)!;
+      employee.weeklyPoints = parseInt(row['Sum of Daily Points'] || row['Total Points'] || employee.weeklyPoints || '0');
+      employee.rank = parseInt(row['Rank'] || '0');
+    });
+
+    // Process Quad Engagement Scores sheet
+    const quadScores = sheets['Quad Engagement Scores'] || [];
+    quadScores.forEach((row: any) => {
+      const employeeName = row['Employee Name'];
+      if (!employeeName) return;
+
+      if (!employees.has(employeeName)) {
+        employees.set(employeeName, {
+          name: employeeName,
+          department: 'Unknown',
+          dailyPoints: 0,
+          weeklyPoints: 0,
+          rank: 0,
+          eventScore: 0,
+          veScore: 0,
+          surveyScore: 0,
+          weightedScore: 0,
+          engagementLevel: 'Engaged'
+        });
+      }
+
+      const employee = employees.get(employeeName)!;
+      employee.eventScore = parseInt(row['Event Participation Score (out of 100)'] || '0');
+      employee.veScore = parseInt(row['Viva Engage Score (out of 100)'] || '0');
+      employee.surveyScore = parseInt(row['Pulse Survey Score (out of 100)'] || '0');
+      employee.weightedScore = parseFloat(row['Weighted Score'] || '0');
+      employee.engagementLevel = row['Engagement Level'] || calculateEngagementLevel(employee.weightedScore);
+    });
+
+    // Convert to array and add IDs
+    return Array.from(employees.values()).map((emp, index) => ({
+      id: `emp-${index}`,
+      name: emp.name || '',
+      department: emp.department || 'Unknown',
+      dailyPoints: emp.dailyPoints || 0,
+      weeklyPoints: emp.weeklyPoints || 0,
+      rank: emp.rank || index + 1,
+      eventScore: emp.eventScore || 0,
+      veScore: emp.veScore || 0,
+      surveyScore: emp.surveyScore || 0,
+      weightedScore: emp.weightedScore || 0,
+      engagementLevel: emp.engagementLevel || 'Engaged'
+    })).filter(emp => emp.name); // Remove empty entries
+  };
+
   const processUploadedData = (data: any[], dataType: string): ParsedEmployee[] => {
     if (dataType === 'daily-logs') {
-      // Process daily engagement logs
+      // Process daily engagement logs (CSV format)
       return data.map((row, index) => {
         const posts = parseInt(row['Posts Created'] || '0');
         const comments = parseInt(row['Comments Made'] || '0');
         const reactions = parseInt(row['Reactions Given'] || '0');
-        const shares = parseInt(row['Shares'] || '0');
-        const dailyPoints = calculateDailyPoints(posts, comments, reactions, shares);
-        
+        const shares = parseInt(row['Posts of Others Shared'] || row['Shares'] || '0');
+        const dailyPoints = parseInt(row['Daily Points'] || '0') || calculateDailyPoints(posts, comments, reactions, shares);
+
         return {
           id: `emp-${index}`,
           name: row['Employee Name'] || `Employee ${index + 1}`,
-          department: row['Department'] || 'Unknown',
+          department: row['BU/GBU'] || row['Department'] || 'Unknown',
           dailyPoints,
           weeklyPoints: dailyPoints * 7, // Estimate
           rank: index + 1,
@@ -94,19 +185,19 @@ export function useCSVUpload() {
         };
       });
     }
-    
+
     if (dataType === 'quad-scores') {
-      // Process quad engagement scores
+      // Process quad engagement scores (CSV format)
       return data.map((row, index) => {
-        const eventScore = parseInt(row['Event Score'] || '0');
-        const veScore = parseInt(row['VE Score'] || '0');
-        const surveyScore = parseInt(row['Survey Score'] || '0');
-        const weightedScore = (eventScore * 0.5) + (veScore * 0.3) + (surveyScore * 0.2);
-        
+        const eventScore = parseInt(row['Event Participation Score (out of 100)'] || row['Event Score'] || '0');
+        const veScore = parseInt(row['Viva Engage Score (out of 100)'] || row['VE Score'] || '0');
+        const surveyScore = parseInt(row['Pulse Survey Score (out of 100)'] || row['Survey Score'] || '0');
+        const weightedScore = parseFloat(row['Weighted Score'] || '0') || (eventScore * 0.5) + (veScore * 0.3) + (surveyScore * 0.2);
+
         return {
           id: `emp-${index}`,
           name: row['Employee Name'] || `Employee ${index + 1}`,
-          department: row['Department'] || 'Unknown',
+          department: row['BU/GBU'] || row['Department'] || 'Unknown',
           dailyPoints: Math.floor(veScore / 2), // Estimate from VE score
           weeklyPoints: Math.floor(veScore / 2) * 7,
           rank: index + 1,
@@ -114,11 +205,11 @@ export function useCSVUpload() {
           veScore,
           surveyScore,
           weightedScore,
-          engagementLevel: calculateEngagementLevel(weightedScore)
+          engagementLevel: row['Engagement Level'] || calculateEngagementLevel(weightedScore)
         };
       });
     }
-    
+
     return [];
   };
 
