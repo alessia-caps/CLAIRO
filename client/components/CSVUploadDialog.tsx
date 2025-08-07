@@ -1,0 +1,160 @@
+import { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import { useCSVUpload } from "@/hooks/use-csv-upload";
+import { Upload, FileText, CheckCircle, AlertCircle, X } from "lucide-react";
+
+interface CSVUploadDialogProps {
+  onDataUploaded: (data: any[]) => void;
+  trigger?: React.ReactNode;
+}
+
+export function CSVUploadDialog({ onDataUploaded, trigger }: CSVUploadDialogProps) {
+  const [open, setOpen] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const { uploadFile, isUploading, uploadError, clearError } = useCSVUpload();
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!file.name.endsWith('.csv')) {
+      return;
+    }
+
+    try {
+      const data = await uploadFile(file);
+      onDataUploaded(data);
+      setOpen(false);
+    } catch (error) {
+      // Error is handled by the hook
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileUpload(e.target.files[0]);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button>
+            <Upload className="h-4 w-4 mr-2" />
+            Upload CSV
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center">
+            <FileText className="h-5 w-5 mr-2 text-primary" />
+            Upload Engagement Data
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          {/* Expected Format Info */}
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-sm">
+              <strong>Expected CSV formats:</strong>
+              <ul className="mt-2 space-y-1 text-xs">
+                <li>• <strong>Daily Logs:</strong> Employee Name, Department, Posts Created, Comments Made, Reactions Given, Shares</li>
+                <li>• <strong>Quad Scores:</strong> Employee Name, Department, Event Score, VE Score, Survey Score</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
+
+          {/* Upload Area */}
+          <div
+            className={`
+              border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
+              ${dragActive ? 'border-primary bg-primary/5' : 'border-slate-300 hover:border-primary/50'}
+              ${isUploading ? 'pointer-events-none opacity-50' : ''}
+            `}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            onClick={() => document.getElementById('csv-upload')?.click()}
+          >
+            <div className="space-y-2">
+              <Upload className="h-8 w-8 mx-auto text-slate-400" />
+              <div>
+                <p className="text-sm font-medium">Drop your CSV file here</p>
+                <p className="text-xs text-slate-600">or click to browse</p>
+              </div>
+            </div>
+          </div>
+
+          <Input
+            id="csv-upload"
+            type="file"
+            accept=".csv"
+            onChange={handleFileInputChange}
+            className="hidden"
+          />
+
+          {/* Loading State */}
+          {isUploading && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span>Processing CSV...</span>
+                <span>Please wait</span>
+              </div>
+              <Progress value={undefined} className="w-full" />
+            </div>
+          )}
+
+          {/* Error State */}
+          {uploadError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="flex items-center justify-between">
+                <span>{uploadError}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearError}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Sample Data Link */}
+          <div className="text-center">
+            <Button variant="link" size="sm" className="text-xs">
+              Download Sample CSV Template
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
