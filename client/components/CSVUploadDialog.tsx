@@ -101,7 +101,7 @@ export function CSVUploadDialog({ onDataUploaded, trigger }: CSVUploadDialogProp
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            onClick={() => document.getElementById('csv-upload')?.click()}
+            onClick={() => document.getElementById('excel-upload')?.click()}
           >
             <div className="space-y-2">
               <Upload className="h-8 w-8 mx-auto text-slate-400" />
