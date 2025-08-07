@@ -517,7 +517,6 @@ export default function Index() {
           </Card>
         </div>
 
-
         {/* Data Tables */}
         <Tabs defaultValue="leaderboard" className="space-y-4">
           <TabsList className="grid w-full grid-cols-3">
@@ -544,25 +543,36 @@ export default function Index() {
                       <div className="flex flex-col items-center space-y-3">
                         <Upload className="h-8 w-8 text-slate-300" />
                         <div>
-                          <p className="font-medium">No department data available</p>
-                          <p className="text-sm">Upload engagement data to see performance</p>
+                          <p className="font-medium">
+                            No department data available
+                          </p>
+                          <p className="text-sm">
+                            Upload engagement data to see performance
+                          </p>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       {departmentData.slice(0, 5).map((dept, index) => (
-                        <div key={dept.name} className="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+                        <div
+                          key={dept.name}
+                          className="flex items-center justify-between p-3 rounded-lg bg-slate-50"
+                        >
                           <div className="flex items-center space-x-3">
                             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
                               #{index + 1}
                             </div>
                             <div>
                               <div className="font-medium">{dept.name}</div>
-                              <div className="text-sm text-slate-600">{dept.totalPoints} total points</div>
+                              <div className="text-sm text-slate-600">
+                                {dept.totalPoints} total points
+                              </div>
                             </div>
                           </div>
-                          {index === 0 && <Trophy className="h-5 w-5 text-yellow-500" />}
+                          {index === 0 && (
+                            <Trophy className="h-5 w-5 text-yellow-500" />
+                          )}
                         </div>
                       ))}
                     </div>
@@ -584,22 +594,32 @@ export default function Index() {
                       <div className="flex flex-col items-center space-y-3">
                         <Upload className="h-8 w-8 text-slate-300" />
                         <div>
-                          <p className="font-medium">No employee data available</p>
-                          <p className="text-sm">Upload engagement data to see top performers</p>
+                          <p className="font-medium">
+                            No employee data available
+                          </p>
+                          <p className="text-sm">
+                            Upload engagement data to see top performers
+                          </p>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {filteredEmployees.slice(0, 5).map((employee) => (
-                        <div key={employee.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+                        <div
+                          key={employee.id}
+                          className="flex items-center justify-between p-3 rounded-lg bg-slate-50"
+                        >
                           <div className="flex items-center space-x-3">
                             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
                               #{employee.rank}
                             </div>
                             <div>
                               <div className="font-medium">{employee.name}</div>
-                              <div className="text-sm text-slate-600">{employee.department} • {employee.weeklyPoints} pts</div>
+                              <div className="text-sm text-slate-600">
+                                {employee.department} • {employee.weeklyPoints}{" "}
+                                pts
+                              </div>
                             </div>
                           </div>
                           <Badge
@@ -608,7 +628,8 @@ export default function Index() {
                                 ? "default"
                                 : employee.engagementLevel === "Engaged"
                                   ? "secondary"
-                                  : employee.engagementLevel === "Needs Improvement"
+                                  : employee.engagementLevel ===
+                                      "Needs Improvement"
                                     ? "outline"
                                     : "destructive"
                             }
@@ -800,17 +821,36 @@ export default function Index() {
           <CardContent>
             {uploadedEmployees.length === 0 ? (
               <p className="text-violet-600 italic">
-                📊 Upload your engagement data to get AI-powered insights about team performance, trends, and recommendations.
+                📊 Upload your engagement data to get AI-powered insights about
+                team performance, trends, and recommendations.
               </p>
             ) : (
               <p className="text-violet-700">
-                📈 <strong>{engagementData.topDepartment} leads this week</strong> with the highest engagement scores, contributing {departmentData[0]?.totalPoints || 0} total points.
-                {filteredEmployees[0]?.name} maintains the #1 position with {filteredEmployees[0]?.weeklyPoints} weekly points.
-                📊 <strong>{engagementData.engagementDistribution.engaged + engagementData.engagementDistribution.highlyEngaged}% of employees are engaged or highly engaged</strong>, indicating positive team morale.
+                📈{" "}
+                <strong>{engagementData.topDepartment} leads this week</strong>{" "}
+                with the highest engagement scores, contributing{" "}
+                {departmentData[0]?.totalPoints || 0} total points.
+                {filteredEmployees[0]?.name} maintains the #1 position with{" "}
+                {filteredEmployees[0]?.weeklyPoints} weekly points. 📊{" "}
+                <strong>
+                  {engagementData.engagementDistribution.engaged +
+                    engagementData.engagementDistribution.highlyEngaged}
+                  % of employees are engaged or highly engaged
+                </strong>
+                , indicating positive team morale.
                 {engagementData.engagementDistribution.atRisk > 0 && (
-                  <>⚠️ <strong>{engagementData.engagementDistribution.atRisk}% are classified as At-Risk</strong> - consider targeted interventions for these individuals. </>
+                  <>
+                    ⚠️{" "}
+                    <strong>
+                      {engagementData.engagementDistribution.atRisk}% are
+                      classified as At-Risk
+                    </strong>{" "}
+                    - consider targeted interventions for these
+                    individuals.{" "}
+                  </>
                 )}
-                🎯 Focus on maintaining momentum in top-performing departments while supporting growth in others.
+                🎯 Focus on maintaining momentum in top-performing departments
+                while supporting growth in others.
               </p>
             )}
           </CardContent>
