@@ -124,7 +124,7 @@ export function CSVUploadDialog({ onDataUploaded, trigger }: CSVUploadDialogProp
           {isUploading && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span>Processing CSV...</span>
+                <span>Processing Excel file...</span>
                 <span>Please wait</span>
               </div>
               <Progress value={undefined} className="w-full" />
