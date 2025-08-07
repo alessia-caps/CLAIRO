@@ -529,98 +529,100 @@ export default function Index() {
           </TabsList>
 
           <TabsContent value="leaderboard">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Award className="h-5 w-5 mr-2 text-primary" />
-                  Employee Leaderboard
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4">Rank</th>
-                        <th className="text-left py-3 px-4">Name</th>
-                        <th className="text-left py-3 px-4">Department</th>
-                        <th className="text-right py-3 px-4">Daily Points</th>
-                        <th className="text-right py-3 px-4">Weekly Points</th>
-                        <th className="text-left py-3 px-4">Level</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredEmployees.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={6}
-                            className="py-12 text-center text-slate-500"
-                          >
-                            <div className="flex flex-col items-center space-y-3">
-                              <Upload className="h-12 w-12 text-slate-300" />
-                              <div>
-                                <p className="font-medium">
-                                  No engagement data available
-                                </p>
-                                <p className="text-sm">
-                                  Upload your Excel engagement tracker to view
-                                  employee rankings
-                                </p>
-                              </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Department Performance Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Trophy className="h-5 w-5 mr-2 text-primary" />
+                    Department Performance
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {departmentData.length === 0 ? (
+                    <div className="py-8 text-center text-slate-500">
+                      <div className="flex flex-col items-center space-y-3">
+                        <Upload className="h-8 w-8 text-slate-300" />
+                        <div>
+                          <p className="font-medium">No department data available</p>
+                          <p className="text-sm">Upload engagement data to see performance</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {departmentData.slice(0, 5).map((dept, index) => (
+                        <div key={dept.name} className="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                              #{index + 1}
                             </div>
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredEmployees.map((employee) => (
-                          <tr
-                            key={employee.id}
-                            className="border-b hover:bg-slate-50"
+                            <div>
+                              <div className="font-medium">{dept.name}</div>
+                              <div className="text-sm text-slate-600">{dept.totalPoints} total points</div>
+                            </div>
+                          </div>
+                          {index === 0 && <Trophy className="h-5 w-5 text-yellow-500" />}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Top Performers */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Award className="h-5 w-5 mr-2 text-primary" />
+                    Top Performers This Week
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {filteredEmployees.length === 0 ? (
+                    <div className="py-8 text-center text-slate-500">
+                      <div className="flex flex-col items-center space-y-3">
+                        <Upload className="h-8 w-8 text-slate-300" />
+                        <div>
+                          <p className="font-medium">No employee data available</p>
+                          <p className="text-sm">Upload engagement data to see top performers</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredEmployees.slice(0, 5).map((employee) => (
+                        <div key={employee.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                              #{employee.rank}
+                            </div>
+                            <div>
+                              <div className="font-medium">{employee.name}</div>
+                              <div className="text-sm text-slate-600">{employee.department} • {employee.weeklyPoints} pts</div>
+                            </div>
+                          </div>
+                          <Badge
+                            variant={
+                              employee.engagementLevel === "Highly Engaged"
+                                ? "default"
+                                : employee.engagementLevel === "Engaged"
+                                  ? "secondary"
+                                  : employee.engagementLevel === "Needs Improvement"
+                                    ? "outline"
+                                    : "destructive"
+                            }
+                            className="text-xs"
                           >
-                            <td className="py-3 px-4">
-                              <div className="flex items-center">
-                                <span className="font-bold text-primary">
-                                  #{employee.rank}
-                                </span>
-                                {employee.rank <= 3 && (
-                                  <Trophy className="h-4 w-4 ml-2 text-yellow-500" />
-                                )}
-                              </div>
-                            </td>
-                            <td className="py-3 px-4 font-medium">
-                              {employee.name}
-                            </td>
-                            <td className="py-3 px-4">{employee.department}</td>
-                            <td className="py-3 px-4 text-right font-bold">
-                              {employee.dailyPoints}
-                            </td>
-                            <td className="py-3 px-4 text-right font-bold">
-                              {employee.weeklyPoints}
-                            </td>
-                            <td className="py-3 px-4">
-                              <Badge
-                                variant={
-                                  employee.engagementLevel === "Highly Engaged"
-                                    ? "default"
-                                    : employee.engagementLevel === "Engaged"
-                                      ? "secondary"
-                                      : employee.engagementLevel ===
-                                          "Needs Improvement"
-                                        ? "outline"
-                                        : "destructive"
-                                }
-                                className="text-xs"
-                              >
-                                {employee.engagementLevel}
-                              </Badge>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
+                            {employee.engagementLevel}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="quad-scores">
