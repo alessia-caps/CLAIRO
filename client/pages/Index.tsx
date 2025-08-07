@@ -154,12 +154,14 @@ export default function Index() {
   // Sample mini-games - these would typically come from a separate data source
   const miniGames: MiniGame[] = [];
 
-  const maxDeptPoints = Math.max(...departmentData.map((d) => d.totalPoints));
+  const maxDeptPoints = departmentData.length > 0 ? Math.max(...departmentData.map((d) => d.totalPoints)) : 1;
 
-  // Use uploaded data if available, otherwise use mock data
-  const currentEmployees = dataSource === "uploaded" && uploadedEmployees.length > 0 ? uploadedEmployees : topEmployees;
+  // Sort uploaded employees by weekly points and assign ranks
+  const sortedEmployees = [...uploadedEmployees]
+    .sort((a, b) => b.weeklyPoints - a.weeklyPoints)
+    .map((emp, index) => ({ ...emp, rank: index + 1 }));
 
-  const filteredEmployees = currentEmployees.filter((employee) => {
+  const filteredEmployees = sortedEmployees.filter((employee) => {
     const matchesSearch =
       employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.department.toLowerCase().includes(searchTerm.toLowerCase());
