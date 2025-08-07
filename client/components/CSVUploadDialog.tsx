@@ -151,7 +151,7 @@ export function CSVUploadDialog({ onDataUploaded, trigger }: CSVUploadDialogProp
           {/* Sample Data Link */}
           <div className="text-center">
             <Button variant="link" size="sm" className="text-xs">
-              Download Sample CSV Template
+              Download Sample Excel Template
             </Button>
           </div>
         </div>
