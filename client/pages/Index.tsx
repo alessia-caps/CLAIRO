@@ -521,11 +521,11 @@ export default function Index() {
         {/* Data Tables */}
         <Tabs defaultValue="leaderboard" className="space-y-4">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+            <TabsTrigger value="leaderboard">Department Overview</TabsTrigger>
             <TabsTrigger value="quad-scores">
               Quad Engagement Scores
             </TabsTrigger>
-            <TabsTrigger value="mini-games">Mini-Game Tracker</TabsTrigger>
+            <TabsTrigger value="mini-games">Activity Tracker</TabsTrigger>
           </TabsList>
 
           <TabsContent value="leaderboard">
