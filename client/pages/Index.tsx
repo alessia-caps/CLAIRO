@@ -485,50 +485,64 @@ export default function Index() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredEmployees.map((employee) => (
-                        <tr
-                          key={employee.id}
-                          className="border-b hover:bg-slate-50"
-                        >
-                          <td className="py-3 px-4">
-                            <div className="flex items-center">
-                              <span className="font-bold text-primary">
-                                #{employee.rank}
-                              </span>
-                              {employee.rank <= 3 && (
-                                <Trophy className="h-4 w-4 ml-2 text-yellow-500" />
-                              )}
+                      {filteredEmployees.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-12 text-center text-slate-500">
+                            <div className="flex flex-col items-center space-y-3">
+                              <Upload className="h-12 w-12 text-slate-300" />
+                              <div>
+                                <p className="font-medium">No engagement data available</p>
+                                <p className="text-sm">Upload your Excel engagement tracker to view employee rankings</p>
+                              </div>
                             </div>
                           </td>
-                          <td className="py-3 px-4 font-medium">
-                            {employee.name}
-                          </td>
-                          <td className="py-3 px-4">{employee.department}</td>
-                          <td className="py-3 px-4 text-right font-bold">
-                            {employee.dailyPoints}
-                          </td>
-                          <td className="py-3 px-4 text-right font-bold">
-                            {employee.weeklyPoints}
-                          </td>
-                          <td className="py-3 px-4">
-                            <Badge
-                              variant={
-                                employee.engagementLevel === "Highly Engaged"
-                                  ? "default"
-                                  : employee.engagementLevel === "Engaged"
-                                    ? "secondary"
-                                    : employee.engagementLevel ===
-                                        "Needs Improvement"
-                                      ? "outline"
-                                      : "destructive"
-                              }
-                              className="text-xs"
-                            >
-                              {employee.engagementLevel}
-                            </Badge>
-                          </td>
                         </tr>
-                      ))}
+                      ) : (
+                        filteredEmployees.map((employee) => (
+                          <tr
+                            key={employee.id}
+                            className="border-b hover:bg-slate-50"
+                          >
+                            <td className="py-3 px-4">
+                              <div className="flex items-center">
+                                <span className="font-bold text-primary">
+                                  #{employee.rank}
+                                </span>
+                                {employee.rank <= 3 && (
+                                  <Trophy className="h-4 w-4 ml-2 text-yellow-500" />
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 font-medium">
+                              {employee.name}
+                            </td>
+                            <td className="py-3 px-4">{employee.department}</td>
+                            <td className="py-3 px-4 text-right font-bold">
+                              {employee.dailyPoints}
+                            </td>
+                            <td className="py-3 px-4 text-right font-bold">
+                              {employee.weeklyPoints}
+                            </td>
+                            <td className="py-3 px-4">
+                              <Badge
+                                variant={
+                                  employee.engagementLevel === "Highly Engaged"
+                                    ? "default"
+                                    : employee.engagementLevel === "Engaged"
+                                      ? "secondary"
+                                      : employee.engagementLevel ===
+                                          "Needs Improvement"
+                                        ? "outline"
+                                        : "destructive"
+                                }
+                                className="text-xs"
+                              >
+                                {employee.engagementLevel}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -555,45 +569,59 @@ export default function Index() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredEmployees.map((employee) => (
-                        <tr
-                          key={employee.id}
-                          className="border-b hover:bg-slate-50"
-                        >
-                          <td className="py-3 px-4 font-medium">
-                            {employee.name}
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            {employee.eventScore}/100
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            {employee.veScore}/100
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            {employee.surveyScore}/100
-                          </td>
-                          <td className="py-3 px-4 text-right font-bold">
-                            {employee.weightedScore}
-                          </td>
-                          <td className="py-3 px-4">
-                            <Badge
-                              variant={
-                                employee.engagementLevel === "Highly Engaged"
-                                  ? "default"
-                                  : employee.engagementLevel === "Engaged"
-                                    ? "secondary"
-                                    : employee.engagementLevel ===
-                                        "Needs Improvement"
-                                      ? "outline"
-                                      : "destructive"
-                              }
-                              className="text-xs"
-                            >
-                              {employee.engagementLevel}
-                            </Badge>
+                      {filteredEmployees.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-12 text-center text-slate-500">
+                            <div className="flex flex-col items-center space-y-3">
+                              <Upload className="h-12 w-12 text-slate-300" />
+                              <div>
+                                <p className="font-medium">No engagement data available</p>
+                                <p className="text-sm">Upload your Excel engagement tracker to view quad scores</p>
+                              </div>
+                            </div>
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        filteredEmployees.map((employee) => (
+                          <tr
+                            key={employee.id}
+                            className="border-b hover:bg-slate-50"
+                          >
+                            <td className="py-3 px-4 font-medium">
+                              {employee.name}
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              {employee.eventScore}/100
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              {employee.veScore}/100
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              {employee.surveyScore}/100
+                            </td>
+                            <td className="py-3 px-4 text-right font-bold">
+                              {employee.weightedScore}
+                            </td>
+                            <td className="py-3 px-4">
+                              <Badge
+                                variant={
+                                  employee.engagementLevel === "Highly Engaged"
+                                    ? "default"
+                                    : employee.engagementLevel === "Engaged"
+                                      ? "secondary"
+                                      : employee.engagementLevel ===
+                                          "Needs Improvement"
+                                        ? "outline"
+                                        : "destructive"
+                                }
+                                className="text-xs"
+                              >
+                                {employee.engagementLevel}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
