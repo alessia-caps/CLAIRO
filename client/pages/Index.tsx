@@ -79,6 +79,8 @@ export default function Index() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedWeek, setSelectedWeek] = useState("current");
+  const [uploadedEmployees, setUploadedEmployees] = useState<Employee[]>([]);
+  const [dataSource, setDataSource] = useState<"mock" | "uploaded">("mock");
 
   // Mock data - in a real app, this would come from your backend
   const engagementData: EngagementData = {
