@@ -6,6 +6,40 @@ interface UploadedData {
   weeklyData?: any[];
   quadScores?: any[];
   miniGames?: any[];
+  weeklyAnalysis?: WeeklyAnalysis[];
+}
+
+interface DailyActivity {
+  id: string;
+  date: Date;
+  dateString: string;
+  week: number;
+  year: number;
+  employeeName: string;
+  department: string;
+  postsCreated: number;
+  commentsMade: number;
+  reactionsGiven: number;
+  postsShared: number;
+  dailyPoints: number;
+}
+
+interface WeeklyAnalysis {
+  week: number;
+  year: number;
+  weekStart: Date;
+  weekEnd: Date;
+  totalActivities: {
+    posts: number;
+    comments: number;
+    reactions: number;
+    shares: number;
+  };
+  totalPoints: number;
+  participantCount: number;
+  averagePointsPerEmployee: number;
+  topDepartment: string;
+  mostActiveDay: string;
 }
 
 interface ParsedEmployee {
@@ -24,6 +58,7 @@ interface ParsedEmployee {
     | "Engaged"
     | "Needs Improvement"
     | "At-Risk";
+  activities?: DailyActivity[];
 }
 
 export function useCSVUpload() {
