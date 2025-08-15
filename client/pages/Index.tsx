@@ -225,30 +225,11 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
-                  <Activity className="h-6 w-6 text-white" />
-                </div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  CLAIRO
-                </h1>
-              </div>
-              <Badge variant="outline" className="text-xs">
-                Engagement Dashboard
-              </Badge>
-            </div>
-            <CSVUploadDialog onDataUploaded={handleDataUploaded} />
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-6">
+    <div className="space-y-6">
+      {/* Upload Button */}
+      <div className="flex justify-end">
+        <CSVUploadDialog onDataUploaded={handleDataUploaded} />
+      </div>
         {/* Data Source Indicator */}
         {dataSource === "uploaded" && (
           <Alert className="mb-6 bg-green-50 border-green-200">
@@ -855,7 +836,6 @@ export default function Index() {
             )}
           </CardContent>
         </Card>
-      </div>
     </div>
   );
 }
