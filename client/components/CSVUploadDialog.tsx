@@ -25,7 +25,7 @@ export function CSVUploadDialog({
 }: CSVUploadDialogProps) {
   const [open, setOpen] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const { uploadFile, isUploading, uploadError, clearError } = useCSVUpload();
+  const { uploadFile, isUploading, uploadError, uploadedData, clearError } = useCSVUpload();
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
