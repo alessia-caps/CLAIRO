@@ -15,7 +15,7 @@ import { useCSVUpload } from "@/hooks/use-csv-upload";
 import { Upload, FileText, CheckCircle, AlertCircle, X } from "lucide-react";
 
 interface CSVUploadDialogProps {
-  onDataUploaded: (data: any[]) => void;
+  onDataUploaded: (data: any[], weeklyAnalysis?: any[]) => void;
   trigger?: React.ReactNode;
 }
 
