@@ -3,16 +3,15 @@ import { Laptop, CheckCircle, AlertTriangle, Package } from "lucide-react";
 
 export default function LaptopInventory() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex-1 space-y-6 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Laptop Inventory</h1>
-            <p className="text-muted-foreground">
-              Manage and track company laptop inventory and assignments
-            </p>
-          </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Laptop Inventory</h1>
+          <p className="text-muted-foreground">
+            Manage and track company laptop inventory and assignments
+          </p>
         </div>
+      </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card>
@@ -78,7 +77,6 @@ export default function LaptopInventory() {
             </p>
           </CardContent>
         </Card>
-      </main>
     </div>
   );
 }
