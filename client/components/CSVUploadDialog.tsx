@@ -58,7 +58,7 @@ export function CSVUploadDialog({
 
     try {
       const data = await uploadFile(file);
-      onDataUploaded(data);
+      onDataUploaded(data, uploadedData?.weeklyAnalysis);
       setOpen(false);
     } catch (error) {
       // Error is handled by the hook
