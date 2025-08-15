@@ -3,16 +3,15 @@ import { Users, TrendingDown, TrendingUp } from "lucide-react";
 
 export default function RetentionTurnover() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex-1 space-y-6 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Retention and Turnover</h1>
-            <p className="text-muted-foreground">
-              Track employee retention rates and turnover analytics
-            </p>
-          </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Retention and Turnover</h1>
+          <p className="text-muted-foreground">
+            Track employee retention rates and turnover analytics
+          </p>
         </div>
+      </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
@@ -65,7 +64,6 @@ export default function RetentionTurnover() {
             </p>
           </CardContent>
         </Card>
-      </main>
     </div>
   );
 }
