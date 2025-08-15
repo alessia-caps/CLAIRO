@@ -156,6 +156,111 @@ export function useCSVUpload() {
     return posts * 5 + comments * 4 + reactions * 2 + shares * 2;
   };
 
+  const processDailyActivities = (sheets: { [sheetName: string]: any[] }): DailyActivity[] => {
+    const activities: DailyActivity[] = [];
+    const dailyVETracker = sheets["Daily VE tracker"] || sheets["Daily VE Tracker"] || [];
+
+    dailyVETracker.forEach((row: any, index: number) => {
+      const dateStr = row["Date"];
+      const employeeName = row["Employee Name"];
+      const department = row["BU/GBU"];
+
+      if (!dateStr || !employeeName) return;
+
+      const date = parseDate(dateStr);
+      if (!date) return;
+
+      const { week, year } = getWeekNumber(date);
+      const posts = parseInt(row["Posts Created"] || "0");
+      const comments = parseInt(row["Comments Made"] || "0");
+      const reactions = parseInt(row["Reactions Given"] || "0");
+      const shares = parseInt(row["Posts of Others Shared"] || "0");
+      const dailyPoints = calculateDailyPoints(posts, comments, reactions, shares);
+
+      activities.push({
+        id: `activity-${index}`,
+        date,
+        dateString: dateStr,
+        week,
+        year,
+        employeeName,
+        department: department || "Unknown",
+        postsCreated: posts,
+        commentsMade: comments,
+        reactionsGiven: reactions,
+        postsShared: shares,
+        dailyPoints,
+      });
+    });
+
+    return activities;
+  };
+
+  const analyzeWeeklyPerformance = (activities: DailyActivity[]): WeeklyAnalysis[] => {
+    const weeklyData = new Map<string, WeeklyAnalysis>();
+
+    activities.forEach((activity) => {
+      const weekKey = `${activity.year}-W${activity.week}`;
+
+      if (!weeklyData.has(weekKey)) {
+        const { start, end } = getWeekBounds(activity.week, activity.year);
+        weeklyData.set(weekKey, {
+          week: activity.week,
+          year: activity.year,
+          weekStart: start,
+          weekEnd: end,
+          totalActivities: { posts: 0, comments: 0, reactions: 0, shares: 0 },
+          totalPoints: 0,
+          participantCount: 0,
+          averagePointsPerEmployee: 0,
+          topDepartment: "",
+          mostActiveDay: "",
+        });
+      }
+
+      const weekData = weeklyData.get(weekKey)!;
+      weekData.totalActivities.posts += activity.postsCreated;
+      weekData.totalActivities.comments += activity.commentsMade;
+      weekData.totalActivities.reactions += activity.reactionsGiven;
+      weekData.totalActivities.shares += activity.postsShared;
+      weekData.totalPoints += activity.dailyPoints;
+    });
+
+    // Calculate additional metrics
+    weeklyData.forEach((weekData, weekKey) => {
+      const weekActivities = activities.filter(a => `${a.year}-W${a.week}` === weekKey);
+      const uniqueEmployees = new Set(weekActivities.map(a => a.employeeName));
+      weekData.participantCount = uniqueEmployees.size;
+      weekData.averagePointsPerEmployee = weekData.participantCount > 0
+        ? weekData.totalPoints / weekData.participantCount
+        : 0;
+
+      // Find top department
+      const deptPoints = new Map<string, number>();
+      weekActivities.forEach(activity => {
+        deptPoints.set(activity.department, (deptPoints.get(activity.department) || 0) + activity.dailyPoints);
+      });
+      const topDept = Array.from(deptPoints.entries()).reduce((max, curr) =>
+        curr[1] > max[1] ? curr : max, ["", 0]);
+      weekData.topDepartment = topDept[0];
+
+      // Find most active day
+      const dayPoints = new Map<string, number>();
+      weekActivities.forEach(activity => {
+        const dayKey = activity.date.toLocaleDateString();
+        dayPoints.set(dayKey, (dayPoints.get(dayKey) || 0) + activity.dailyPoints);
+      });
+      const mostActiveDay = Array.from(dayPoints.entries()).reduce((max, curr) =>
+        curr[1] > max[1] ? curr : max, ["", 0]);
+      weekData.mostActiveDay = mostActiveDay[0];
+    });
+
+    return Array.from(weeklyData.values()).sort((a, b) => {
+      if (a.year !== b.year) return b.year - a.year;
+      return b.week - a.week;
+    });
+  };
+
   const processExcelData = (sheets: {
     [sheetName: string]: any[];
   }): ParsedEmployee[] => {
