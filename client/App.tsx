@@ -28,7 +28,10 @@ const App = () => (
             <Route path="/retention-turnover" element={<RetentionTurnover />} />
             <Route path="/ot-leave-claims" element={<OTLeaveClaims />} />
             <Route path="/laptop-inventory" element={<LaptopInventory />} />
-            <Route path="/certification-training" element={<CertificationTraining />} />
+            <Route
+              path="/certification-training"
+              element={<CertificationTraining />}
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

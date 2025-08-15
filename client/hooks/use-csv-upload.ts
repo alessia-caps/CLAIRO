@@ -84,23 +84,36 @@ export function useCSVUpload() {
         return date;
       }
     } catch (error) {
-      console.warn('Could not parse date:', dateString);
+      console.warn("Could not parse date:", dateString);
     }
     return null;
   };
 
   const getWeekNumber = (date: Date): { week: number; year: number } => {
-    const tempDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const tempDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+    );
     const dayOfWeek = tempDate.getDay();
-    tempDate.setDate(tempDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
+    tempDate.setDate(
+      tempDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1),
+    );
     const yearStart = new Date(tempDate.getFullYear(), 0, 1);
-    const weekNumber = Math.ceil((((tempDate.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    const weekNumber = Math.ceil(
+      ((tempDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+    );
     return { week: weekNumber, year: tempDate.getFullYear() };
   };
 
-  const getWeekBounds = (weekNumber: number, year: number): { start: Date; end: Date } => {
+  const getWeekBounds = (
+    weekNumber: number,
+    year: number,
+  ): { start: Date; end: Date } => {
     const yearStart = new Date(year, 0, 1);
-    const weekStart = new Date(yearStart.getTime() + (weekNumber - 1) * 7 * 24 * 60 * 60 * 1000);
+    const weekStart = new Date(
+      yearStart.getTime() + (weekNumber - 1) * 7 * 24 * 60 * 60 * 1000,
+    );
     const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
     return { start: weekStart, end: weekEnd };
   };
@@ -156,9 +169,12 @@ export function useCSVUpload() {
     return posts * 5 + comments * 4 + reactions * 2 + shares * 2;
   };
 
-  const processDailyActivities = (sheets: { [sheetName: string]: any[] }): DailyActivity[] => {
+  const processDailyActivities = (sheets: {
+    [sheetName: string]: any[];
+  }): DailyActivity[] => {
     const activities: DailyActivity[] = [];
-    const dailyVETracker = sheets["Daily VE tracker"] || sheets["Daily VE Tracker"] || [];
+    const dailyVETracker =
+      sheets["Daily VE tracker"] || sheets["Daily VE Tracker"] || [];
 
     dailyVETracker.forEach((row: any, index: number) => {
       const dateStr = row["Date"];
@@ -175,7 +191,12 @@ export function useCSVUpload() {
       const comments = parseInt(row["Comments Made"] || "0");
       const reactions = parseInt(row["Reactions Given"] || "0");
       const shares = parseInt(row["Posts of Others Shared"] || "0");
-      const dailyPoints = calculateDailyPoints(posts, comments, reactions, shares);
+      const dailyPoints = calculateDailyPoints(
+        posts,
+        comments,
+        reactions,
+        shares,
+      );
 
       activities.push({
         id: `activity-${index}`,
@@ -196,7 +217,9 @@ export function useCSVUpload() {
     return activities;
   };
 
-  const analyzeWeeklyPerformance = (activities: DailyActivity[]): WeeklyAnalysis[] => {
+  const analyzeWeeklyPerformance = (
+    activities: DailyActivity[],
+  ): WeeklyAnalysis[] => {
     const weeklyData = new Map<string, WeeklyAnalysis>();
 
     activities.forEach((activity) => {
@@ -228,30 +251,45 @@ export function useCSVUpload() {
 
     // Calculate additional metrics
     weeklyData.forEach((weekData, weekKey) => {
-      const weekActivities = activities.filter(a => `${a.year}-W${a.week}` === weekKey);
-      const uniqueEmployees = new Set(weekActivities.map(a => a.employeeName));
+      const weekActivities = activities.filter(
+        (a) => `${a.year}-W${a.week}` === weekKey,
+      );
+      const uniqueEmployees = new Set(
+        weekActivities.map((a) => a.employeeName),
+      );
       weekData.participantCount = uniqueEmployees.size;
-      weekData.averagePointsPerEmployee = weekData.participantCount > 0
-        ? weekData.totalPoints / weekData.participantCount
-        : 0;
+      weekData.averagePointsPerEmployee =
+        weekData.participantCount > 0
+          ? weekData.totalPoints / weekData.participantCount
+          : 0;
 
       // Find top department
       const deptPoints = new Map<string, number>();
-      weekActivities.forEach(activity => {
-        deptPoints.set(activity.department, (deptPoints.get(activity.department) || 0) + activity.dailyPoints);
+      weekActivities.forEach((activity) => {
+        deptPoints.set(
+          activity.department,
+          (deptPoints.get(activity.department) || 0) + activity.dailyPoints,
+        );
       });
-      const topDept = Array.from(deptPoints.entries()).reduce((max, curr) =>
-        curr[1] > max[1] ? curr : max, ["", 0]);
+      const topDept = Array.from(deptPoints.entries()).reduce(
+        (max, curr) => (curr[1] > max[1] ? curr : max),
+        ["", 0],
+      );
       weekData.topDepartment = topDept[0];
 
       // Find most active day
       const dayPoints = new Map<string, number>();
-      weekActivities.forEach(activity => {
+      weekActivities.forEach((activity) => {
         const dayKey = activity.date.toLocaleDateString();
-        dayPoints.set(dayKey, (dayPoints.get(dayKey) || 0) + activity.dailyPoints);
+        dayPoints.set(
+          dayKey,
+          (dayPoints.get(dayKey) || 0) + activity.dailyPoints,
+        );
       });
-      const mostActiveDay = Array.from(dayPoints.entries()).reduce((max, curr) =>
-        curr[1] > max[1] ? curr : max, ["", 0]);
+      const mostActiveDay = Array.from(dayPoints.entries()).reduce(
+        (max, curr) => (curr[1] > max[1] ? curr : max),
+        ["", 0],
+      );
       weekData.mostActiveDay = mostActiveDay[0];
     });
 

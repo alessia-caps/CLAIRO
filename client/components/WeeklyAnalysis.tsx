@@ -1,15 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Calendar, 
-  TrendingUp, 
-  Users, 
+import {
+  Calendar,
+  TrendingUp,
+  Users,
   Trophy,
   Activity,
   MessageSquare,
   Heart,
   Share,
-  Target
+  Target,
 } from "lucide-react";
 
 interface WeeklyAnalysis {
@@ -53,28 +53,40 @@ export function WeeklyAnalysisComponent({ weeklyData }: WeeklyAnalysisProps) {
     );
   }
 
-  const mostProductiveWeek = weeklyData.reduce((max, current) => 
-    current.totalPoints > max.totalPoints ? current : max
+  const mostProductiveWeek = weeklyData.reduce((max, current) =>
+    current.totalPoints > max.totalPoints ? current : max,
   );
 
   const bestActivityWeek = {
-    posts: weeklyData.reduce((max, current) => 
-      current.totalActivities.posts > max.totalActivities.posts ? current : max
+    posts: weeklyData.reduce((max, current) =>
+      current.totalActivities.posts > max.totalActivities.posts ? current : max,
     ),
-    comments: weeklyData.reduce((max, current) => 
-      current.totalActivities.comments > max.totalActivities.comments ? current : max
+    comments: weeklyData.reduce((max, current) =>
+      current.totalActivities.comments > max.totalActivities.comments
+        ? current
+        : max,
     ),
-    reactions: weeklyData.reduce((max, current) => 
-      current.totalActivities.reactions > max.totalActivities.reactions ? current : max
+    reactions: weeklyData.reduce((max, current) =>
+      current.totalActivities.reactions > max.totalActivities.reactions
+        ? current
+        : max,
     ),
-    shares: weeklyData.reduce((max, current) => 
-      current.totalActivities.shares > max.totalActivities.shares ? current : max
-    )
+    shares: weeklyData.reduce((max, current) =>
+      current.totalActivities.shares > max.totalActivities.shares
+        ? current
+        : max,
+    ),
   };
 
   const formatWeekRange = (week: WeeklyAnalysis) => {
-    const start = new Date(week.weekStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const end = new Date(week.weekEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const start = new Date(week.weekStart).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+    const end = new Date(week.weekEnd).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
     return `${start} - ${end}`;
   };
 
@@ -130,7 +142,8 @@ export function WeeklyAnalysisComponent({ weeklyData }: WeeklyAnalysisProps) {
               <CardContent>
                 <div className="space-y-2">
                   <Badge variant="outline" className="bg-accent/10">
-                    Week {bestActivityWeek.posts.week}, {bestActivityWeek.posts.year}
+                    Week {bestActivityWeek.posts.week},{" "}
+                    {bestActivityWeek.posts.year}
                   </Badge>
                   <p className="text-xs text-muted-foreground">
                     {formatWeekRange(bestActivityWeek.posts)}
@@ -139,7 +152,10 @@ export function WeeklyAnalysisComponent({ weeklyData }: WeeklyAnalysisProps) {
                     {bestActivityWeek.posts.totalActivities.posts} posts
                   </div>
                   <p className="text-xs">
-                    {(bestActivityWeek.posts.totalActivities.posts * 5).toLocaleString()} points from posts
+                    {(
+                      bestActivityWeek.posts.totalActivities.posts * 5
+                    ).toLocaleString()}{" "}
+                    points from posts
                   </p>
                 </div>
               </CardContent>
@@ -156,16 +172,21 @@ export function WeeklyAnalysisComponent({ weeklyData }: WeeklyAnalysisProps) {
               <CardContent>
                 <div className="space-y-2">
                   <Badge variant="outline" className="bg-blue-100">
-                    Week {bestActivityWeek.comments.week}, {bestActivityWeek.comments.year}
+                    Week {bestActivityWeek.comments.week},{" "}
+                    {bestActivityWeek.comments.year}
                   </Badge>
                   <p className="text-xs text-muted-foreground">
                     {formatWeekRange(bestActivityWeek.comments)}
                   </p>
                   <div className="text-lg font-bold text-blue-900">
-                    {bestActivityWeek.comments.totalActivities.comments} comments
+                    {bestActivityWeek.comments.totalActivities.comments}{" "}
+                    comments
                   </div>
                   <p className="text-xs">
-                    {(bestActivityWeek.comments.totalActivities.comments * 4).toLocaleString()} points from comments
+                    {(
+                      bestActivityWeek.comments.totalActivities.comments * 4
+                    ).toLocaleString()}{" "}
+                    points from comments
                   </p>
                 </div>
               </CardContent>
@@ -182,16 +203,21 @@ export function WeeklyAnalysisComponent({ weeklyData }: WeeklyAnalysisProps) {
               <CardContent>
                 <div className="space-y-2">
                   <Badge variant="outline" className="bg-red-100">
-                    Week {bestActivityWeek.reactions.week}, {bestActivityWeek.reactions.year}
+                    Week {bestActivityWeek.reactions.week},{" "}
+                    {bestActivityWeek.reactions.year}
                   </Badge>
                   <p className="text-xs text-muted-foreground">
                     {formatWeekRange(bestActivityWeek.reactions)}
                   </p>
                   <div className="text-lg font-bold text-red-900">
-                    {bestActivityWeek.reactions.totalActivities.reactions} reactions
+                    {bestActivityWeek.reactions.totalActivities.reactions}{" "}
+                    reactions
                   </div>
                   <p className="text-xs">
-                    {(bestActivityWeek.reactions.totalActivities.reactions * 2).toLocaleString()} points from reactions
+                    {(
+                      bestActivityWeek.reactions.totalActivities.reactions * 2
+                    ).toLocaleString()}{" "}
+                    points from reactions
                   </p>
                 </div>
               </CardContent>
@@ -208,7 +234,8 @@ export function WeeklyAnalysisComponent({ weeklyData }: WeeklyAnalysisProps) {
               <CardContent>
                 <div className="space-y-2">
                   <Badge variant="outline" className="bg-green-100">
-                    Week {bestActivityWeek.shares.week}, {bestActivityWeek.shares.year}
+                    Week {bestActivityWeek.shares.week},{" "}
+                    {bestActivityWeek.shares.year}
                   </Badge>
                   <p className="text-xs text-muted-foreground">
                     {formatWeekRange(bestActivityWeek.shares)}
@@ -217,7 +244,10 @@ export function WeeklyAnalysisComponent({ weeklyData }: WeeklyAnalysisProps) {
                     {bestActivityWeek.shares.totalActivities.shares} shares
                   </div>
                   <p className="text-xs">
-                    {(bestActivityWeek.shares.totalActivities.shares * 2).toLocaleString()} points from shares
+                    {(
+                      bestActivityWeek.shares.totalActivities.shares * 2
+                    ).toLocaleString()}{" "}
+                    points from shares
                   </p>
                 </div>
               </CardContent>
@@ -237,13 +267,26 @@ export function WeeklyAnalysisComponent({ weeklyData }: WeeklyAnalysisProps) {
                     {weeklyData.length} weeks
                   </div>
                   <p className="text-xs">
-                    Total: {weeklyData.reduce((sum, week) => sum + week.totalPoints, 0).toLocaleString()} points
+                    Total:{" "}
+                    {weeklyData
+                      .reduce((sum, week) => sum + week.totalPoints, 0)
+                      .toLocaleString()}{" "}
+                    points
                   </p>
                   <p className="text-xs">
-                    Avg per week: {Math.round(weeklyData.reduce((sum, week) => sum + week.totalPoints, 0) / weeklyData.length).toLocaleString()} points
+                    Avg per week:{" "}
+                    {Math.round(
+                      weeklyData.reduce(
+                        (sum, week) => sum + week.totalPoints,
+                        0,
+                      ) / weeklyData.length,
+                    ).toLocaleString()}{" "}
+                    points
                   </p>
                   <p className="text-xs">
-                    Peak participation: {Math.max(...weeklyData.map(w => w.participantCount))} employees
+                    Peak participation:{" "}
+                    {Math.max(...weeklyData.map((w) => w.participantCount))}{" "}
+                    employees
                   </p>
                 </div>
               </CardContent>
@@ -278,7 +321,10 @@ export function WeeklyAnalysisComponent({ weeklyData }: WeeklyAnalysisProps) {
               </thead>
               <tbody>
                 {weeklyData.map((week, index) => (
-                  <tr key={`${week.year}-W${week.week}`} className="border-b hover:bg-muted/50">
+                  <tr
+                    key={`${week.year}-W${week.week}`}
+                    className="border-b hover:bg-muted/50"
+                  >
                     <td className="p-2 font-medium">
                       Week {week.week}, {week.year}
                     </td>
@@ -288,9 +334,7 @@ export function WeeklyAnalysisComponent({ weeklyData }: WeeklyAnalysisProps) {
                     <td className="p-2 text-right font-medium">
                       {week.totalPoints.toLocaleString()}
                     </td>
-                    <td className="p-2 text-right">
-                      {week.participantCount}
-                    </td>
+                    <td className="p-2 text-right">{week.participantCount}</td>
                     <td className="p-2 text-right">
                       {week.totalActivities.posts}
                     </td>
@@ -303,9 +347,7 @@ export function WeeklyAnalysisComponent({ weeklyData }: WeeklyAnalysisProps) {
                     <td className="p-2 text-right">
                       {week.totalActivities.shares}
                     </td>
-                    <td className="p-2">
-                      {week.topDepartment}
-                    </td>
+                    <td className="p-2">{week.topDepartment}</td>
                   </tr>
                 ))}
               </tbody>

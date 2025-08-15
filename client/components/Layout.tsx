@@ -57,23 +57,23 @@ export function Layout({ children }: LayoutProps) {
 
   const downloadSampleExcel = async () => {
     try {
-      const response = await fetch('/api/sample-excel');
+      const response = await fetch("/api/sample-excel");
       if (!response.ok) {
-        throw new Error('Failed to download sample file');
+        throw new Error("Failed to download sample file");
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = 'bneXt_Sample_Data.xlsx';
+      a.download = "bneXt_Sample_Data.xlsx";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading sample file:', error);
-      alert('Failed to download sample file. Please try again.');
+      console.error("Error downloading sample file:", error);
+      alert("Failed to download sample file. Please try again.");
     }
   };
 
@@ -109,7 +109,8 @@ export function Layout({ children }: LayoutProps) {
           <SidebarTrigger className="-ml-1" />
           <div className="h-4 w-px bg-sidebar-border mx-2" />
           <h1 className="text-lg font-semibold flex-1">
-            {menuItems.find(item => item.path === location.pathname)?.title || "Dashboard"}
+            {menuItems.find((item) => item.path === location.pathname)?.title ||
+              "Dashboard"}
           </h1>
           <Button
             variant="outline"
@@ -121,9 +122,7 @@ export function Layout({ children }: LayoutProps) {
             Download Sample Excel
           </Button>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">
-          {children}
-        </div>
+        <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
