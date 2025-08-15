@@ -720,6 +720,10 @@ export default function Index() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="weekly-analysis">
+            <WeeklyAnalysisComponent weeklyData={weeklyAnalysis} />
+          </TabsContent>
+
           <TabsContent value="mini-games">
             <Card>
               <CardHeader>
