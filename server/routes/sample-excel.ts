@@ -96,7 +96,7 @@ export const generateSampleExcel: RequestHandler = (req, res) => {
         "Event Participation Score (out of 100)": 92,
         "Viva Engage Score (out of 100)": 88,
         "Pulse Survey Score (out of 100)": 90,
-        "Weighted Level": 90.0,
+        "Weighted Score": 90.0,
         "Engagement Level": "Highly Engaged"
       },
       {
