@@ -66,6 +66,45 @@ export function useCSVUpload() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadedData, setUploadedData] = useState<UploadedData | null>(null);
 
+  // Utility functions for date handling
+  const parseDate = (dateString: string): Date | null => {
+    // Try different date formats
+    const formats = [
+      /^\d{4}-\d{2}-\d{2}$/, // YYYY-MM-DD
+      /^\d{2}\/\d{2}\/\d{4}$/, // MM/DD/YYYY
+      /^\d{2}-\d{2}-\d{4}$/, // MM-DD-YYYY
+      /^[A-Za-z]+ \d{1,2}, \d{4}$/, // April 28, 2025
+    ];
+
+    if (!dateString) return null;
+
+    try {
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    } catch (error) {
+      console.warn('Could not parse date:', dateString);
+    }
+    return null;
+  };
+
+  const getWeekNumber = (date: Date): { week: number; year: number } => {
+    const tempDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const dayOfWeek = tempDate.getDay();
+    tempDate.setDate(tempDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
+    const yearStart = new Date(tempDate.getFullYear(), 0, 1);
+    const weekNumber = Math.ceil((((tempDate.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    return { week: weekNumber, year: tempDate.getFullYear() };
+  };
+
+  const getWeekBounds = (weekNumber: number, year: number): { start: Date; end: Date } => {
+    const yearStart = new Date(year, 0, 1);
+    const weekStart = new Date(yearStart.getTime() + (weekNumber - 1) * 7 * 24 * 60 * 60 * 1000);
+    const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+    return { start: weekStart, end: weekEnd };
+  };
+
   const parseExcel = async (
     file: File,
   ): Promise<{ [sheetName: string]: any[] }> => {
