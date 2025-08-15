@@ -29,6 +29,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { CSVUploadDialog } from "@/components/CSVUploadDialog";
+import { WeeklyAnalysisComponent } from "@/components/WeeklyAnalysis";
 
 interface EngagementData {
   totalParticipants: number;
