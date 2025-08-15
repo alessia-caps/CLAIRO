@@ -66,7 +66,7 @@ export function Layout({ children }: LayoutProps) {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'CLAIRO_Sample_Data.xlsx';
+      a.download = 'bneXt_Sample_Data.xlsx';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

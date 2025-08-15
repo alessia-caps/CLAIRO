@@ -145,7 +145,7 @@ export const generateSampleExcel: RequestHandler = (req, res) => {
     });
 
     // Set headers for file download
-    res.setHeader('Content-Disposition', 'attachment; filename="CLAIRO_Sample_Data.xlsx"');
+    res.setHeader('Content-Disposition', 'attachment; filename="bneXt_Sample_Data.xlsx"');
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Length', buffer.length);
 
