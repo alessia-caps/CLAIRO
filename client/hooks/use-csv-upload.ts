@@ -465,10 +465,15 @@ export function useCSVUpload() {
           );
         }
 
+        // Process daily activities and weekly analysis
+        const dailyActivities = processDailyActivities(sheets);
+        const weeklyAnalysis = analyzeWeeklyPerformance(dailyActivities);
+
         setUploadedData((prev) => ({
           ...prev,
           dailyLogs: processedData,
           quadScores: processedData,
+          weeklyAnalysis: weeklyAnalysis,
         }));
       } else if (file.name.endsWith(".csv")) {
         // Handle CSV files
