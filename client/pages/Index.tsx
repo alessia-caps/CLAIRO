@@ -81,6 +81,7 @@ export default function Index() {
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedWeek, setSelectedWeek] = useState("current");
   const [uploadedEmployees, setUploadedEmployees] = useState<Employee[]>([]);
+  const [weeklyAnalysis, setWeeklyAnalysis] = useState<any[]>([]);
   const [dataSource, setDataSource] = useState<"empty" | "uploaded">("empty");
 
   // Calculate engagement data from uploaded employees
