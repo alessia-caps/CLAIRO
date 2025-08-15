@@ -221,8 +221,11 @@ export default function Index() {
     return matchesSearch && matchesDepartment;
   });
 
-  const handleDataUploaded = (data: Employee[]) => {
+  const handleDataUploaded = (data: Employee[], weeklyAnalysis?: any[]) => {
     setUploadedEmployees(data);
+    if (weeklyAnalysis) {
+      setWeeklyAnalysis(weeklyAnalysis);
+    }
     setDataSource("uploaded");
   };
 
