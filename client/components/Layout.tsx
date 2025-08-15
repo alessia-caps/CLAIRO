@@ -10,12 +10,14 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import {
   Activity,
   Users,
   Clock,
   Laptop,
   GraduationCap,
+  Download,
 } from "lucide-react";
 
 const menuItems = [
@@ -53,6 +55,28 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
 
+  const downloadSampleExcel = async () => {
+    try {
+      const response = await fetch('/api/sample-excel');
+      if (!response.ok) {
+        throw new Error('Failed to download sample file');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'CLAIRO_Sample_Data.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading sample file:', error);
+      alert('Failed to download sample file. Please try again.');
+    }
+  };
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -84,9 +108,18 @@ export function Layout({ children }: LayoutProps) {
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <div className="h-4 w-px bg-sidebar-border mx-2" />
-          <h1 className="text-lg font-semibold">
+          <h1 className="text-lg font-semibold flex-1">
             {menuItems.find(item => item.path === location.pathname)?.title || "Dashboard"}
           </h1>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={downloadSampleExcel}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Download Sample Excel
+          </Button>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
           {children}
