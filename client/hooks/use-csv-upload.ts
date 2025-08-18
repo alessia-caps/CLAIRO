@@ -67,25 +67,67 @@ export function useCSVUpload() {
   const [uploadedData, setUploadedData] = useState<UploadedData | null>(null);
 
   // Utility functions for date handling
-  const parseDate = (dateString: string): Date | null => {
+  const parseDate = (dateString: string | number): Date | null => {
+    if (!dateString) return null;
+
+    // Handle Excel date serial numbers
+    if (typeof dateString === 'number') {
+      // Excel dates are stored as days since January 1, 1900
+      const excelEpoch = new Date(1900, 0, 1);
+      const date = new Date(excelEpoch.getTime() + (dateString - 1) * 24 * 60 * 60 * 1000);
+      console.log(`Parsed Excel serial date ${dateString} to:`, date.toISOString());
+      return date;
+    }
+
+    const dateStr = dateString.toString().trim();
+    console.log(`Parsing date string: "${dateStr}"`);
+
     // Try different date formats
     const formats = [
       /^\d{4}-\d{2}-\d{2}$/, // YYYY-MM-DD
       /^\d{2}\/\d{2}\/\d{4}$/, // MM/DD/YYYY
+      /^\d{1,2}\/\d{1,2}\/\d{4}$/, // M/D/YYYY
       /^\d{2}-\d{2}-\d{4}$/, // MM-DD-YYYY
+      /^\d{1,2}-\d{1,2}-\d{4}$/, // M-D-YYYY
       /^[A-Za-z]+ \d{1,2}, \d{4}$/, // April 28, 2025
+      /^\d{1,2}\/\d{1,2}\/\d{2}$/, // M/D/YY
     ];
 
-    if (!dateString) return null;
-
     try {
-      const date = new Date(dateString);
-      if (!isNaN(date.getTime())) {
+      // First try direct parsing
+      const date = new Date(dateStr);
+      if (!isNaN(date.getTime()) && date.getFullYear() > 1900) {
+        console.log(`Successfully parsed date "${dateStr}" to:`, date.toISOString());
         return date;
       }
+
+      // Try parsing MM/DD/YYYY format specifically
+      const mmddyyyy = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (mmddyyyy) {
+        const [, month, day, year] = mmddyyyy;
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        if (!isNaN(date.getTime())) {
+          console.log(`Parsed MM/DD/YYYY date "${dateStr}" to:`, date.toISOString());
+          return date;
+        }
+      }
+
+      // Try parsing DD/MM/YYYY format
+      const ddmmyyyy = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (ddmmyyyy) {
+        const [, day, month, year] = ddmmyyyy;
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        if (!isNaN(date.getTime())) {
+          console.log(`Parsed DD/MM/YYYY date "${dateStr}" to:`, date.toISOString());
+          return date;
+        }
+      }
+
     } catch (error) {
-      console.warn("Could not parse date:", dateString);
+      console.warn("Could not parse date:", dateStr, error);
     }
+
+    console.log(`Failed to parse date: "${dateStr}"`);
     return null;
   };
 
