@@ -204,24 +204,64 @@ export function useCSVUpload() {
     [sheetName: string]: any[];
   }): DailyActivity[] => {
     const activities: DailyActivity[] = [];
-    const dailyVETracker =
-      sheets["Daily VE tracker"] || sheets["Daily VE Tracker"] || [];
+
+    // Try multiple possible sheet names
+    const possibleSheetNames = [
+      "Daily VE tracker",
+      "Daily VE Tracker",
+      "DailyVETracker",
+      "Daily Tracker",
+      "Daily",
+      "Sheet1" // fallback for generic sheet names
+    ];
+
+    let dailyVETracker: any[] = [];
+    let foundSheetName = '';
+
+    for (const sheetName of possibleSheetNames) {
+      if (sheets[sheetName] && sheets[sheetName].length > 0) {
+        dailyVETracker = sheets[sheetName];
+        foundSheetName = sheetName;
+        break;
+      }
+    }
+
+    console.log(`Found daily tracker sheet: "${foundSheetName}" with ${dailyVETracker.length} rows`);
+
+    if (dailyVETracker.length === 0) {
+      console.log('Available sheets:', Object.keys(sheets));
+      // If no daily tracker found, try the first sheet with data
+      const firstSheetWithData = Object.keys(sheets).find(name => sheets[name].length > 0);
+      if (firstSheetWithData) {
+        console.log(`Using first available sheet: "${firstSheetWithData}"`);
+        dailyVETracker = sheets[firstSheetWithData];
+        foundSheetName = firstSheetWithData;
+      }
+    }
 
     dailyVETracker.forEach((row: any, index: number) => {
-      const dateStr = row["Date"];
-      const employeeName = row["Employee Name"];
-      const department = row["BU/GBU"];
+      const dateStr = row["Date"] || row["date"] || row["DATE"];
+      const employeeName = row["Employee Name"] || row["employee name"] || row["Name"] || row["name"];
+      const department = row["BU/GBU"] || row["Department"] || row["Dept"];
 
-      if (!dateStr || !employeeName) return;
+      console.log(`Row ${index}: Date="${dateStr}", Employee="${employeeName}", Dept="${department}"`);
+
+      if (!dateStr || !employeeName) {
+        console.log(`Skipping row ${index}: missing date or employee name`);
+        return;
+      }
 
       const date = parseDate(dateStr);
-      if (!date) return;
+      if (!date) {
+        console.log(`Skipping row ${index}: could not parse date "${dateStr}"`);
+        return;
+      }
 
       const { week, year } = getWeekNumber(date);
-      const posts = parseInt(row["Posts Created"] || "0");
-      const comments = parseInt(row["Comments Made"] || "0");
-      const reactions = parseInt(row["Reactions Given"] || "0");
-      const shares = parseInt(row["Posts of Others Shared"] || "0");
+      const posts = parseInt(row["Posts Created"] || row["posts created"] || "0");
+      const comments = parseInt(row["Comments Made"] || row["comments made"] || "0");
+      const reactions = parseInt(row["Reactions Given"] || row["reactions given"] || "0");
+      const shares = parseInt(row["Posts of Others Shared"] || row["shares"] || "0");
       const dailyPoints = calculateDailyPoints(
         posts,
         comments,
@@ -243,8 +283,11 @@ export function useCSVUpload() {
         postsShared: shares,
         dailyPoints,
       });
+
+      console.log(`Added activity for ${employeeName}: Week ${week}/${year}, Points: ${dailyPoints}`);
     });
 
+    console.log(`Total activities processed: ${activities.length}`);
     return activities;
   };
 
