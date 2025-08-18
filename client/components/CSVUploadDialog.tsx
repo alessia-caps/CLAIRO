@@ -59,7 +59,10 @@ export function CSVUploadDialog({
 
     try {
       const data = await uploadFile(file);
-      onDataUploaded(data, uploadedData?.weeklyAnalysis);
+      // Get the latest uploaded data which includes weekly analysis
+      const latestUploadedData = uploadedData;
+      console.log('Upload completed. Weekly analysis data:', latestUploadedData?.weeklyAnalysis);
+      onDataUploaded(data, latestUploadedData?.weeklyAnalysis);
       setOpen(false);
     } catch (error) {
       // Error is handled by the hook
