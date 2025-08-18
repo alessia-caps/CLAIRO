@@ -511,20 +511,31 @@ export function useCSVUpload() {
     return [];
   };
 
-  const uploadFile = async (file: File): Promise<ParsedEmployee[]> => {
+  const uploadFile = async (file: File): Promise<{ employees: ParsedEmployee[]; weeklyAnalysis?: WeeklyAnalysis[] }> => {
     setIsUploading(true);
     setUploadError(null);
 
     try {
       let processedData: ParsedEmployee[] = [];
+      let weeklyAnalysis: WeeklyAnalysis[] = [];
 
       if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
         // Handle Excel files
         const sheets = await parseExcel(file);
 
+        console.log('Excel sheets found:', Object.keys(sheets));
+
         if (Object.keys(sheets).length === 0) {
           throw new Error("No valid sheets found in the Excel file");
         }
+
+        // Debug: Log sheet contents
+        Object.keys(sheets).forEach(sheetName => {
+          console.log(`Sheet "${sheetName}" has ${sheets[sheetName].length} rows`);
+          if (sheets[sheetName].length > 0) {
+            console.log(`Sample row from "${sheetName}":`, sheets[sheetName][0]);
+          }
+        });
 
         processedData = processExcelData(sheets);
 
@@ -536,7 +547,10 @@ export function useCSVUpload() {
 
         // Process daily activities and weekly analysis
         const dailyActivities = processDailyActivities(sheets);
-        const weeklyAnalysis = analyzeWeeklyPerformance(dailyActivities);
+        console.log('Daily activities processed:', dailyActivities.length);
+
+        weeklyAnalysis = analyzeWeeklyPerformance(dailyActivities);
+        console.log('Weekly analysis generated:', weeklyAnalysis.length, weeklyAnalysis);
 
         setUploadedData((prev) => ({
           ...prev,
@@ -587,7 +601,7 @@ export function useCSVUpload() {
         throw new Error("Please upload an Excel (.xlsx) or CSV (.csv) file");
       }
 
-      return processedData;
+      return { employees: processedData, weeklyAnalysis };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to process the file";
