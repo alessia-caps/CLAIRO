@@ -121,17 +121,48 @@ export function useCSVUpload() {
   const parseExcel = async (
     file: File,
   ): Promise<{ [sheetName: string]: any[] }> => {
-    const buffer = await file.arrayBuffer();
-    const workbook = XLSX.read(buffer);
-    const result: { [sheetName: string]: any[] } = {};
+    try {
+      const buffer = await file.arrayBuffer();
 
-    workbook.SheetNames.forEach((sheetName) => {
-      const worksheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(worksheet);
-      result[sheetName] = data;
-    });
+      // Check if buffer is valid and not empty
+      if (!buffer || buffer.byteLength === 0) {
+        throw new Error("The uploaded file is empty or corrupted. Please try uploading a different file.");
+      }
 
-    return result;
+      // Check if file size is reasonable (not too large)
+      if (buffer.byteLength > 50 * 1024 * 1024) { // 50MB limit
+        throw new Error("File is too large. Please upload a file smaller than 50MB.");
+      }
+
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const result: { [sheetName: string]: any[] } = {};
+
+      if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+        throw new Error("No sheets found in the Excel file. Please ensure it's a valid Excel file.");
+      }
+
+      workbook.SheetNames.forEach((sheetName) => {
+        const worksheet = workbook.Sheets[sheetName];
+        if (worksheet) {
+          const data = XLSX.utils.sheet_to_json(worksheet);
+          result[sheetName] = data;
+        }
+      });
+
+      return result;
+    } catch (error) {
+      if (error instanceof Error) {
+        // Check for specific XLSX errors
+        if (error.message.includes("Bad compressed size") || error.message.includes("unsupported compression")) {
+          throw new Error("The Excel file appears to be corrupted or in an unsupported format. Please try re-saving the file as .xlsx and upload again.");
+        }
+        if (error.message.includes("not a valid zip file")) {
+          throw new Error("The file is not a valid Excel format. Please ensure you're uploading a .xlsx or .xls file.");
+        }
+        throw error;
+      }
+      throw new Error("Failed to read the Excel file. Please ensure it's a valid Excel file and try again.");
+    }
   };
 
   const parseCSV = (text: string): any[] => {
