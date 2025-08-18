@@ -71,11 +71,16 @@ export function useCSVUpload() {
     if (!dateString) return null;
 
     // Handle Excel date serial numbers
-    if (typeof dateString === 'number') {
+    if (typeof dateString === "number") {
       // Excel dates are stored as days since January 1, 1900
       const excelEpoch = new Date(1900, 0, 1);
-      const date = new Date(excelEpoch.getTime() + (dateString - 1) * 24 * 60 * 60 * 1000);
-      console.log(`Parsed Excel serial date ${dateString} to:`, date.toISOString());
+      const date = new Date(
+        excelEpoch.getTime() + (dateString - 1) * 24 * 60 * 60 * 1000,
+      );
+      console.log(
+        `Parsed Excel serial date ${dateString} to:`,
+        date.toISOString(),
+      );
       return date;
     }
 
@@ -97,7 +102,10 @@ export function useCSVUpload() {
       // First try direct parsing
       const date = new Date(dateStr);
       if (!isNaN(date.getTime()) && date.getFullYear() > 1900) {
-        console.log(`Successfully parsed date "${dateStr}" to:`, date.toISOString());
+        console.log(
+          `Successfully parsed date "${dateStr}" to:`,
+          date.toISOString(),
+        );
         return date;
       }
 
@@ -105,9 +113,16 @@ export function useCSVUpload() {
       const mmddyyyy = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
       if (mmddyyyy) {
         const [, month, day, year] = mmddyyyy;
-        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        const date = new Date(
+          parseInt(year),
+          parseInt(month) - 1,
+          parseInt(day),
+        );
         if (!isNaN(date.getTime())) {
-          console.log(`Parsed MM/DD/YYYY date "${dateStr}" to:`, date.toISOString());
+          console.log(
+            `Parsed MM/DD/YYYY date "${dateStr}" to:`,
+            date.toISOString(),
+          );
           return date;
         }
       }
@@ -116,13 +131,19 @@ export function useCSVUpload() {
       const ddmmyyyy = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
       if (ddmmyyyy) {
         const [, day, month, year] = ddmmyyyy;
-        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        const date = new Date(
+          parseInt(year),
+          parseInt(month) - 1,
+          parseInt(day),
+        );
         if (!isNaN(date.getTime())) {
-          console.log(`Parsed DD/MM/YYYY date "${dateStr}" to:`, date.toISOString());
+          console.log(
+            `Parsed DD/MM/YYYY date "${dateStr}" to:`,
+            date.toISOString(),
+          );
           return date;
         }
       }
-
     } catch (error) {
       console.warn("Could not parse date:", dateStr, error);
     }
@@ -168,19 +189,26 @@ export function useCSVUpload() {
 
       // Check if buffer is valid and not empty
       if (!buffer || buffer.byteLength === 0) {
-        throw new Error("The uploaded file is empty or corrupted. Please try uploading a different file.");
+        throw new Error(
+          "The uploaded file is empty or corrupted. Please try uploading a different file.",
+        );
       }
 
       // Check if file size is reasonable (not too large)
-      if (buffer.byteLength > 50 * 1024 * 1024) { // 50MB limit
-        throw new Error("File is too large. Please upload a file smaller than 50MB.");
+      if (buffer.byteLength > 50 * 1024 * 1024) {
+        // 50MB limit
+        throw new Error(
+          "File is too large. Please upload a file smaller than 50MB.",
+        );
       }
 
-      const workbook = XLSX.read(buffer, { type: 'array' });
+      const workbook = XLSX.read(buffer, { type: "array" });
       const result: { [sheetName: string]: any[] } = {};
 
       if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
-        throw new Error("No sheets found in the Excel file. Please ensure it's a valid Excel file.");
+        throw new Error(
+          "No sheets found in the Excel file. Please ensure it's a valid Excel file.",
+        );
       }
 
       workbook.SheetNames.forEach((sheetName) => {
@@ -195,15 +223,24 @@ export function useCSVUpload() {
     } catch (error) {
       if (error instanceof Error) {
         // Check for specific XLSX errors
-        if (error.message.includes("Bad compressed size") || error.message.includes("unsupported compression")) {
-          throw new Error("The Excel file appears to be corrupted or in an unsupported format. Please try re-saving the file as .xlsx and upload again.");
+        if (
+          error.message.includes("Bad compressed size") ||
+          error.message.includes("unsupported compression")
+        ) {
+          throw new Error(
+            "The Excel file appears to be corrupted or in an unsupported format. Please try re-saving the file as .xlsx and upload again.",
+          );
         }
         if (error.message.includes("not a valid zip file")) {
-          throw new Error("The file is not a valid Excel format. Please ensure you're uploading a .xlsx or .xls file.");
+          throw new Error(
+            "The file is not a valid Excel format. Please ensure you're uploading a .xlsx or .xls file.",
+          );
         }
         throw error;
       }
-      throw new Error("Failed to read the Excel file. Please ensure it's a valid Excel file and try again.");
+      throw new Error(
+        "Failed to read the Excel file. Please ensure it's a valid Excel file and try again.",
+      );
     }
   };
 
@@ -254,11 +291,11 @@ export function useCSVUpload() {
       "DailyVETracker",
       "Daily Tracker",
       "Daily",
-      "Sheet1" // fallback for generic sheet names
+      "Sheet1", // fallback for generic sheet names
     ];
 
     let dailyVETracker: any[] = [];
-    let foundSheetName = '';
+    let foundSheetName = "";
 
     for (const sheetName of possibleSheetNames) {
       if (sheets[sheetName] && sheets[sheetName].length > 0) {
@@ -268,12 +305,16 @@ export function useCSVUpload() {
       }
     }
 
-    console.log(`Found daily tracker sheet: "${foundSheetName}" with ${dailyVETracker.length} rows`);
+    console.log(
+      `Found daily tracker sheet: "${foundSheetName}" with ${dailyVETracker.length} rows`,
+    );
 
     if (dailyVETracker.length === 0) {
-      console.log('Available sheets:', Object.keys(sheets));
+      console.log("Available sheets:", Object.keys(sheets));
       // If no daily tracker found, try the first sheet with data
-      const firstSheetWithData = Object.keys(sheets).find(name => sheets[name].length > 0);
+      const firstSheetWithData = Object.keys(sheets).find(
+        (name) => sheets[name].length > 0,
+      );
       if (firstSheetWithData) {
         console.log(`Using first available sheet: "${firstSheetWithData}"`);
         dailyVETracker = sheets[firstSheetWithData];
@@ -283,10 +324,16 @@ export function useCSVUpload() {
 
     dailyVETracker.forEach((row: any, index: number) => {
       const dateStr = row["Date"] || row["date"] || row["DATE"];
-      const employeeName = row["Employee Name"] || row["employee name"] || row["Name"] || row["name"];
+      const employeeName =
+        row["Employee Name"] ||
+        row["employee name"] ||
+        row["Name"] ||
+        row["name"];
       const department = row["BU/GBU"] || row["Department"] || row["Dept"];
 
-      console.log(`Row ${index}: Date="${dateStr}", Employee="${employeeName}", Dept="${department}"`);
+      console.log(
+        `Row ${index}: Date="${dateStr}", Employee="${employeeName}", Dept="${department}"`,
+      );
 
       if (!dateStr || !employeeName) {
         console.log(`Skipping row ${index}: missing date or employee name`);
@@ -300,10 +347,18 @@ export function useCSVUpload() {
       }
 
       const { week, year } = getWeekNumber(date);
-      const posts = parseInt(row["Posts Created"] || row["posts created"] || "0");
-      const comments = parseInt(row["Comments Made"] || row["comments made"] || "0");
-      const reactions = parseInt(row["Reactions Given"] || row["reactions given"] || "0");
-      const shares = parseInt(row["Posts of Others Shared"] || row["shares"] || "0");
+      const posts = parseInt(
+        row["Posts Created"] || row["posts created"] || "0",
+      );
+      const comments = parseInt(
+        row["Comments Made"] || row["comments made"] || "0",
+      );
+      const reactions = parseInt(
+        row["Reactions Given"] || row["reactions given"] || "0",
+      );
+      const shares = parseInt(
+        row["Posts of Others Shared"] || row["shares"] || "0",
+      );
       const dailyPoints = calculateDailyPoints(
         posts,
         comments,
@@ -326,7 +381,9 @@ export function useCSVUpload() {
         dailyPoints,
       });
 
-      console.log(`Added activity for ${employeeName}: Week ${week}/${year}, Points: ${dailyPoints}`);
+      console.log(
+        `Added activity for ${employeeName}: Week ${week}/${year}, Points: ${dailyPoints}`,
+      );
     });
 
     console.log(`Total activities processed: ${activities.length}`);
@@ -596,7 +653,12 @@ export function useCSVUpload() {
     return [];
   };
 
-  const uploadFile = async (file: File): Promise<{ employees: ParsedEmployee[]; weeklyAnalysis?: WeeklyAnalysis[] }> => {
+  const uploadFile = async (
+    file: File,
+  ): Promise<{
+    employees: ParsedEmployee[];
+    weeklyAnalysis?: WeeklyAnalysis[];
+  }> => {
     setIsUploading(true);
     setUploadError(null);
 
@@ -608,17 +670,22 @@ export function useCSVUpload() {
         // Handle Excel files
         const sheets = await parseExcel(file);
 
-        console.log('Excel sheets found:', Object.keys(sheets));
+        console.log("Excel sheets found:", Object.keys(sheets));
 
         if (Object.keys(sheets).length === 0) {
           throw new Error("No valid sheets found in the Excel file");
         }
 
         // Debug: Log sheet contents
-        Object.keys(sheets).forEach(sheetName => {
-          console.log(`Sheet "${sheetName}" has ${sheets[sheetName].length} rows`);
+        Object.keys(sheets).forEach((sheetName) => {
+          console.log(
+            `Sheet "${sheetName}" has ${sheets[sheetName].length} rows`,
+          );
           if (sheets[sheetName].length > 0) {
-            console.log(`Sample row from "${sheetName}":`, sheets[sheetName][0]);
+            console.log(
+              `Sample row from "${sheetName}":`,
+              sheets[sheetName][0],
+            );
           }
         });
 
@@ -632,10 +699,14 @@ export function useCSVUpload() {
 
         // Process daily activities and weekly analysis
         const dailyActivities = processDailyActivities(sheets);
-        console.log('Daily activities processed:', dailyActivities.length);
+        console.log("Daily activities processed:", dailyActivities.length);
 
         weeklyAnalysis = analyzeWeeklyPerformance(dailyActivities);
-        console.log('Weekly analysis generated:', weeklyAnalysis.length, weeklyAnalysis);
+        console.log(
+          "Weekly analysis generated:",
+          weeklyAnalysis.length,
+          weeklyAnalysis,
+        );
 
         setUploadedData((prev) => ({
           ...prev,
