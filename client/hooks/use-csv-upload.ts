@@ -587,7 +587,7 @@ export function useCSVUpload() {
       if (!employees.has(employeeName)) {
         employees.set(employeeName, {
           name: employeeName,
-          department: "Unknown",
+          department: employeeDeptMap.get(employeeName.toLowerCase()) || "Unknown",
           dailyPoints: 0,
           weeklyPoints: 0,
           rank: 0,
