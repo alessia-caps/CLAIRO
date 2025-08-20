@@ -19,7 +19,7 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
-  app.get("/api/sample-excel", generateSampleExcel);
+  app.get("/api/sample-excel", handleSampleExcelDownload);
 
   return app;
 }
