@@ -175,7 +175,14 @@ export function CSVUploadDialog({
 
           {/* Sample Data Link */}
           <div className="text-center">
-            <Button variant="link" size="sm" className="text-xs">
+            <Button
+              variant="link"
+              size="sm"
+              className="text-xs"
+              onClick={() => {
+                window.open('/api/sample-excel', '_blank');
+              }}
+            >
               Download Sample Excel Template
             </Button>
           </div>
