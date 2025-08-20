@@ -83,7 +83,7 @@ export function Layout({ children }: LayoutProps) {
         <SidebarHeader>
           <div className="flex items-center gap-2 p-2">
             <Activity className="h-6 w-6" />
-            <span className="text-xl font-bold">bneXt</span>
+            <span className="text-xl font-bold">CLAIRO</span>
           </div>
         </SidebarHeader>
         <SidebarContent>
