@@ -88,7 +88,7 @@ export default function Index() {
   // Get unique departments from uploaded data
   const availableDepartments = React.useMemo(() => {
     const depts = new Set<string>();
-    uploadedEmployees.forEach(emp => {
+    uploadedEmployees.forEach((emp) => {
       if (emp.department && emp.department !== "Unknown") {
         depts.add(emp.department);
       }
@@ -331,7 +331,6 @@ export default function Index() {
         </Card>
       </div>
 
-
       {/* Charts and Visualizations */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Department Points Bar Chart */}
@@ -467,7 +466,9 @@ export default function Index() {
       <Tabs defaultValue="leaderboard" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="leaderboard">Department Overview</TabsTrigger>
-          <TabsTrigger value="quarterly-report">Quarterly Engagement Report</TabsTrigger>
+          <TabsTrigger value="quarterly-report">
+            Quarterly Engagement Report
+          </TabsTrigger>
           <TabsTrigger value="weekly-analysis">Weekly Analysis</TabsTrigger>
         </TabsList>
 
@@ -491,8 +492,10 @@ export default function Index() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Departments</SelectItem>
-                      {availableDepartments.map(dept => (
-                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                      {availableDepartments.map((dept) => (
+                        <SelectItem key={dept} value={dept}>
+                          {dept}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -659,8 +662,10 @@ export default function Index() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Departments</SelectItem>
-                      {availableDepartments.map(dept => (
-                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                      {availableDepartments.map((dept) => (
+                        <SelectItem key={dept} value={dept}>
+                          {dept}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -676,7 +681,8 @@ export default function Index() {
                           No quarterly data available
                         </p>
                         <p className="text-sm">
-                          Upload engagement data to view quarterly team performance
+                          Upload engagement data to view quarterly team
+                          performance
                         </p>
                       </div>
                     </div>
@@ -693,7 +699,9 @@ export default function Index() {
                             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
                               #{index + 1}
                             </div>
-                            <h3 className="font-semibold text-lg">{dept.name}</h3>
+                            <h3 className="font-semibold text-lg">
+                              {dept.name}
+                            </h3>
                           </div>
                           {index === 0 && (
                             <Trophy className="h-6 w-6 text-yellow-500" />
@@ -702,12 +710,24 @@ export default function Index() {
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span className="text-slate-600">Total Points</span>
-                            <span className="font-bold">{dept.totalPoints}</span>
+                            <span className="font-bold">
+                              {dept.totalPoints}
+                            </span>
                           </div>
                           <div className="flex justify-between text-sm">
-                            <span className="text-slate-600">Avg per Employee</span>
+                            <span className="text-slate-600">
+                              Avg per Employee
+                            </span>
                             <span className="font-medium">
-                              {Math.round(dept.totalPoints / Math.max(uploadedEmployees.filter(emp => emp.department === dept.name).length, 1))}
+                              {Math.round(
+                                dept.totalPoints /
+                                  Math.max(
+                                    uploadedEmployees.filter(
+                                      (emp) => emp.department === dept.name,
+                                    ).length,
+                                    1,
+                                  ),
+                              )}
                             </span>
                           </div>
                           <div className="w-full bg-slate-200 rounded-full h-2 mt-3">
@@ -754,7 +774,8 @@ export default function Index() {
                           No employee data available
                         </p>
                         <p className="text-sm">
-                          Upload engagement data to view top quarterly performers
+                          Upload engagement data to view top quarterly
+                          performers
                         </p>
                       </div>
                     </div>
@@ -767,12 +788,18 @@ export default function Index() {
                           <th className="text-left py-3 px-4">Rank</th>
                           <th className="text-left py-3 px-4">Name</th>
                           <th className="text-left py-3 px-4">Department</th>
-                          <th className="text-right py-3 px-4">Weekly Points</th>
+                          <th className="text-right py-3 px-4">
+                            Weekly Points
+                          </th>
                           <th className="text-right py-3 px-4">Event Score</th>
                           <th className="text-right py-3 px-4">VE Score</th>
                           <th className="text-right py-3 px-4">Survey Score</th>
-                          <th className="text-right py-3 px-4">Weighted Score</th>
-                          <th className="text-left py-3 px-4">Engagement Level</th>
+                          <th className="text-right py-3 px-4">
+                            Weighted Score
+                          </th>
+                          <th className="text-left py-3 px-4">
+                            Engagement Level
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -845,7 +872,6 @@ export default function Index() {
         <TabsContent value="weekly-analysis">
           <WeeklyAnalysisComponent weeklyData={weeklyAnalysis} />
         </TabsContent>
-
       </Tabs>
 
       {/* AI Summary Panel - Moved to Bottom */}

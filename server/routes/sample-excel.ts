@@ -8,8 +8,16 @@ export const handleSampleExcelDownload: RequestHandler = (req, res) => {
 
     // Sample departments and employees with proper department structure
     const departments = [
-      "Marketing", "Sales", "Engineering", "Design", "HR", "Finance", 
-      "Operations", "Customer Success", "Product", "Legal"
+      "Marketing",
+      "Sales",
+      "Engineering",
+      "Design",
+      "HR",
+      "Finance",
+      "Operations",
+      "Customer Success",
+      "Product",
+      "Legal",
     ];
 
     const employees = [
@@ -39,7 +47,11 @@ export const handleSampleExcelDownload: RequestHandler = (req, res) => {
     const startDate = new Date(2024, 0, 1); // January 1, 2024
     const endDate = new Date(2024, 2, 31); // March 31, 2024
     const dates: Date[] = [];
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    for (
+      let d = new Date(startDate);
+      d <= endDate;
+      d.setDate(d.getDate() + 1)
+    ) {
       // Only include weekdays
       if (d.getDay() !== 0 && d.getDay() !== 6) {
         dates.push(new Date(d));
@@ -48,7 +60,7 @@ export const handleSampleExcelDownload: RequestHandler = (req, res) => {
 
     // 1. Daily VE tracker sheet
     const dailyVEData: any[] = [];
-    employees.forEach(emp => {
+    employees.forEach((emp) => {
       dates.forEach((date, dateIndex) => {
         // Simulate engagement data with some variability
         const baseEngagement = Math.random() * 0.7 + 0.3; // 30% to 100% engagement
@@ -56,12 +68,13 @@ export const handleSampleExcelDownload: RequestHandler = (req, res) => {
         const comments = Math.floor(Math.random() * 8 * baseEngagement);
         const reactions = Math.floor(Math.random() * 15 * baseEngagement);
         const shares = Math.floor(Math.random() * 2 * baseEngagement);
-        const dailyPoints = posts * 5 + comments * 4 + reactions * 2 + shares * 2;
-        
+        const dailyPoints =
+          posts * 5 + comments * 4 + reactions * 2 + shares * 2;
+
         const weekNumber = Math.ceil((dateIndex + 1) / 5); // Rough week calculation
-        
+
         dailyVEData.push({
-          "Date": date.toLocaleDateString("en-US"),
+          Date: date.toLocaleDateString("en-US"),
           "BU/GBU": emp.dept,
           "Employee Name": emp.name,
           "Posts Created": posts,
@@ -69,38 +82,49 @@ export const handleSampleExcelDownload: RequestHandler = (req, res) => {
           "Reactions Given": reactions,
           "Posts of Others Shared": shares,
           "Daily Points": dailyPoints,
-          "Week Number": weekNumber
+          "Week Number": weekNumber,
         });
       });
     });
 
     // 2. VE Weekly Summary sheet
     const weeklyData: any[] = [];
-    employees.forEach(emp => {
-      const empDailyData = dailyVEData.filter(d => d["Employee Name"] === emp.name);
-      const totalPoints = empDailyData.reduce((sum, d) => sum + d["Daily Points"], 0);
+    employees.forEach((emp) => {
+      const empDailyData = dailyVEData.filter(
+        (d) => d["Employee Name"] === emp.name,
+      );
+      const totalPoints = empDailyData.reduce(
+        (sum, d) => sum + d["Daily Points"],
+        0,
+      );
       weeklyData.push({
         "Employee Name": emp.name,
         "Sum of Daily Points": totalPoints,
-        "Rank": 0 // Will be filled after sorting
+        Rank: 0, // Will be filled after sorting
       });
     });
 
     // Sort by points and assign ranks
-    weeklyData.sort((a, b) => b["Sum of Daily Points"] - a["Sum of Daily Points"]);
+    weeklyData.sort(
+      (a, b) => b["Sum of Daily Points"] - a["Sum of Daily Points"],
+    );
     weeklyData.forEach((emp, index) => {
       emp["Rank"] = index + 1;
     });
 
     // 3. Quad Engagement Scores sheet
     const quadScoresData: any[] = [];
-    employees.forEach(emp => {
-      const weeklyEmp = weeklyData.find(w => w["Employee Name"] === emp.name);
-      const veScore = Math.min(100, Math.floor((weeklyEmp?.["Sum of Daily Points"] || 0) / 10));
+    employees.forEach((emp) => {
+      const weeklyEmp = weeklyData.find((w) => w["Employee Name"] === emp.name);
+      const veScore = Math.min(
+        100,
+        Math.floor((weeklyEmp?.["Sum of Daily Points"] || 0) / 10),
+      );
       const eventScore = Math.floor(Math.random() * 40 + 60); // 60-100
       const surveyScore = Math.floor(Math.random() * 30 + 70); // 70-100
-      const weightedScore = eventScore * 0.4 + veScore * 0.3 + surveyScore * 0.3;
-      
+      const weightedScore =
+        eventScore * 0.4 + veScore * 0.3 + surveyScore * 0.3;
+
       let engagementLevel = "At-Risk";
       if (weightedScore >= 85) engagementLevel = "Highly Engaged";
       else if (weightedScore >= 70) engagementLevel = "Engaged";
@@ -112,33 +136,39 @@ export const handleSampleExcelDownload: RequestHandler = (req, res) => {
         "Viva Engage Score (out of 100)": veScore,
         "Pulse Survey Score (out of 100)": surveyScore,
         "Weighted Score": Math.round(weightedScore * 100) / 100,
-        "Engagement Level": engagementLevel
+        "Engagement Level": engagementLevel,
       });
     });
 
     // 4. Department Summary sheet (additional helpful data)
     const deptSummaryData: any[] = [];
-    departments.forEach(dept => {
-      const deptEmployees = employees.filter(e => e.dept === dept);
-      const deptWeeklyData = weeklyData.filter(w => 
-        deptEmployees.some(e => e.name === w["Employee Name"])
+    departments.forEach((dept) => {
+      const deptEmployees = employees.filter((e) => e.dept === dept);
+      const deptWeeklyData = weeklyData.filter((w) =>
+        deptEmployees.some((e) => e.name === w["Employee Name"]),
       );
-      const totalPoints = deptWeeklyData.reduce((sum, w) => sum + w["Sum of Daily Points"], 0);
-      const avgPoints = deptEmployees.length > 0 ? totalPoints / deptEmployees.length : 0;
-      
-      const deptQuadData = quadScoresData.filter(q => 
-        deptEmployees.some(e => e.name === q["Employee Name"])
+      const totalPoints = deptWeeklyData.reduce(
+        (sum, w) => sum + w["Sum of Daily Points"],
+        0,
       );
-      const avgEngagement = deptQuadData.length > 0 
-        ? deptQuadData.reduce((sum, q) => sum + q["Weighted Score"], 0) / deptQuadData.length 
-        : 0;
+      const avgPoints =
+        deptEmployees.length > 0 ? totalPoints / deptEmployees.length : 0;
+
+      const deptQuadData = quadScoresData.filter((q) =>
+        deptEmployees.some((e) => e.name === q["Employee Name"]),
+      );
+      const avgEngagement =
+        deptQuadData.length > 0
+          ? deptQuadData.reduce((sum, q) => sum + q["Weighted Score"], 0) /
+            deptQuadData.length
+          : 0;
 
       deptSummaryData.push({
-        "Department": dept,
+        Department: dept,
         "Employee Count": deptEmployees.length,
         "Total Points": totalPoints,
         "Average Points per Employee": Math.round(avgPoints * 100) / 100,
-        "Average Engagement Score": Math.round(avgEngagement * 100) / 100
+        "Average Engagement Score": Math.round(avgEngagement * 100) / 100,
       });
     });
 
@@ -154,13 +184,21 @@ export const handleSampleExcelDownload: RequestHandler = (req, res) => {
     // Add sheets to workbook with proper names
     XLSX.utils.book_append_sheet(workbook, dailyVESheet, "Daily VE tracker");
     XLSX.utils.book_append_sheet(workbook, weeklySheet, "VE Weekly Summary");
-    XLSX.utils.book_append_sheet(workbook, quadScoresSheet, "Quad Engagement Scores");
-    XLSX.utils.book_append_sheet(workbook, deptSummarySheet, "Department Summary");
+    XLSX.utils.book_append_sheet(
+      workbook,
+      quadScoresSheet,
+      "Quad Engagement Scores",
+    );
+    XLSX.utils.book_append_sheet(
+      workbook,
+      deptSummarySheet,
+      "Department Summary",
+    );
 
     // Set column widths for better readability
     const setColumnWidths = (sheet: XLSX.WorkSheet, widths: number[]) => {
-      const cols: XLSX.ColInfo[] = widths.map(w => ({ width: w }));
-      sheet['!cols'] = cols;
+      const cols: XLSX.ColInfo[] = widths.map((w) => ({ width: w }));
+      sheet["!cols"] = cols;
     };
 
     setColumnWidths(dailyVESheet, [12, 15, 20, 12, 14, 14, 20, 12, 12]);
@@ -174,11 +212,11 @@ export const handleSampleExcelDownload: RequestHandler = (req, res) => {
     // Set response headers
     res.setHeader(
       "Content-Disposition",
-      "attachment; filename=Sample_Engagement_Tracker_Q1_2024.xlsx"
+      "attachment; filename=Sample_Engagement_Tracker_Q1_2024.xlsx",
     );
     res.setHeader(
       "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     );
 
     // Send the file
