@@ -81,6 +81,9 @@ export default function Index() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedWeek, setSelectedWeek] = useState("current");
+  const [uploadedEmployees, setUploadedEmployees] = useState<Employee[]>([]);
+  const [weeklyAnalysis, setWeeklyAnalysis] = useState<any[]>([]);
+  const [dataSource, setDataSource] = useState<"empty" | "uploaded">("empty");
 
   // Get unique departments from uploaded data
   const availableDepartments = React.useMemo(() => {
@@ -92,9 +95,6 @@ export default function Index() {
     });
     return Array.from(depts).sort();
   }, [uploadedEmployees]);
-  const [uploadedEmployees, setUploadedEmployees] = useState<Employee[]>([]);
-  const [weeklyAnalysis, setWeeklyAnalysis] = useState<any[]>([]);
-  const [dataSource, setDataSource] = useState<"empty" | "uploaded">("empty");
 
   // Calculate engagement data from uploaded employees
   const engagementData: EngagementData =
