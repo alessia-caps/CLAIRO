@@ -1,4 +1,5 @@
 import { useState } from "react";
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -80,6 +81,17 @@ export default function Index() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedWeek, setSelectedWeek] = useState("current");
+
+  // Get unique departments from uploaded data
+  const availableDepartments = React.useMemo(() => {
+    const depts = new Set<string>();
+    uploadedEmployees.forEach(emp => {
+      if (emp.department && emp.department !== "Unknown") {
+        depts.add(emp.department);
+      }
+    });
+    return Array.from(depts).sort();
+  }, [uploadedEmployees]);
   const [uploadedEmployees, setUploadedEmployees] = useState<Employee[]>([]);
   const [weeklyAnalysis, setWeeklyAnalysis] = useState<any[]>([]);
   const [dataSource, setDataSource] = useState<"empty" | "uploaded">("empty");
@@ -327,7 +339,7 @@ export default function Index() {
           <CardHeader>
             <CardTitle className="flex items-center">
               <BarChart3 className="h-5 w-5 mr-2 text-primary" />
-              Total Engagement Points by Department
+              Total Engagement Points by Department (Current Upload)
             </CardTitle>
           </CardHeader>
           <CardContent>
