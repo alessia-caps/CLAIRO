@@ -522,6 +522,9 @@ export function useCSVUpload() {
   }): ParsedEmployee[] => {
     const employees: Map<string, Partial<ParsedEmployee>> = new Map();
 
+    // Validate and normalize departments across all sheets
+    const employeeDeptMap = validateAndNormalizeDepartments(sheets);
+
     // Process Daily VE tracker sheet
     const dailyVETracker =
       sheets["Daily VE tracker"] || sheets["Daily VE Tracker"] || [];
