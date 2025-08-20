@@ -491,11 +491,9 @@ export default function Index() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Departments</SelectItem>
-                      <SelectItem value="Marketing">Marketing</SelectItem>
-                      <SelectItem value="Sales">Sales</SelectItem>
-                      <SelectItem value="Engineering">Engineering</SelectItem>
-                      <SelectItem value="Design">Design</SelectItem>
-                      <SelectItem value="HR">HR</SelectItem>
+                      {availableDepartments.map(dept => (
+                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <Select value={selectedWeek} onValueChange={setSelectedWeek}>
@@ -503,9 +501,11 @@ export default function Index() {
                       <SelectValue placeholder="Period" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="current">Current Week</SelectItem>
-                      <SelectItem value="last">Last Week</SelectItem>
-                      <SelectItem value="month">This Month</SelectItem>
+                      <SelectItem value="current">This Week</SelectItem>
+                      <SelectItem value="last">Previous Week</SelectItem>
+                      <SelectItem value="month">Current Month</SelectItem>
+                      <SelectItem value="quarter">Current Quarter</SelectItem>
+                      <SelectItem value="year">This Year</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
