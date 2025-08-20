@@ -95,12 +95,15 @@ export function CSVUploadDialog({
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-sm">
-              <strong>Expected Excel sheets:</strong>
+              <strong>
+                Expected Excel sheets with proper department mapping:
+              </strong>
               <ul className="mt-2 space-y-1 text-xs">
                 <li>
-                  • <strong>Daily VE tracker:</strong> Date, BU/GBU, Employee
-                  Name, Posts Created, Comments Made, Reactions Given, Posts of
-                  Others Shared, Daily Points, Week Number
+                  • <strong>Daily VE tracker:</strong> Date, BU/GBU (or
+                  Department/Business Unit/Team), Employee Name, Posts Created,
+                  Comments Made, Reactions Given, Posts of Others Shared, Daily
+                  Points, Week Number
                 </li>
                 <li>
                   • <strong>VE Weekly Summary:</strong> Employee Name, Sum of
@@ -113,6 +116,11 @@ export function CSVUploadDialog({
                   Engagement Level
                 </li>
               </ul>
+              <p className="mt-2 text-xs text-accent">
+                💡 The system will auto-detect departments from BU/GBU,
+                Department, Business Unit, or Team columns and cross-reference
+                employee data across all sheets for consistency.
+              </p>
             </AlertDescription>
           </Alert>
 
@@ -171,6 +179,19 @@ export function CSVUploadDialog({
               </AlertDescription>
             </Alert>
           )}
+          {/* Sample Data Link */}
+          <div className="text-center">
+            <Button
+              variant="link"
+              size="sm"
+              className="text-xs"
+              onClick={() => {
+                window.open("/api/sample-excel", "_blank");
+              }}
+            >
+              Download Sample Excel Template
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

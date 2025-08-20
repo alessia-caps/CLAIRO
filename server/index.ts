@@ -2,7 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
-import { generateSampleExcel } from "./routes/sample-excel";
+import { handleSampleExcelDownload } from "./routes/sample-excel";
 
 export function createServer() {
   const app = express();
@@ -19,7 +19,7 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
-  app.get("/api/sample-excel", generateSampleExcel);
+  app.get("/api/sample-excel", handleSampleExcelDownload);
 
   return app;
 }

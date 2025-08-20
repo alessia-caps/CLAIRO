@@ -270,6 +270,71 @@ export function useCSVUpload() {
     return "At-Risk";
   };
 
+  // Cross-reference departments and employee names across sheets
+  const validateAndNormalizeDepartments = (sheets: {
+    [sheetName: string]: any[];
+  }): Map<string, string> => {
+    const employeeDeptMap = new Map<string, string>();
+    const deptVariations = new Map<string, Set<string>>();
+
+    // Collect all employee-department mappings from all sheets
+    Object.values(sheets).forEach((sheetData) => {
+      sheetData.forEach((row) => {
+        const empName =
+          row["Employee Name"] ||
+          row["employee name"] ||
+          row["Name"] ||
+          row["name"];
+        const dept =
+          row["BU/GBU"] ||
+          row["Department"] ||
+          row["Business Unit"] ||
+          row["Team"] ||
+          row["Dept"];
+
+        if (empName && dept && dept !== "Unknown") {
+          const normalizedName = empName.trim().toLowerCase();
+          const normalizedDept = dept.trim();
+
+          // If we've seen this employee before, check for consistency
+          if (employeeDeptMap.has(normalizedName)) {
+            const existingDept = employeeDeptMap.get(normalizedName)!;
+            if (existingDept !== normalizedDept) {
+              console.warn(
+                `Department inconsistency for ${empName}: ${existingDept} vs ${normalizedDept}`,
+              );
+              // Keep the more specific/longer department name
+              if (normalizedDept.length > existingDept.length) {
+                employeeDeptMap.set(normalizedName, normalizedDept);
+              }
+            }
+          } else {
+            employeeDeptMap.set(normalizedName, normalizedDept);
+          }
+
+          // Track department variations
+          const deptKey = normalizedDept
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "");
+          if (!deptVariations.has(deptKey)) {
+            deptVariations.set(deptKey, new Set());
+          }
+          deptVariations.get(deptKey)!.add(normalizedDept);
+        }
+      });
+    });
+
+    console.log(
+      `Found ${employeeDeptMap.size} unique employees with departments`,
+    );
+    console.log(
+      "Department variations detected:",
+      Object.fromEntries(deptVariations),
+    );
+
+    return employeeDeptMap;
+  };
+
   const calculateDailyPoints = (
     posts: number,
     comments: number,
@@ -329,7 +394,12 @@ export function useCSVUpload() {
         row["employee name"] ||
         row["Name"] ||
         row["name"];
-      const department = row["BU/GBU"] || row["Department"] || row["Dept"];
+      const department =
+        row["BU/GBU"] ||
+        row["Department"] ||
+        row["Dept"] ||
+        row["Business Unit"] ||
+        row["Team"];
 
       console.log(
         `Row ${index}: Date="${dateStr}", Employee="${employeeName}", Dept="${department}"`,
@@ -477,6 +547,9 @@ export function useCSVUpload() {
   }): ParsedEmployee[] => {
     const employees: Map<string, Partial<ParsedEmployee>> = new Map();
 
+    // Validate and normalize departments across all sheets
+    const employeeDeptMap = validateAndNormalizeDepartments(sheets);
+
     // Process Daily VE tracker sheet
     const dailyVETracker =
       sheets["Daily VE tracker"] || sheets["Daily VE Tracker"] || [];
@@ -495,7 +568,13 @@ export function useCSVUpload() {
       if (!employees.has(employeeName)) {
         employees.set(employeeName, {
           name: employeeName,
-          department: row["BU/GBU"] || "Unknown",
+          department:
+            employeeDeptMap.get(employeeName.toLowerCase()) ||
+            row["BU/GBU"] ||
+            row["Department"] ||
+            row["Business Unit"] ||
+            row["Team"] ||
+            "Unknown",
           dailyPoints: 0,
           weeklyPoints: 0,
           rank: 0,
@@ -538,7 +617,8 @@ export function useCSVUpload() {
       if (!employees.has(employeeName)) {
         employees.set(employeeName, {
           name: employeeName,
-          department: "Unknown",
+          department:
+            employeeDeptMap.get(employeeName.toLowerCase()) || "Unknown",
           dailyPoints: 0,
           weeklyPoints: 0,
           rank: 0,
@@ -602,7 +682,12 @@ export function useCSVUpload() {
         return {
           id: `emp-${index}`,
           name: row["Employee Name"] || `Employee ${index + 1}`,
-          department: row["BU/GBU"] || row["Department"] || "Unknown",
+          department:
+            row["BU/GBU"] ||
+            row["Department"] ||
+            row["Business Unit"] ||
+            row["Team"] ||
+            "Unknown",
           dailyPoints,
           weeklyPoints: dailyPoints * 7, // Estimate
           rank: index + 1,
@@ -636,7 +721,12 @@ export function useCSVUpload() {
         return {
           id: `emp-${index}`,
           name: row["Employee Name"] || `Employee ${index + 1}`,
-          department: row["BU/GBU"] || row["Department"] || "Unknown",
+          department:
+            row["BU/GBU"] ||
+            row["Department"] ||
+            row["Business Unit"] ||
+            row["Team"] ||
+            "Unknown",
           dailyPoints: Math.floor(veScore / 2), // Estimate from VE score
           weeklyPoints: Math.floor(veScore / 2) * 7,
           rank: index + 1,
