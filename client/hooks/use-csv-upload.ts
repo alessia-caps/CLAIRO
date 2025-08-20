@@ -329,7 +329,7 @@ export function useCSVUpload() {
         row["employee name"] ||
         row["Name"] ||
         row["name"];
-      const department = row["BU/GBU"] || row["Department"] || row["Dept"];
+      const department = row["BU/GBU"] || row["Department"] || row["Dept"] || row["Business Unit"] || row["Team"];
 
       console.log(
         `Row ${index}: Date="${dateStr}", Employee="${employeeName}", Dept="${department}"`,
@@ -495,7 +495,7 @@ export function useCSVUpload() {
       if (!employees.has(employeeName)) {
         employees.set(employeeName, {
           name: employeeName,
-          department: row["BU/GBU"] || "Unknown",
+          department: row["BU/GBU"] || row["Department"] || row["Business Unit"] || row["Team"] || "Unknown",
           dailyPoints: 0,
           weeklyPoints: 0,
           rank: 0,
