@@ -22,7 +22,7 @@ import {
 
 const menuItems = [
   {
-    title: "Dashboard",
+    title: "Engagement Dashboard",
     icon: Activity,
     path: "/",
   },
@@ -55,35 +55,14 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
 
-  const downloadSampleExcel = async () => {
-    try {
-      const response = await fetch("/api/sample-excel");
-      if (!response.ok) {
-        throw new Error("Failed to download sample file");
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "bneXt_Sample_Data.xlsx";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Error downloading sample file:", error);
-      alert("Failed to download sample file. Please try again.");
-    }
-  };
-
   return (
+    <div className="space-y-6">
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
           <div className="flex items-center gap-2 p-2">
             <Activity className="h-6 w-6" />
-            <span className="text-xl font-bold">bneXt</span>
+            <span className="text-xl font-bold">CLAIRO</span>
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -112,18 +91,12 @@ export function Layout({ children }: LayoutProps) {
             {menuItems.find((item) => item.path === location.pathname)?.title ||
               "Dashboard"}
           </h1>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={downloadSampleExcel}
-            className="flex items-center gap-2"
-          >
-            <Download className="h-4 w-4" />
-            Download Sample Excel
-          </Button>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
       </SidebarInset>
     </SidebarProvider>
+  </div>
   );
 }
+
+
