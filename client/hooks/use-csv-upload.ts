@@ -543,7 +543,8 @@ export function useCSVUpload() {
       if (!employees.has(employeeName)) {
         employees.set(employeeName, {
           name: employeeName,
-          department: row["BU/GBU"] || row["Department"] || row["Business Unit"] || row["Team"] || "Unknown",
+          department: employeeDeptMap.get(employeeName.toLowerCase()) ||
+                      row["BU/GBU"] || row["Department"] || row["Business Unit"] || row["Team"] || "Unknown",
           dailyPoints: 0,
           weeklyPoints: 0,
           rank: 0,
