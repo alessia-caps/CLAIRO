@@ -319,49 +319,6 @@ export default function Index() {
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-              <Input
-                placeholder="Search employees..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Select
-              value={selectedDepartment}
-              onValueChange={setSelectedDepartment}
-            >
-              <SelectTrigger className="w-full sm:w-48">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Department" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Departments</SelectItem>
-                <SelectItem value="Marketing">Marketing</SelectItem>
-                <SelectItem value="Sales">Sales</SelectItem>
-                <SelectItem value="Engineering">Engineering</SelectItem>
-                <SelectItem value="Design">Design</SelectItem>
-                <SelectItem value="HR">HR</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={selectedWeek} onValueChange={setSelectedWeek}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Week" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="current">Current Week</SelectItem>
-                <SelectItem value="last">Last Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Charts and Visualizations */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -496,11 +453,10 @@ export default function Index() {
 
       {/* Data Tables */}
       <Tabs defaultValue="leaderboard" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="leaderboard">Department Overview</TabsTrigger>
-          <TabsTrigger value="quad-scores">Quad Engagement Scores</TabsTrigger>
+          <TabsTrigger value="quarterly-report">Quarterly Engagement Report</TabsTrigger>
           <TabsTrigger value="weekly-analysis">Weekly Analysis</TabsTrigger>
-          <TabsTrigger value="mini-games">Activity Tracker</TabsTrigger>
         </TabsList>
 
         <TabsContent value="leaderboard">
@@ -512,6 +468,35 @@ export default function Index() {
                   <Trophy className="h-5 w-5 mr-2 text-primary" />
                   Department Performance
                 </CardTitle>
+                <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                  <Select
+                    value={selectedDepartment}
+                    onValueChange={setSelectedDepartment}
+                  >
+                    <SelectTrigger className="w-full sm:w-48">
+                      <Filter className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="Department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Departments</SelectItem>
+                      <SelectItem value="Marketing">Marketing</SelectItem>
+                      <SelectItem value="Sales">Sales</SelectItem>
+                      <SelectItem value="Engineering">Engineering</SelectItem>
+                      <SelectItem value="Design">Design</SelectItem>
+                      <SelectItem value="HR">HR</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={selectedWeek} onValueChange={setSelectedWeek}>
+                    <SelectTrigger className="w-full sm:w-40">
+                      <SelectValue placeholder="Period" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="current">Current Week</SelectItem>
+                      <SelectItem value="last">Last Week</SelectItem>
+                      <SelectItem value="month">This Month</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardHeader>
               <CardContent>
                 {departmentData.length === 0 ? (
@@ -563,6 +548,15 @@ export default function Index() {
                   <Award className="h-5 w-5 mr-2 text-primary" />
                   Top Performers This Week
                 </CardTitle>
+                <div className="flex-1 relative mt-3">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="Search employees..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
               </CardHeader>
               <CardContent>
                 {filteredEmployees.length === 0 ? (
@@ -622,168 +616,225 @@ export default function Index() {
           </div>
         </TabsContent>
 
-        <TabsContent value="quad-scores">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quad Engagement Score Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4">Name</th>
-                      <th className="text-right py-3 px-4">Event Score</th>
-                      <th className="text-right py-3 px-4">VE Score</th>
-                      <th className="text-right py-3 px-4">Survey Score</th>
-                      <th className="text-right py-3 px-4">Weighted Score</th>
-                      <th className="text-left py-3 px-4">Level</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredEmployees.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="py-12 text-center text-slate-500"
-                        >
-                          <div className="flex flex-col items-center space-y-3">
-                            <Upload className="h-12 w-12 text-slate-300" />
-                            <div>
-                              <p className="font-medium">
-                                No engagement data available
-                              </p>
-                              <p className="text-sm">
-                                Upload your Excel engagement tracker to view
-                                quad scores
-                              </p>
+        <TabsContent value="quarterly-report">
+          <div className="space-y-6">
+            {/* Top Teams/Departments for Quarter */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Trophy className="h-5 w-5 mr-2 text-primary" />
+                  Top Performing Teams - Q1 2024
+                </CardTitle>
+                <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                  <Select value={selectedWeek} onValueChange={setSelectedWeek}>
+                    <SelectTrigger className="w-full sm:w-48">
+                      <SelectValue placeholder="Quarter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="q1">Q1 2024</SelectItem>
+                      <SelectItem value="q4">Q4 2023</SelectItem>
+                      <SelectItem value="q3">Q3 2023</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={selectedDepartment}
+                    onValueChange={setSelectedDepartment}
+                  >
+                    <SelectTrigger className="w-full sm:w-48">
+                      <Filter className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="Department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Departments</SelectItem>
+                      <SelectItem value="Marketing">Marketing</SelectItem>
+                      <SelectItem value="Sales">Sales</SelectItem>
+                      <SelectItem value="Engineering">Engineering</SelectItem>
+                      <SelectItem value="Design">Design</SelectItem>
+                      <SelectItem value="HR">HR</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {departmentData.length === 0 ? (
+                  <div className="py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center space-y-3">
+                      <Trophy className="h-12 w-12 text-slate-300" />
+                      <div>
+                        <p className="font-medium">
+                          No quarterly data available
+                        </p>
+                        <p className="text-sm">
+                          Upload engagement data to view quarterly team performance
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {departmentData.map((dept, index) => (
+                      <div
+                        key={dept.name}
+                        className="p-4 rounded-lg border bg-gradient-to-br from-slate-50 to-slate-100 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-2">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                              #{index + 1}
                             </div>
+                            <h3 className="font-semibold text-lg">{dept.name}</h3>
                           </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredEmployees.map((employee) => (
-                        <tr
-                          key={employee.id}
-                          className="border-b hover:bg-slate-50"
-                        >
-                          <td className="py-3 px-4 font-medium">
-                            {employee.name}
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            {employee.eventScore}/100
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            {employee.veScore}/100
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            {employee.surveyScore}/100
-                          </td>
-                          <td className="py-3 px-4 text-right font-bold">
-                            {employee.weightedScore}
-                          </td>
-                          <td className="py-3 px-4">
-                            <Badge
-                              variant={
-                                employee.engagementLevel === "Highly Engaged"
-                                  ? "default"
-                                  : employee.engagementLevel === "Engaged"
-                                    ? "secondary"
-                                    : employee.engagementLevel ===
-                                        "Needs Improvement"
-                                      ? "outline"
-                                      : "destructive"
-                              }
-                              className="text-xs"
-                            >
-                              {employee.engagementLevel}
-                            </Badge>
-                          </td>
+                          {index === 0 && (
+                            <Trophy className="h-6 w-6 text-yellow-500" />
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-slate-600">Total Points</span>
+                            <span className="font-bold">{dept.totalPoints}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-slate-600">Avg per Employee</span>
+                            <span className="font-medium">
+                              {Math.round(dept.totalPoints / Math.max(uploadedEmployees.filter(emp => emp.department === dept.name).length, 1))}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-200 rounded-full h-2 mt-3">
+                            <div
+                              className="h-2 rounded-full transition-all duration-300"
+                              style={{
+                                width: `${(dept.totalPoints / maxDeptPoints) * 100}%`,
+                                backgroundColor: dept.color,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Top Employees for Quarter */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Star className="h-5 w-5 mr-2 text-primary" />
+                  Top Performing Employees - Q1 2024
+                </CardTitle>
+                <div className="flex-1 relative mt-3">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="Search employees..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                {filteredEmployees.length === 0 ? (
+                  <div className="py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center space-y-3">
+                      <Star className="h-12 w-12 text-slate-300" />
+                      <div>
+                        <p className="font-medium">
+                          No employee data available
+                        </p>
+                        <p className="text-sm">
+                          Upload engagement data to view top quarterly performers
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-3 px-4">Rank</th>
+                          <th className="text-left py-3 px-4">Name</th>
+                          <th className="text-left py-3 px-4">Department</th>
+                          <th className="text-right py-3 px-4">Weekly Points</th>
+                          <th className="text-right py-3 px-4">Event Score</th>
+                          <th className="text-right py-3 px-4">VE Score</th>
+                          <th className="text-right py-3 px-4">Survey Score</th>
+                          <th className="text-right py-3 px-4">Weighted Score</th>
+                          <th className="text-left py-3 px-4">Engagement Level</th>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+                      </thead>
+                      <tbody>
+                        {filteredEmployees.slice(0, 10).map((employee) => (
+                          <tr
+                            key={employee.id}
+                            className="border-b hover:bg-slate-50"
+                          >
+                            <td className="py-3 px-4">
+                              <div className="flex items-center space-x-2">
+                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                                  #{employee.rank}
+                                </div>
+                                {employee.rank <= 3 && (
+                                  <Award className="h-4 w-4 text-yellow-500" />
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 font-medium">
+                              {employee.name}
+                            </td>
+                            <td className="py-3 px-4">
+                              <Badge variant="outline" className="text-xs">
+                                {employee.department}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4 text-right font-semibold">
+                              {employee.weeklyPoints}
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              {employee.eventScore}/100
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              {employee.veScore}/100
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              {employee.surveyScore}/100
+                            </td>
+                            <td className="py-3 px-4 text-right font-bold">
+                              {employee.weightedScore}
+                            </td>
+                            <td className="py-3 px-4">
+                              <Badge
+                                variant={
+                                  employee.engagementLevel === "Highly Engaged"
+                                    ? "default"
+                                    : employee.engagementLevel === "Engaged"
+                                      ? "secondary"
+                                      : employee.engagementLevel ===
+                                          "Needs Improvement"
+                                        ? "outline"
+                                        : "destructive"
+                                }
+                                className="text-xs"
+                              >
+                                {employee.engagementLevel}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="weekly-analysis">
           <WeeklyAnalysisComponent weeklyData={weeklyAnalysis} />
         </TabsContent>
 
-        <TabsContent value="mini-games">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Activity className="h-5 w-5 mr-2 text-primary" />
-                Activity Participation Tracker
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4">Week</th>
-                      <th className="text-left py-3 px-4">Game Type</th>
-                      <th className="text-right py-3 px-4">Participants</th>
-                      <th className="text-left py-3 px-4">
-                        Winning Department
-                      </th>
-                      <th className="text-left py-3 px-4">Winning Employee</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {miniGames.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="py-12 text-center text-slate-500"
-                        >
-                          <div className="flex flex-col items-center space-y-3">
-                            <Activity className="h-12 w-12 text-slate-300" />
-                            <div>
-                              <p className="font-medium">
-                                No mini-game data available
-                              </p>
-                              <p className="text-sm">
-                                Mini-game participation data will appear here
-                                when available
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      miniGames.map((game) => (
-                        <tr
-                          key={game.week}
-                          className="border-b hover:bg-slate-50"
-                        >
-                          <td className="py-3 px-4 font-medium">
-                            Week {game.week}
-                          </td>
-                          <td className="py-3 px-4">{game.gameType}</td>
-                          <td className="py-3 px-4 text-right">
-                            {game.participants}
-                          </td>
-                          <td className="py-3 px-4">
-                            <Badge variant="outline">{game.winningDept}</Badge>
-                          </td>
-                          <td className="py-3 px-4 font-medium">
-                            {game.winningEmployee}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       {/* AI Summary Panel - Moved to Bottom */}
