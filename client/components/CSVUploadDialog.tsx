@@ -58,9 +58,8 @@ export function CSVUploadDialog({
     }
 
     try {
-      const result = await uploadFile(file);
-      console.log("Upload completed. Result:", result);
-      onDataUploaded(result.employees, result.weeklyAnalysis);
+      const data = await uploadFile(file);
+      onDataUploaded(data, uploadedData?.weeklyAnalysis);
       setOpen(false);
     } catch (error) {
       // Error is handled by the hook
@@ -180,7 +179,6 @@ export function CSVUploadDialog({
               </AlertDescription>
             </Alert>
           )}
-
           {/* Sample Data Link */}
           <div className="text-center">
             <Button
