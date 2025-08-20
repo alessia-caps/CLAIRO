@@ -602,7 +602,7 @@ export function useCSVUpload() {
         return {
           id: `emp-${index}`,
           name: row["Employee Name"] || `Employee ${index + 1}`,
-          department: row["BU/GBU"] || row["Department"] || "Unknown",
+          department: row["BU/GBU"] || row["Department"] || row["Business Unit"] || row["Team"] || "Unknown",
           dailyPoints,
           weeklyPoints: dailyPoints * 7, // Estimate
           rank: index + 1,
@@ -636,7 +636,7 @@ export function useCSVUpload() {
         return {
           id: `emp-${index}`,
           name: row["Employee Name"] || `Employee ${index + 1}`,
-          department: row["BU/GBU"] || row["Department"] || "Unknown",
+          department: row["BU/GBU"] || row["Department"] || row["Business Unit"] || row["Team"] || "Unknown",
           dailyPoints: Math.floor(veScore / 2), // Estimate from VE score
           weeklyPoints: Math.floor(veScore / 2) * 7,
           rank: index + 1,
