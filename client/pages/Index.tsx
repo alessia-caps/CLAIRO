@@ -640,12 +640,13 @@ export default function Index() {
                 <div className="flex flex-col sm:flex-row gap-2 mt-3">
                   <Select value={selectedWeek} onValueChange={setSelectedWeek}>
                     <SelectTrigger className="w-full sm:w-48">
-                      <SelectValue placeholder="Quarter" />
+                      <SelectValue placeholder="Time Period" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="q1">Q1 2024</SelectItem>
+                      <SelectItem value="q1">Q1 2024 (Current)</SelectItem>
                       <SelectItem value="q4">Q4 2023</SelectItem>
                       <SelectItem value="q3">Q3 2023</SelectItem>
+                      <SelectItem value="q2">Q2 2023</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select
@@ -658,11 +659,9 @@ export default function Index() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Departments</SelectItem>
-                      <SelectItem value="Marketing">Marketing</SelectItem>
-                      <SelectItem value="Sales">Sales</SelectItem>
-                      <SelectItem value="Engineering">Engineering</SelectItem>
-                      <SelectItem value="Design">Design</SelectItem>
-                      <SelectItem value="HR">HR</SelectItem>
+                      {availableDepartments.map(dept => (
+                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
