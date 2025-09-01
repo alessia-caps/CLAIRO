@@ -280,7 +280,7 @@ export default function LaptopInventory() {
       );
       if (/^no custodian/i.test(employee)) employee = "";
       const dept = normalizeStr(
-        getFirstVal(row, ["Department", "Dept", "Team", "BU", "Business Unit"], "Unknown"),
+        getFirstVal(row, ["VERTICAL", "Department", "Dept", "Team", "BU", "Business Unit"], "Unknown"),
       );
       const statusRaw = normalizeStr(
         getFirstVal(row, ["Status", "State"], employee ? "Active" : "Spare"),
