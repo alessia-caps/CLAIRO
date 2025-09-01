@@ -920,7 +920,7 @@ export default function LaptopInventory() {
                         <TableCell className="space-x-1">
                           {l.cyod && <Badge variant="outline">CYOD</Badge>}
                           {l.replacementScheduled && <Badge variant="outline">Replacement</Badge>}
-                          {l.ageYears >= 7 && <Badge variant="destructive">>7y</Badge>}
+                          {l.ageYears >= 7 && <Badge variant="destructive">&gt;7y</Badge>}
                         </TableCell>
                         <TableCell className="text-right space-x-1">
                           {l.status.toLowerCase() === "spare" && (
