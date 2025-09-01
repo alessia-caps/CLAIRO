@@ -499,12 +499,15 @@ export default function LaptopInventory() {
         }));
     }
 
-    let parsedPeripherals: Peripheral[] = peripheralsSheet.map((row: any) => ({
-      item: normalizeStr(getFirstVal(row, ["Item", "Type"], "")),
-      quantity: Number(getFirstVal(row, ["Quantity", "Qty"], 0)) || 0,
-      available: Number(getFirstVal(row, ["Available", "In Stock"], 0)) || 0,
-    }));
-    if (peripheralsSheet.length) {
+    let parsedPeripherals: Peripheral[] = [];
+
+    if (peripheralsSheet.length > 0) {
+      parsedPeripherals = peripheralsSheet.map((row: any) => ({
+        item: normalizeStr(getFirstVal(row, ["Item", "Type"], "")),
+        quantity: Number(getFirstVal(row, ["Quantity", "Qty"], 0)) || 0,
+        available: Number(getFirstVal(row, ["Available", "In Stock"], 0)) || 0,
+      }));
+
       const extra: Peripheral[] = [];
       peripheralsSheet.forEach((row: any) => {
         const entries = Object.entries(row);
@@ -528,6 +531,9 @@ export default function LaptopInventory() {
       });
       const combined = [...parsedPeripherals, ...extra].filter((p) => p.item);
       if (combined.length) parsedPeripherals = combined;
+    } else {
+      // No peripherals data available, set default empty array
+      parsedPeripherals = [];
     }
 
     // Cross-mark laptops with active issues or incoming
