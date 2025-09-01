@@ -699,7 +699,7 @@ export default function LaptopInventory() {
             <CardTitle className="text-sm font-medium flex items-center gap-2"><Layers className="h-4 w-4" /> Peripherals</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex items-center justify-between"><span><MousePointerSquareDashed className="inline h-3 w-3 mr-1"/>Mouse available</span><Badge variant={peripheralsSummary.mouse<5?"destructive":"secondary"}>{peripheralsSummary.mouse}</Badge></div>
+            <div className="flex items-center justify-between"><span><Mouse className="inline h-3 w-3 mr-1"/>Mouse available</span><Badge variant={peripheralsSummary.mouse<5?"destructive":"secondary"}>{peripheralsSummary.mouse}</Badge></div>
             <div className="flex items-center justify-between"><span><Headphones className="inline h-3 w-3 mr-1"/>Headset available</span><Badge variant={peripheralsSummary.headset<5?"destructive":"secondary"}>{peripheralsSummary.headset}</Badge></div>
             {peripheralsSummary.shortages.length===0 ? (
               <p className="text-xs text-muted-foreground">No shortages</p>
