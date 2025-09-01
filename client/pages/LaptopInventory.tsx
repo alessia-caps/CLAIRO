@@ -151,10 +151,7 @@ export default function LaptopInventory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [deptFilter, setDeptFilter] = useState<string>("all");
   const [problemOnly, setProblemOnly] = useState(false);
-  const [excelUrl, setExcelUrl] = useState("");
-  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
-
-  // File/URL upload
+  // File upload
   const onFileUpload = async (file: File) => {
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: "array" });
@@ -645,26 +642,6 @@ export default function LaptopInventory() {
           <Button variant="outline" onClick={() => { document.getElementById("file")?.click(); }}>
             <Upload className="h-4 w-4 mr-2" /> Upload
           </Button>
-          <Input
-            placeholder="Paste Excel URL and press Load"
-            value={excelUrl}
-            onChange={(e) => setExcelUrl(e.target.value)}
-            className="w-72"
-          />
-          <Button disabled={!excelUrl || isLoadingUrl} onClick={async () => {
-            try {
-              setIsLoadingUrl(true);
-              const res = await fetch(excelUrl);
-              if (!res.ok) throw new Error("Failed to fetch file");
-              const buf = await res.arrayBuffer();
-              const file = new File([buf], "remote.xlsx", { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-              await onFileUpload(file);
-            } catch (e) {
-              alert("Could not load the Excel from URL. Please verify the link.");
-            } finally {
-              setIsLoadingUrl(false);
-            }
-          }}>{isLoadingUrl ? "Loading..." : "Load"}</Button>
         </div>
       </div>
 
