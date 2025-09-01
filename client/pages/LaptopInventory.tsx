@@ -210,7 +210,7 @@ export default function LaptopInventory() {
       );
     }
 
-    let issuesSheet = getSheet(["Issues", "Repairs", "Maintenance"]);
+    let issuesSheet = getSheet(["Laptops With Issues", "Issues", "Repairs", "Maintenance"]);
     if (!issuesSheet.length) {
       issuesSheet = detectBy((rows) =>
         scoreSheet(rows, ["issue", "problem", "category"]) + scoreSheet(rows, ["status"]) + scoreSheet(rows, ["reported", "date"]) + scoreSheet(rows, ["asset", "model"]),
