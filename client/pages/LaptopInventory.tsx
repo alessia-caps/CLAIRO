@@ -417,25 +417,58 @@ export default function LaptopInventory() {
         });
     }
 
-    const parsedIncoming: Incoming[] = incomingSheet.map((row: any) => {
-      const comments = normalizeStr(getFirstVal(row, ["COMMENTS", "Comments", "Notes"], ""));
-      const model = normalizeStr(getFirstVal(row, ["MODEL", "Model"], ""));
-      const brand = normalizeStr(getFirstVal(row, ["BRAND", "Brand", "Make"], ""));
-      const startDate = tryParseDate(getFirstVal(row, ["NEW HIRE START DATE"], null));
-      const invoiceDate = tryParseDate(getFirstVal(row, ["INVOICE DATE"], null));
-      let purpose = "Spare";
-      if (/new\s*hire/i.test(comments) || startDate) purpose = "New Hire";
-      else if (/replace/i.test(comments)) purpose = "Replacement";
-      else if (/purchase/i.test(comments)) purpose = "Spare";
-      return {
-        assetTag: normalizeStr(getFirstVal(row, ["ASSET CODE", "Asset", "ID"], "")),
-        brand,
-        model: model || brand,
-        expectedDate: startDate || invoiceDate,
-        purpose,
-        employee: normalizeStr(getFirstVal(row, ["Employee", "Name"], "")) || undefined,
-      } as Incoming;
-    });
+    let parsedIncoming: Incoming[] = [];
+
+    if (incomingSheet.length > 0) {
+      // If we have a separate incoming sheet, parse it
+      parsedIncoming = incomingSheet.map((row: any) => {
+        const comments = normalizeStr(getFirstVal(row, ["COMMENTS", "Comments", "Notes"], ""));
+        const model = normalizeStr(getFirstVal(row, ["MODEL", "Model"], ""));
+        const brand = normalizeStr(getFirstVal(row, ["BRAND", "Brand", "Make"], ""));
+        const startDate = tryParseDate(getFirstVal(row, ["NEW HIRE START DATE"], null));
+        const invoiceDate = tryParseDate(getFirstVal(row, ["INVOICE DATE"], null));
+        let purpose = "Spare";
+        if (/new\s*hire/i.test(comments) || startDate) purpose = "New Hire";
+        else if (/replace/i.test(comments)) purpose = "Replacement";
+        else if (/purchase/i.test(comments)) purpose = "Spare";
+        return {
+          assetTag: normalizeStr(getFirstVal(row, ["ASSET CODE", "Asset", "ID"], "")),
+          brand,
+          model: model || brand,
+          expectedDate: startDate || invoiceDate,
+          purpose,
+          employee: normalizeStr(getFirstVal(row, ["Employee", "Name"], "")) || undefined,
+        } as Incoming;
+      });
+    } else {
+      // For this dataset, we can look for future deployment dates or recent purchases without assignments
+      const today = new Date();
+      const recentThreshold = new Date();
+      recentThreshold.setMonth(recentThreshold.getMonth() - 1); // Last month
+
+      parsedIncoming = laptopsSheet
+        .filter((row: any) => {
+          const invoiceDate = tryParseDate(getFirstVal(row, ["INVOICE DATE"], null));
+          const deploymentDate = tryParseDate(getFirstVal(row, ["ASSET DEPLOYMNT"], null));
+          const custodian = normalizeStr(getFirstVal(row, ["CUSTODIAN"], ""));
+
+          // Recent purchases without custodian or future deployment dates
+          const isRecent = invoiceDate && invoiceDate > recentThreshold;
+          const hasNoCustodian = !custodian || /no custodian/i.test(custodian);
+          const futureDeployment = deploymentDate && deploymentDate > today;
+
+          return (isRecent && hasNoCustodian) || futureDeployment;
+        })
+        .map((row: any) => ({
+          assetTag: normalizeStr(getFirstVal(row, ["ASSET CODE"], "")),
+          brand: normalizeStr(getFirstVal(row, ["BRAND"], "")),
+          model: normalizeStr(getFirstVal(row, ["MODEL"], "")),
+          expectedDate: tryParseDate(getFirstVal(row, ["ASSET DEPLOYMNT"], null)) ||
+                       tryParseDate(getFirstVal(row, ["INVOICE DATE"], null)),
+          purpose: "Spare",
+          employee: undefined,
+        }));
+    }
 
     let parsedCyod: Cyod[] = [];
 
