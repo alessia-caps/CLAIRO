@@ -305,74 +305,78 @@ export default function LaptopInventory() {
       );
     }
 
-    const parsedLaptops: Laptop[] = laptopsSheet.map((row: any) => {
-      const purchaseDate = tryParseDate(
-        getFirstVal(row, ["INVOICE DATE", "Purchase Date", "Purchased", "Buy Date"], null),
-      );
-      const deploymentDate = tryParseDate(
-        getFirstVal(row, ["ASSET DEPLOYMNT", "EMP DATE", "Deployment Date", "Assigned Date"], null),
-      );
+    const parsedLaptops: Laptop[] = laptopsSheet
+      .filter((row: any) => {
+        // Filter out empty rows and header rows
+        const assetCode = String(row["ASSET CODE"] || "").trim();
+        return assetCode && assetCode !== "ASSET CODE" && !assetCode.includes("#REF!");
+      })
+      .map((row: any) => {
+        console.log("Processing row:", row);
 
-      let employee = normalizeStr(
-        getFirstVal(row, ["CUSTODIAN", "Employee", "Assigned To", "User", "Name"], ""),
-      );
-      // Handle various "no custodian" formats from your data
-      if (/^no custodian/i.test(employee) || /^0$/i.test(employee) || /^#ref!?$/i.test(employee) ||
-          /^dead unit/i.test(employee) || /^defective/i.test(employee) || employee === "CH") {
-        employee = "";
-      }
+        const purchaseDate = tryParseDate(row["INVOICE DATE"]);
+        const deploymentDate = tryParseDate(row["ASSET DEPLOYMNT"] || row["EMP DATE"]);
 
-      const dept = normalizeStr(
-        getFirstVal(row, ["VERTICAL", "Department", "Dept", "Team", "BU", "Business Unit"], "Unknown"),
-      );
+        let employee = String(row["CUSTODIAN"] || "").trim();
+        // Handle various "no custodian" formats from your data
+        if (!employee || /^no custodian/i.test(employee) || /^0$/i.test(employee) ||
+            /^#ref!?$/i.test(employee) || /^dead unit/i.test(employee) ||
+            /^defective/i.test(employee) || employee === "CH" ||
+            /^marketing$/i.test(employee) || employee === "RC") {
+          employee = "";
+        }
 
-      // Parse TAG field to determine status
-      const tagText = normalizeStr(getFirstVal(row, ["TAG", "Status"], "")).toLowerCase();
-      const maintenanceHistory = normalizeStr(getFirstVal(row, ["MAINTENANCE HISTORY"], ""));
+        const dept = String(row["VERTICAL"] || "0").trim();
+        const realDept = dept === "0" ? "Unknown" : dept;
 
-      let statusRaw = "";
-      if (/spare\s*unit|spare|common area/.test(tagText)) {
-        statusRaw = "Spare";
-      } else if (/deployed?\s*unit|cyod|change ownership to employee/.test(tagText)) {
-        statusRaw = employee ? "Active" : "Spare";
-      } else if (/eol|beyond\s*repair|dead unit|under repair|for repair/.test(tagText)) {
-        statusRaw = "Issues";
-      } else if (/test eqpt|borrowed/.test(tagText)) {
-        statusRaw = "Spare";
-      } else {
-        // Default logic based on employee assignment
-        statusRaw = employee ? "Active" : "Spare";
-      }
+        // Parse TAG field to determine status
+        const tagText = String(row["TAG"] || "").toLowerCase();
+        const maintenanceHistory = String(row["MAINTENANCE HISTORY"] || "");
 
-      // Check if it's CYOD
-      const cyodFlag = /cyod|change ownership to employee|sold/.test(tagText.toLowerCase());
+        let statusRaw = "";
+        if (/spare\s*unit|spare|common area/.test(tagText)) {
+          statusRaw = "Spare";
+        } else if (/deployed?\s*unit/.test(tagText)) {
+          statusRaw = "Active";
+        } else if (/cyod|change ownership to employee|sold/.test(tagText)) {
+          statusRaw = employee ? "Active" : "Spare";
+        } else if (/eol|beyond\s*repair|under repair|for repair/.test(tagText)) {
+          statusRaw = "Issues";
+        } else if (/test eqpt|borrowed/.test(tagText)) {
+          statusRaw = "Spare";
+        } else {
+          // Default logic based on employee assignment
+          statusRaw = employee ? "Active" : "Spare";
+        }
 
-      // Parse age from LAPTOP AGE column
-      const laptopAgeStr = normalizeStr(getFirstVal(row, ["LAPTOP AGE"], ""));
-      const ageMatch = laptopAgeStr.match(/(\d+\.?\d*)/);
-      const ageYears = ageMatch ? Math.floor(parseFloat(ageMatch[1])) : fullYearsBetween(purchaseDate);
+        // Check if it's CYOD
+        const cyodFlag = /cyod|change ownership to employee|sold/.test(tagText);
 
-      return {
-        assetTag: normalizeStr(
-          getFirstVal(row, ["ASSET CODE", "OLD CODE", "Asset Tag", "Asset", "Code", "ID"], ""),
-        ),
-        serial: normalizeStr(
-          getFirstVal(row, ["SERIAL NUM", "Serial Number", "Serial", "SN"], ""),
-        ),
-        brand: normalizeStr(getFirstVal(row, ["BRAND", "Brand", "Make"], "Unknown")),
-        model: normalizeStr(getFirstVal(row, ["MODEL", "Model"], "Unknown")),
-        department: dept || "Unknown",
-        employee: employee || undefined,
-        status: statusRaw,
-        purchaseDate,
-        ownershipDate: null,
-        deploymentDate,
-        ageYears,
-        cyod: cyodFlag,
-        notes: maintenanceHistory || "",
-        replacementScheduled: /replace/.test(tagText.toLowerCase()),
-      };
-    });
+        // Parse age from LAPTOP AGE column
+        const laptopAgeStr = String(row["LAPTOP AGE"] || "");
+        const ageMatch = laptopAgeStr.match(/(\d+\.?\d*)/);
+        const ageYears = ageMatch ? Math.floor(parseFloat(ageMatch[1])) : fullYearsBetween(purchaseDate);
+
+        const laptop = {
+          assetTag: String(row["ASSET CODE"] || "").trim(),
+          serial: String(row["SERIAL NUM"] || "").trim(),
+          brand: String(row["BRAND"] || "Unknown").trim(),
+          model: String(row["MODEL"] || "Unknown").trim(),
+          department: realDept,
+          employee: employee || undefined,
+          status: statusRaw,
+          purchaseDate,
+          ownershipDate: null,
+          deploymentDate,
+          ageYears,
+          cyod: cyodFlag,
+          notes: maintenanceHistory,
+          replacementScheduled: /replace/.test(tagText),
+        };
+
+        console.log("Processed laptop:", laptop);
+        return laptop;
+      });
 
     let parsedIssues: Issue[] = [];
 
