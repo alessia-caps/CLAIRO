@@ -282,9 +282,12 @@ export default function LaptopInventory() {
       const dept = normalizeStr(
         getFirstVal(row, ["VERTICAL", "Department", "Dept", "Team", "BU", "Business Unit"], "Unknown"),
       );
-      const statusRaw = normalizeStr(
-        getFirstVal(row, ["Status", "State"], employee ? "Active" : "Spare"),
+      let statusRaw = normalizeStr(
+        getFirstVal(row, ["TYPE", "Status", "State"], employee ? "Active" : "Spare"),
       );
+      if (/spare/i.test(statusRaw)) statusRaw = "Spare";
+      else if (/deploy/i.test(statusRaw)) statusRaw = "Active";
+      else if (/eol|beyond repair/i.test(statusRaw)) statusRaw = "Issues";
       const cyodFlag = String(
         getFirstVal(row, ["CYOD", "Is CYOD", "Personal", "Ownership", "Employee Owned"], "No"),
       )
