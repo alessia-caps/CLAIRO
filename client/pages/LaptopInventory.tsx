@@ -971,10 +971,10 @@ export default function LaptopInventory() {
 
         {/* Overview */}
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium flex items-center gap-2"><Cpu className="h-4 w-4"/> Age Chart</CardTitle>
+                <CardTitle className="text-sm font-medium flex items-center gap-2"><Cpu className="h-4 w-4"/> Laptop Age Distribution</CardTitle>
               </CardHeader>
               <CardContent>
                 {ageData.length ? (
@@ -995,7 +995,7 @@ export default function LaptopInventory() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">Brand Breakdown</CardTitle>
+                <CardTitle className="text-sm font-medium">Brand Distribution</CardTitle>
               </CardHeader>
               <CardContent>
                 {brandData.length ? (
@@ -1014,7 +1014,7 @@ export default function LaptopInventory() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">Department Distribution</CardTitle>
+                <CardTitle className="text-sm font-medium">Department Overview</CardTitle>
               </CardHeader>
               <CardContent>
                 {deptData.length ? (
@@ -1032,14 +1032,32 @@ export default function LaptopInventory() {
                 )}
               </CardContent>
             </Card>
+          </div>
 
+          {/* Quick Stats Row */}
+          <div className="grid gap-4 md:grid-cols-4">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">5-Year Rule</CardTitle>
-              </CardHeader>
-              <CardContent>
+              <CardContent className="p-4">
                 <div className="text-2xl font-bold">{fiveYearCount}</div>
-                <p className="text-xs text-muted-foreground">Assets at or beyond 5 years (based on purchase date)</p>
+                <p className="text-xs text-muted-foreground">Assets 5+ years old</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-2xl font-bold">{summary.cyodCount}</div>
+                <p className="text-xs text-muted-foreground">CYOD devices</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-2xl font-bold">{issues.length}</div>
+                <p className="text-xs text-muted-foreground">Issues reported</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-2xl font-bold">{employees.length}</div>
+                <p className="text-xs text-muted-foreground">Employees with laptops</p>
               </CardContent>
             </Card>
           </div>
