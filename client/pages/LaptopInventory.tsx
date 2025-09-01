@@ -317,11 +317,12 @@ export default function LaptopInventory() {
         getFirstVal(row, ["VERTICAL", "Department", "Dept", "Team", "BU", "Business Unit"], "Unknown"),
       );
       let statusRaw = normalizeStr(
-        getFirstVal(row, ["TYPE", "Status", "State"], employee ? "Active" : "Spare"),
+        getFirstVal(row, ["TYPE", "TYPE OF EMPLOYEE", "Status", "State", "REPLACE TAG", "MAINTENANCE HISTORY", "NOTES / COMMENTS"], employee ? "Active" : "Spare"),
       );
-      if (/spare/i.test(statusRaw)) statusRaw = "Spare";
+      if (/spare\s*unit|\bspare\b/i.test(statusRaw)) statusRaw = "Spare";
       else if (/deploy/i.test(statusRaw)) statusRaw = "Active";
-      else if (/eol|beyond repair/i.test(statusRaw)) statusRaw = "Issues";
+      else if (/eol|beyond\s*repair|defective/i.test(statusRaw)) statusRaw = "Issues";
+      if (!/Spare|Issues/i.test(statusRaw) && employee) statusRaw = "Active";
       const cyodFlag = (() => {
         const raw = String(
           getFirstVal(
