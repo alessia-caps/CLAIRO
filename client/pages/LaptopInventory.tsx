@@ -163,7 +163,6 @@ export default function LaptopInventory() {
 
     const getSheet = (names: string[]) => {
       for (const n of names) if (sheets[n]) return sheets[n];
-      // try case-insensitive
       const lower = Object.fromEntries(
         Object.keys(sheets).map((k) => [k.toLowerCase(), k]),
       );
@@ -174,36 +173,85 @@ export default function LaptopInventory() {
       return [] as any[];
     };
 
-    const laptopsSheet = getSheet([
+    const keysOf = (rows: any[]) =>
+      rows && rows.length ? Object.keys(rows[0]).map((k) => k.toLowerCase()) : [];
+
+    const scoreSheet = (rows: any[], wanted: string[]) => {
+      const keys = keysOf(rows);
+      return wanted.reduce((s, w) => (keys.some((k) => k.includes(w)) ? s + 1 : s), 0);
+    };
+
+    const detectBy = (scoreFn: (rows: any[]) => number) => {
+      let best: any[] = [];
+      let bestScore = 0;
+      for (const name of Object.keys(sheets)) {
+        const rows = sheets[name];
+        const sc = scoreFn(rows);
+        if (sc > bestScore) {
+          bestScore = sc;
+          best = rows;
+        }
+      }
+      return bestScore > 0 ? best : ([] as any[]);
+    };
+
+    let laptopsSheet = getSheet([
       "Laptops",
       "Assets",
       "Laptop Inventory",
       "Computers",
       "Laptop",
     ]);
+    if (!laptopsSheet.length) {
+      laptopsSheet = detectBy((rows) =>
+        scoreSheet(rows, [
+          "asset", "serial", "brand", "model", "department", "dept", "team", "business unit", "employee", "status", "purchase", "acquisition", "procure"
+        ]),
+      );
+    }
 
-    const issuesSheet = getSheet(["Issues", "Repairs", "Maintenance"]);
+    let issuesSheet = getSheet(["Issues", "Repairs", "Maintenance"]);
+    if (!issuesSheet.length) {
+      issuesSheet = detectBy((rows) =>
+        scoreSheet(rows, ["issue", "problem", "category"]) + scoreSheet(rows, ["status"]) + scoreSheet(rows, ["reported", "date"]) + scoreSheet(rows, ["asset", "model"]),
+      );
+    }
 
-    const incomingSheet = getSheet([
+    let incomingSheet = getSheet([
       "Incoming",
       "New Arrivals",
       "Pipeline",
       "Incoming Equipment",
     ]);
+    if (!incomingSheet.length) {
+      incomingSheet = detectBy((rows) =>
+        scoreSheet(rows, ["expected", "eta", "arrival"]) + scoreSheet(rows, ["purpose", "reason", "type"]) + scoreSheet(rows, ["employee"]) + scoreSheet(rows, ["brand", "model"]),
+      );
+    }
 
-    const cyodSheet = getSheet([
+    let cyodSheet = getSheet([
       "CYOD",
       "Choose Your Own Device",
       "BYOD",
       "Employee Choice",
     ]);
+    if (!cyodSheet.length) {
+      cyodSheet = detectBy((rows) =>
+        scoreSheet(rows, ["cyod", "employee owned", "ownership"]) + scoreSheet(rows, ["device type", "type"]) + scoreSheet(rows, ["status"]) + scoreSheet(rows, ["cost", "price"]),
+      );
+    }
 
-    const peripheralsSheet = getSheet([
+    let peripheralsSheet = getSheet([
       "Mouse & Headset",
       "Mouse and Headset",
       "Peripherals",
       "Accessories",
     ]);
+    if (!peripheralsSheet.length) {
+      peripheralsSheet = detectBy((rows) =>
+        scoreSheet(rows, ["item", "type"]) + scoreSheet(rows, ["quantity", "qty"]) + scoreSheet(rows, ["available", "in stock"]) + scoreSheet(rows, ["mouse"]) + scoreSheet(rows, ["headset"]),
+      );
+    }
 
     const parsedLaptops: Laptop[] = laptopsSheet.map((row: any) => {
       const purchaseDate = tryParseDate(
@@ -1055,7 +1103,7 @@ export default function LaptopInventory() {
                     )}
                     {issues.map((i, idx) => (
                       <TableRow key={idx}>
-                        <TableCell>{i.assetTag || "—"}</TableCell>
+                        <TableCell>{i.assetTag || "��"}</TableCell>
                         <TableCell>{i.model || "—"}</TableCell>
                         <TableCell>{i.issueType}</TableCell>
                         <TableCell><Badge variant={/fixed/i.test(i.status)?"secondary":"destructive"}>{i.status}</Badge></TableCell>
