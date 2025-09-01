@@ -1145,7 +1145,37 @@ export default function LaptopInventory() {
         <TabsContent value="assets" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>All Assets</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Search className="h-4 w-4"/>
+                Search & Filter Assets
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 md:grid-cols-4">
+              <Input
+                placeholder="Search asset, employee..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Select value={deptFilter} onValueChange={setDeptFilter}>
+                <SelectTrigger><SelectValue placeholder="Department" /></SelectTrigger>
+                <SelectContent>
+                  {departments.map((d) => (
+                    <SelectItem key={d} value={d}>{d === "all" ? "All Departments" : d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button variant={problemOnly?"destructive":"outline"} onClick={() => setProblemOnly((v) => !v)}>
+                <AlertCircle className="h-4 w-4 mr-2"/> {problemOnly ? "Issues Only" : "Show Issues"}
+              </Button>
+              <Button variant="ghost" onClick={()=>{setSearchQuery(""); setDeptFilter("all"); setProblemOnly(false);}}>
+                <RefreshCcw className="h-4 w-4 mr-2"/> Reset
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>All Assets ({filteredLaptops.length})</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -1156,54 +1186,45 @@ export default function LaptopInventory() {
                       <TableHead>Brand/Model</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Employee</TableHead>
-                      <TableHead>Dept</TableHead>
+                      <TableHead>Department</TableHead>
                       <TableHead>Age</TableHead>
-                      <TableHead>Flags</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>Notes</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredLaptops.length === 0 && (
-                      <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">No assets match</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No assets match your search</TableCell></TableRow>
                     )}
-                    {filteredLaptops.map((l, idx) => (
+                    {filteredLaptops.slice(0, 50).map((l, idx) => (
                       <TableRow key={`${l.assetTag || l.serial || l.model || 'row'}-${idx}`} className={l.status.toLowerCase()==="issues"?"bg-destructive/5":""}>
                         <TableCell className="font-medium">{l.assetTag || "—"}</TableCell>
                         <TableCell>
                           <div className="flex flex-col">
-                            <span>{l.brand}</span>
+                            <span className="font-medium">{l.brand}</span>
                             <span className="text-xs text-muted-foreground">{l.model}</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={l.status.toLowerCase()==="issues"?"destructive": l.status.toLowerCase()==="active"?"default":"secondary"}>{l.status || "—"}</Badge>
+                          <Badge variant={l.status.toLowerCase()==="issues"?"destructive": l.status.toLowerCase()==="active"?"default":"secondary"}>
+                            {l.status || "—"}
+                          </Badge>
+                          {l.cyod && <Badge variant="outline" className="ml-1">CYOD</Badge>}
+                          {l.ageYears >= 7 && <Badge variant="destructive" className="ml-1">Old</Badge>}
                         </TableCell>
                         <TableCell>{l.employee || "—"}</TableCell>
                         <TableCell>{l.department || "Unknown"}</TableCell>
                         <TableCell>{l.ageYears}y</TableCell>
-                        <TableCell className="space-x-1">
-                          {l.cyod && <Badge variant="outline">CYOD</Badge>}
-                          {l.replacementScheduled && <Badge variant="outline">Replacement</Badge>}
-                          {l.ageYears >= 7 && <Badge variant="destructive">&gt;7y</Badge>}
-                        </TableCell>
-                        <TableCell className="text-right space-x-1">
-                          {l.status.toLowerCase() === "spare" && (
-                            <Button size="sm" onClick={() => deployAsset(l)}>Deploy</Button>
-                          )}
-                          {l.status.toLowerCase() === "active" && (
-                            <Button size="sm" variant="secondary" onClick={() => returnAsset(l)}>Return</Button>
-                          )}
-                          <Button size="sm" variant="outline" onClick={() => reportIssue(l)}>Report</Button>
-                          <Button size="sm" variant="ghost" onClick={() => scheduleReplacement(l)}>Replace</Button>
-                          {l.status.toLowerCase() === "spare" && (
-                            <Button size="sm" variant="ghost" onClick={() => assignToNewHire(l)}>Assign to New Hire</Button>
-                          )}
-                        </TableCell>
+                        <TableCell className="max-w-xs truncate text-xs text-muted-foreground">{l.notes || "—"}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </div>
+              {filteredLaptops.length > 50 && (
+                <p className="text-sm text-muted-foreground text-center mt-4">
+                  Showing first 50 of {filteredLaptops.length} assets. Use filters to narrow down results.
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
