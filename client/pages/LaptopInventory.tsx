@@ -57,13 +57,22 @@ import {
 } from "recharts";
 
 // Dev-only: suppress Recharts defaultProps warnings (library issue)
-if (typeof window !== "undefined" && import.meta && (import.meta as any).env && (import.meta as any).env.DEV) {
+if (
+  typeof window !== "undefined" &&
+  import.meta &&
+  (import.meta as any).env &&
+  (import.meta as any).env.DEV
+) {
   const originalError = console.error;
   // @ts-expect-error override
   console.error = (...args: any[]) => {
-    const joined = args.map((a) => (typeof a === "string" ? a : String(a))).join(" ");
+    const joined = args
+      .map((a) => (typeof a === "string" ? a : String(a)))
+      .join(" ");
     if (
-      joined.includes("Support for defaultProps will be removed from function components") &&
+      joined.includes(
+        "Support for defaultProps will be removed from function components",
+      ) &&
       (joined.includes("XAxis") || joined.includes("YAxis"))
     ) {
       return;
@@ -158,7 +167,8 @@ const getFirstVal = (row: any, keys: string[], fallback = ""): any => {
   // 2) case-insensitive
   for (const k of keys) {
     const idx = rowKeys.find((rk) => rk.toLowerCase() === k.toLowerCase());
-    if (idx && row[idx] !== undefined && row[idx] !== null && row[idx] !== "") return row[idx];
+    if (idx && row[idx] !== undefined && row[idx] !== null && row[idx] !== "")
+      return row[idx];
   }
   // 3) normalized (remove spaces/symbols)
   const normMap = new Map<string, string>();
@@ -166,7 +176,13 @@ const getFirstVal = (row: any, keys: string[], fallback = ""): any => {
   for (const k of keys) {
     const nk = normalizeKey(k);
     const match = normMap.get(nk);
-    if (match && row[match] !== undefined && row[match] !== null && row[match] !== "") return row[match];
+    if (
+      match &&
+      row[match] !== undefined &&
+      row[match] !== null &&
+      row[match] !== ""
+    )
+      return row[match];
   }
   return fallback;
 };
@@ -175,13 +191,20 @@ const normalizeStr = (v: any) => String(v || "").trim();
 
 export default function LaptopInventory() {
   useEffect(() => {
-    if (typeof window !== "undefined" && import.meta && (import.meta as any).env && (import.meta as any).env.DEV) {
+    if (
+      typeof window !== "undefined" &&
+      import.meta &&
+      (import.meta as any).env &&
+      (import.meta as any).env.DEV
+    ) {
       const originalError = console.error;
       console.error = (...args: any[]) => {
         const msg = typeof args[0] === "string" ? args[0] : "";
         const joined = args.map(String).join(" ");
         const isRechartsDefaultPropsWarning =
-          msg.includes("Support for defaultProps will be removed from function components") &&
+          msg.includes(
+            "Support for defaultProps will be removed from function components",
+          ) &&
           (joined.includes("XAxis") || joined.includes("YAxis"));
         if (isRechartsDefaultPropsWarning) return;
         originalError(...args);
@@ -225,11 +248,16 @@ export default function LaptopInventory() {
     };
 
     const keysOf = (rows: any[]) =>
-      rows && rows.length ? Object.keys(rows[0]).map((k) => k.toLowerCase()) : [];
+      rows && rows.length
+        ? Object.keys(rows[0]).map((k) => k.toLowerCase())
+        : [];
 
     const scoreSheet = (rows: any[], wanted: string[]) => {
       const keys = keysOf(rows);
-      return wanted.reduce((s, w) => (keys.some((k) => k.includes(w)) ? s + 1 : s), 0);
+      return wanted.reduce(
+        (s, w) => (keys.some((k) => k.includes(w)) ? s + 1 : s),
+        0,
+      );
     };
 
     const detectBy = (scoreFn: (rows: any[]) => number) => {
@@ -257,15 +285,32 @@ export default function LaptopInventory() {
     if (!laptopsSheet.length) {
       laptopsSheet = detectBy((rows) =>
         scoreSheet(rows, [
-          "asset code", "invoice date", "custodian", "brand", "model", "vertical", "serial num", "tag", "maintenance history"
+          "asset code",
+          "invoice date",
+          "custodian",
+          "brand",
+          "model",
+          "vertical",
+          "serial num",
+          "tag",
+          "maintenance history",
         ]),
       );
     }
 
-    let issuesSheet = getSheet(["Laptops With Issues", "Issues", "Repairs", "Maintenance"]);
+    let issuesSheet = getSheet([
+      "Laptops With Issues",
+      "Issues",
+      "Repairs",
+      "Maintenance",
+    ]);
     if (!issuesSheet.length) {
-      issuesSheet = detectBy((rows) =>
-        scoreSheet(rows, ["issue", "problem", "category"]) + scoreSheet(rows, ["status"]) + scoreSheet(rows, ["reported", "date"]) + scoreSheet(rows, ["asset", "model"]),
+      issuesSheet = detectBy(
+        (rows) =>
+          scoreSheet(rows, ["issue", "problem", "category"]) +
+          scoreSheet(rows, ["status"]) +
+          scoreSheet(rows, ["reported", "date"]) +
+          scoreSheet(rows, ["asset", "model"]),
       );
     }
 
@@ -276,8 +321,12 @@ export default function LaptopInventory() {
       "Incoming Equipment",
     ]);
     if (!incomingSheet.length) {
-      incomingSheet = detectBy((rows) =>
-        scoreSheet(rows, ["expected", "eta", "arrival"]) + scoreSheet(rows, ["purpose", "reason", "type"]) + scoreSheet(rows, ["employee"]) + scoreSheet(rows, ["brand", "model"]),
+      incomingSheet = detectBy(
+        (rows) =>
+          scoreSheet(rows, ["expected", "eta", "arrival"]) +
+          scoreSheet(rows, ["purpose", "reason", "type"]) +
+          scoreSheet(rows, ["employee"]) +
+          scoreSheet(rows, ["brand", "model"]),
       );
     }
 
@@ -288,8 +337,12 @@ export default function LaptopInventory() {
       "Employee Choice",
     ]);
     if (!cyodSheet.length) {
-      cyodSheet = detectBy((rows) =>
-        scoreSheet(rows, ["cyod", "employee owned", "ownership"]) + scoreSheet(rows, ["device type", "type"]) + scoreSheet(rows, ["status"]) + scoreSheet(rows, ["cost", "price"]),
+      cyodSheet = detectBy(
+        (rows) =>
+          scoreSheet(rows, ["cyod", "employee owned", "ownership"]) +
+          scoreSheet(rows, ["device type", "type"]) +
+          scoreSheet(rows, ["status"]) +
+          scoreSheet(rows, ["cost", "price"]),
       );
     }
 
@@ -300,8 +353,13 @@ export default function LaptopInventory() {
       "Accessories",
     ]);
     if (!peripheralsSheet.length) {
-      peripheralsSheet = detectBy((rows) =>
-        scoreSheet(rows, ["item", "type"]) + scoreSheet(rows, ["quantity", "qty"]) + scoreSheet(rows, ["available", "in stock"]) + scoreSheet(rows, ["mouse"]) + scoreSheet(rows, ["headset"]),
+      peripheralsSheet = detectBy(
+        (rows) =>
+          scoreSheet(rows, ["item", "type"]) +
+          scoreSheet(rows, ["quantity", "qty"]) +
+          scoreSheet(rows, ["available", "in stock"]) +
+          scoreSheet(rows, ["mouse"]) +
+          scoreSheet(rows, ["headset"]),
       );
     }
 
@@ -309,20 +367,33 @@ export default function LaptopInventory() {
       .filter((row: any) => {
         // Filter out empty rows and header rows
         const assetCode = String(row["ASSET CODE"] || "").trim();
-        return assetCode && assetCode !== "ASSET CODE" && !assetCode.includes("#REF!");
+        return (
+          assetCode &&
+          assetCode !== "ASSET CODE" &&
+          !assetCode.includes("#REF!")
+        );
       })
       .map((row: any) => {
         console.log("Processing row:", row);
 
         const purchaseDate = tryParseDate(row["INVOICE DATE"]);
-        const deploymentDate = tryParseDate(row["ASSET DEPLOYMNT"] || row["EMP DATE"]);
+        const deploymentDate = tryParseDate(
+          row["ASSET DEPLOYMNT"] || row["EMP DATE"],
+        );
 
         let employee = String(row["CUSTODIAN"] || "").trim();
         // Handle various "no custodian" formats from your data
-        if (!employee || /^no custodian/i.test(employee) || /^0$/i.test(employee) ||
-            /^#ref!?$/i.test(employee) || /^dead unit/i.test(employee) ||
-            /^defective/i.test(employee) || employee === "CH" ||
-            /^marketing$/i.test(employee) || employee === "RC") {
+        if (
+          !employee ||
+          /^no custodian/i.test(employee) ||
+          /^0$/i.test(employee) ||
+          /^#ref!?$/i.test(employee) ||
+          /^dead unit/i.test(employee) ||
+          /^defective/i.test(employee) ||
+          employee === "CH" ||
+          /^marketing$/i.test(employee) ||
+          employee === "RC"
+        ) {
           employee = "";
         }
 
@@ -340,7 +411,9 @@ export default function LaptopInventory() {
           statusRaw = "Active";
         } else if (/cyod|change ownership to employee|sold/.test(tagText)) {
           statusRaw = employee ? "Active" : "Spare";
-        } else if (/eol|beyond\s*repair|under repair|for repair/.test(tagText)) {
+        } else if (
+          /eol|beyond\s*repair|under repair|for repair/.test(tagText)
+        ) {
           statusRaw = "Issues";
         } else if (/test eqpt|borrowed/.test(tagText)) {
           statusRaw = "Spare";
@@ -355,7 +428,9 @@ export default function LaptopInventory() {
         // Parse age from LAPTOP AGE column
         const laptopAgeStr = String(row["LAPTOP AGE"] || "");
         const ageMatch = laptopAgeStr.match(/(\d+\.?\d*)/);
-        const ageYears = ageMatch ? Math.floor(parseFloat(ageMatch[1])) : fullYearsBetween(purchaseDate);
+        const ageYears = ageMatch
+          ? Math.floor(parseFloat(ageMatch[1]))
+          : fullYearsBetween(purchaseDate);
 
         const laptop = {
           assetTag: String(row["ASSET CODE"] || "").trim(),
@@ -383,39 +458,81 @@ export default function LaptopInventory() {
     if (issuesSheet.length > 0) {
       // If we have a separate issues sheet, parse it
       parsedIssues = issuesSheet.map((row: any) => ({
-        assetTag: normalizeStr(getFirstVal(row, ["ASSET CODE", "Asset Tag", "Asset", "Code", "ID"], "")),
+        assetTag: normalizeStr(
+          getFirstVal(
+            row,
+            ["ASSET CODE", "Asset Tag", "Asset", "Code", "ID"],
+            "",
+          ),
+        ),
         model: normalizeStr(getFirstVal(row, ["MODEL", "Model"], "")),
-        serial: normalizeStr(getFirstVal(row, ["SERIAL NUM", "Serial Number", "Serial", "SN"], "")),
-        issueType: normalizeStr(getFirstVal(row, ["ISSUE (BNEXT)", "Issue Type", "Problem", "Category", "MAINTENANCE HISTORY"], "Unknown")),
-        status: normalizeStr(getFirstVal(row, ["TAG", "TYPE", "Status", "State"], "In Repair")),
-        reportedDate: tryParseDate(getFirstVal(row, ["DATE REPORTED ISSUE (BNEXT)", "Reported Date", "Date", "Opened"], null)),
+        serial: normalizeStr(
+          getFirstVal(row, ["SERIAL NUM", "Serial Number", "Serial", "SN"], ""),
+        ),
+        issueType: normalizeStr(
+          getFirstVal(
+            row,
+            [
+              "ISSUE (BNEXT)",
+              "Issue Type",
+              "Problem",
+              "Category",
+              "MAINTENANCE HISTORY",
+            ],
+            "Unknown",
+          ),
+        ),
+        status: normalizeStr(
+          getFirstVal(row, ["TAG", "TYPE", "Status", "State"], "In Repair"),
+        ),
+        reportedDate: tryParseDate(
+          getFirstVal(
+            row,
+            ["DATE REPORTED ISSUE (BNEXT)", "Reported Date", "Date", "Opened"],
+            null,
+          ),
+        ),
       }));
     } else {
       // Extract issues from main laptop data based on status and maintenance history
       parsedIssues = laptopsSheet
         .filter((row: any) => {
           const tag = normalizeStr(getFirstVal(row, ["TAG"], "")).toLowerCase();
-          const maintenance = normalizeStr(getFirstVal(row, ["MAINTENANCE HISTORY"], "")).toLowerCase();
-          return /eol|beyond repair|dead unit|under repair|defective|for repair|nexus|broken|battery|keyboard|screen|lcd|overheating/.test(tag + " " + maintenance);
+          const maintenance = normalizeStr(
+            getFirstVal(row, ["MAINTENANCE HISTORY"], ""),
+          ).toLowerCase();
+          return /eol|beyond repair|dead unit|under repair|defective|for repair|nexus|broken|battery|keyboard|screen|lcd|overheating/.test(
+            tag + " " + maintenance,
+          );
         })
         .map((row: any) => {
-          const maintenance = normalizeStr(getFirstVal(row, ["MAINTENANCE HISTORY"], ""));
+          const maintenance = normalizeStr(
+            getFirstVal(row, ["MAINTENANCE HISTORY"], ""),
+          );
           let issueType = "Hardware Issue";
 
           // Extract specific issue types from maintenance history
-          if (/battery|charging/.test(maintenance.toLowerCase())) issueType = "Battery Issue";
-          else if (/keyboard|key/.test(maintenance.toLowerCase())) issueType = "Keyboard Issue";
-          else if (/screen|lcd|display/.test(maintenance.toLowerCase())) issueType = "Display Issue";
-          else if (/overheating|shutdown|fan/.test(maintenance.toLowerCase())) issueType = "Thermal Issue";
-          else if (/hard.?drive|hdd|ssd/.test(maintenance.toLowerCase())) issueType = "Storage Issue";
-          else if (/beyond repair|eol/.test(maintenance.toLowerCase())) issueType = "End of Life";
+          if (/battery|charging/.test(maintenance.toLowerCase()))
+            issueType = "Battery Issue";
+          else if (/keyboard|key/.test(maintenance.toLowerCase()))
+            issueType = "Keyboard Issue";
+          else if (/screen|lcd|display/.test(maintenance.toLowerCase()))
+            issueType = "Display Issue";
+          else if (/overheating|shutdown|fan/.test(maintenance.toLowerCase()))
+            issueType = "Thermal Issue";
+          else if (/hard.?drive|hdd|ssd/.test(maintenance.toLowerCase()))
+            issueType = "Storage Issue";
+          else if (/beyond repair|eol/.test(maintenance.toLowerCase()))
+            issueType = "End of Life";
 
           return {
             assetTag: normalizeStr(getFirstVal(row, ["ASSET CODE"], "")),
             model: normalizeStr(getFirstVal(row, ["MODEL"], "")),
             serial: normalizeStr(getFirstVal(row, ["SERIAL NUM"], "")),
             issueType,
-            status: /beyond repair|eol|dead/.test(maintenance.toLowerCase()) ? "Beyond Repair" : "Under Repair",
+            status: /beyond repair|eol|dead/.test(maintenance.toLowerCase())
+              ? "Beyond Repair"
+              : "Under Repair",
             reportedDate: null,
           };
         });
@@ -426,22 +543,34 @@ export default function LaptopInventory() {
     if (incomingSheet.length > 0) {
       // If we have a separate incoming sheet, parse it
       parsedIncoming = incomingSheet.map((row: any) => {
-        const comments = normalizeStr(getFirstVal(row, ["COMMENTS", "Comments", "Notes"], ""));
+        const comments = normalizeStr(
+          getFirstVal(row, ["COMMENTS", "Comments", "Notes"], ""),
+        );
         const model = normalizeStr(getFirstVal(row, ["MODEL", "Model"], ""));
-        const brand = normalizeStr(getFirstVal(row, ["BRAND", "Brand", "Make"], ""));
-        const startDate = tryParseDate(getFirstVal(row, ["NEW HIRE START DATE"], null));
-        const invoiceDate = tryParseDate(getFirstVal(row, ["INVOICE DATE"], null));
+        const brand = normalizeStr(
+          getFirstVal(row, ["BRAND", "Brand", "Make"], ""),
+        );
+        const startDate = tryParseDate(
+          getFirstVal(row, ["NEW HIRE START DATE"], null),
+        );
+        const invoiceDate = tryParseDate(
+          getFirstVal(row, ["INVOICE DATE"], null),
+        );
         let purpose = "Spare";
         if (/new\s*hire/i.test(comments) || startDate) purpose = "New Hire";
         else if (/replace/i.test(comments)) purpose = "Replacement";
         else if (/purchase/i.test(comments)) purpose = "Spare";
         return {
-          assetTag: normalizeStr(getFirstVal(row, ["ASSET CODE", "Asset", "ID"], "")),
+          assetTag: normalizeStr(
+            getFirstVal(row, ["ASSET CODE", "Asset", "ID"], ""),
+          ),
           brand,
           model: model || brand,
           expectedDate: startDate || invoiceDate,
           purpose,
-          employee: normalizeStr(getFirstVal(row, ["Employee", "Name"], "")) || undefined,
+          employee:
+            normalizeStr(getFirstVal(row, ["Employee", "Name"], "")) ||
+            undefined,
         } as Incoming;
       });
     } else {
@@ -452,8 +581,12 @@ export default function LaptopInventory() {
 
       parsedIncoming = laptopsSheet
         .filter((row: any) => {
-          const invoiceDate = tryParseDate(getFirstVal(row, ["INVOICE DATE"], null));
-          const deploymentDate = tryParseDate(getFirstVal(row, ["ASSET DEPLOYMNT"], null));
+          const invoiceDate = tryParseDate(
+            getFirstVal(row, ["INVOICE DATE"], null),
+          );
+          const deploymentDate = tryParseDate(
+            getFirstVal(row, ["ASSET DEPLOYMNT"], null),
+          );
           const custodian = normalizeStr(getFirstVal(row, ["CUSTODIAN"], ""));
 
           // Recent purchases without custodian or future deployment dates
@@ -467,8 +600,9 @@ export default function LaptopInventory() {
           assetTag: normalizeStr(getFirstVal(row, ["ASSET CODE"], "")),
           brand: normalizeStr(getFirstVal(row, ["BRAND"], "")),
           model: normalizeStr(getFirstVal(row, ["MODEL"], "")),
-          expectedDate: tryParseDate(getFirstVal(row, ["ASSET DEPLOYMNT"], null)) ||
-                       tryParseDate(getFirstVal(row, ["INVOICE DATE"], null)),
+          expectedDate:
+            tryParseDate(getFirstVal(row, ["ASSET DEPLOYMNT"], null)) ||
+            tryParseDate(getFirstVal(row, ["INVOICE DATE"], null)),
           purpose: "Spare",
           employee: undefined,
         }));
@@ -498,7 +632,11 @@ export default function LaptopInventory() {
           brand: normalizeStr(getFirstVal(row, ["BRAND"], "")),
           deviceType: normalizeStr(getFirstVal(row, ["MODEL"], "")),
           model: normalizeStr(getFirstVal(row, ["MODEL"], "")),
-          status: /sold/.test(normalizeStr(getFirstVal(row, ["TAG"], "")).toLowerCase()) ? "Sold" : "Deployed",
+          status: /sold/.test(
+            normalizeStr(getFirstVal(row, ["TAG"], "")).toLowerCase(),
+          )
+            ? "Sold"
+            : "Deployed",
           cost: undefined,
         }));
     }
@@ -517,9 +655,14 @@ export default function LaptopInventory() {
         const entries = Object.entries(row);
         entries.forEach(([k, v]) => {
           const label = String(k).trim();
-          if (label && (typeof v === "number" || (typeof v === "string" && /^\d+(?:\.\d+)?$/.test(v)))) {
+          if (
+            label &&
+            (typeof v === "number" ||
+              (typeof v === "string" && /^\d+(?:\.\d+)?$/.test(v)))
+          ) {
             const num = Number(v);
-            if (!isNaN(num)) extra.push({ item: label, quantity: num, available: num });
+            if (!isNaN(num))
+              extra.push({ item: label, quantity: num, available: num });
           }
         });
         // Also support value-as-label when key is generic
@@ -529,8 +672,18 @@ export default function LaptopInventory() {
           const sB = typeof b[1] === "string" ? b[1].trim() : "";
           const nA = typeof a[1] === "number" ? a[1] : Number(sA);
           const nB = typeof b[1] === "number" ? b[1] : Number(sB);
-          if (sA && !isNaN(nB)) extra.push({ item: sA, quantity: Number(nB), available: Number(nB) });
-          if (sB && !isNaN(nA)) extra.push({ item: sB, quantity: Number(nA), available: Number(nA) });
+          if (sA && !isNaN(nB))
+            extra.push({
+              item: sA,
+              quantity: Number(nB),
+              available: Number(nB),
+            });
+          if (sB && !isNaN(nA))
+            extra.push({
+              item: sB,
+              quantity: Number(nA),
+              available: Number(nA),
+            });
         }
       });
       const combined = [...parsedPeripherals, ...extra].filter((p) => p.item);
@@ -541,19 +694,32 @@ export default function LaptopInventory() {
     }
 
     // Cross-mark laptops with active issues or incoming
-    const issueByAsset = new Map(parsedIssues.filter((i) => i.assetTag).map((i) => [i.assetTag!, i]));
-    const issueBySerial = new Map(parsedIssues.filter((i) => i.serial).map((i) => [i.serial!, i]));
-    const issueByModel = new Map(parsedIssues.filter((i) => i.model).map((i) => [i.model!, i]));
-    const incomingByAsset = new Map(parsedIncoming.filter((i) => i.assetTag).map((i) => [i.assetTag!, i]));
+    const issueByAsset = new Map(
+      parsedIssues.filter((i) => i.assetTag).map((i) => [i.assetTag!, i]),
+    );
+    const issueBySerial = new Map(
+      parsedIssues.filter((i) => i.serial).map((i) => [i.serial!, i]),
+    );
+    const issueByModel = new Map(
+      parsedIssues.filter((i) => i.model).map((i) => [i.model!, i]),
+    );
+    const incomingByAsset = new Map(
+      parsedIncoming.filter((i) => i.assetTag).map((i) => [i.assetTag!, i]),
+    );
 
     const mergedLaptops = parsedLaptops.map((l) => {
       let status = l.status;
       let issueMatch: Issue | undefined;
-      if (l.assetTag && issueByAsset.has(l.assetTag)) issueMatch = issueByAsset.get(l.assetTag);
-      if (!issueMatch && l.serial && issueBySerial.has(l.serial)) issueMatch = issueBySerial.get(l.serial);
-      if (!issueMatch && l.model && issueByModel.has(l.model)) issueMatch = issueByModel.get(l.model);
+      if (l.assetTag && issueByAsset.has(l.assetTag))
+        issueMatch = issueByAsset.get(l.assetTag);
+      if (!issueMatch && l.serial && issueBySerial.has(l.serial))
+        issueMatch = issueBySerial.get(l.serial);
+      if (!issueMatch && l.model && issueByModel.has(l.model))
+        issueMatch = issueByModel.get(l.model);
       if (issueMatch) {
-        const blob = [issueMatch.status, issueMatch.issueType].join(" ").toLowerCase();
+        const blob = [issueMatch.status, issueMatch.issueType]
+          .join(" ")
+          .toLowerCase();
         const resolved = /repaired|fixed|redeployed/.test(blob);
         if (!resolved) status = "Issues";
       }
@@ -602,10 +768,22 @@ export default function LaptopInventory() {
   }, [laptops, searchQuery, deptFilter, problemOnly]);
 
   const summary = useMemo(() => {
-    const active = laptops.filter((l) => l.status.toLowerCase() === "active" || (!!l.employee && l.status.toLowerCase() !== "spare" && l.status.toLowerCase() !== "issues")).length;
-    const spare = laptops.filter((l) => l.status.toLowerCase() === "spare").length;
-    const issueCount = laptops.filter((l) => l.status.toLowerCase() === "issues").length;
-    const incomingCount = laptops.filter((l) => l.status.toLowerCase() === "incoming").length || incoming.length;
+    const active = laptops.filter(
+      (l) =>
+        l.status.toLowerCase() === "active" ||
+        (!!l.employee &&
+          l.status.toLowerCase() !== "spare" &&
+          l.status.toLowerCase() !== "issues"),
+    ).length;
+    const spare = laptops.filter(
+      (l) => l.status.toLowerCase() === "spare",
+    ).length;
+    const issueCount = laptops.filter(
+      (l) => l.status.toLowerCase() === "issues",
+    ).length;
+    const incomingCount =
+      laptops.filter((l) => l.status.toLowerCase() === "incoming").length ||
+      incoming.length;
 
     const mouseCount = peripherals
       .filter((p) => p.item.toLowerCase().includes("mouse"))
@@ -614,11 +792,14 @@ export default function LaptopInventory() {
       .filter((p) => p.item.toLowerCase().includes("headset"))
       .reduce((s, p) => s + p.available, 0);
 
-    const cyodCount = cyod.filter((c) => (c.status || "").toLowerCase() !== "returned").length ||
-      laptops.filter((l) => l.cyod).length;
+    const cyodCount =
+      cyod.filter((c) => (c.status || "").toLowerCase() !== "returned")
+        .length || laptops.filter((l) => l.cyod).length;
 
     const over7yrs = laptops.filter((l) => l.ageYears >= 7).length;
-    const newHireWaiting = incoming.filter((i) => /hire|new\s*hire|onboard/i.test(i.purpose)).length;
+    const newHireWaiting = incoming.filter((i) =>
+      /hire|new\s*hire|onboard/i.test(i.purpose),
+    ).length;
 
     const spareLow = spare < 5; // threshold
 
@@ -648,18 +829,28 @@ export default function LaptopInventory() {
       else if (y <= 7) bump("6-7y");
       else bump(">7y");
     });
-    return Array.from(buckets.entries()).map(([name, value]) => ({ name, value }));
+    return Array.from(buckets.entries()).map(([name, value]) => ({
+      name,
+      value,
+    }));
   }, [laptops]);
 
   const brandData = useMemo(() => {
     const cmap = new Map<string, number>();
-    laptops.forEach((l) => cmap.set(l.brand || "Unknown", (cmap.get(l.brand || "Unknown") || 0) + 1));
+    laptops.forEach((l) =>
+      cmap.set(l.brand || "Unknown", (cmap.get(l.brand || "Unknown") || 0) + 1),
+    );
     return Array.from(cmap.entries()).map(([name, value]) => ({ name, value }));
   }, [laptops]);
 
   const deptData = useMemo(() => {
     const dmap = new Map<string, number>();
-    laptops.forEach((l) => dmap.set(l.department || "Unknown", (dmap.get(l.department || "Unknown") || 0) + 1));
+    laptops.forEach((l) =>
+      dmap.set(
+        l.department || "Unknown",
+        (dmap.get(l.department || "Unknown") || 0) + 1,
+      ),
+    );
     return Array.from(dmap.entries()).map(([name, value]) => ({ name, value }));
   }, [laptops]);
 
@@ -668,19 +859,26 @@ export default function LaptopInventory() {
     return laptops.filter((l) => {
       const base = l.purchaseDate;
       const yrs = fullYearsBetween(base, today);
-      return (l.status.toLowerCase() === "active" ? yrs >= 5 : yrs >= 5);
+      return l.status.toLowerCase() === "active" ? yrs >= 5 : yrs >= 5;
     }).length;
   }, [laptops]);
 
   const problemTypeData = useMemo(() => {
     const map = new Map<string, number>();
-    issues.forEach((i) => map.set(i.issueType || "Unknown", (map.get(i.issueType || "Unknown") || 0) + 1));
+    issues.forEach((i) =>
+      map.set(
+        i.issueType || "Unknown",
+        (map.get(i.issueType || "Unknown") || 0) + 1,
+      ),
+    );
     return Array.from(map.entries()).map(([name, value]) => ({ name, value }));
   }, [issues]);
 
   const repairStatusData = useMemo(() => {
     const map = new Map<string, number>();
-    issues.forEach((i) => map.set(i.status || "Unknown", (map.get(i.status || "Unknown") || 0) + 1));
+    issues.forEach((i) =>
+      map.set(i.status || "Unknown", (map.get(i.status || "Unknown") || 0) + 1),
+    );
     return Array.from(map.entries()).map(([name, value]) => ({ name, value }));
   }, [issues]);
 
@@ -697,7 +895,9 @@ export default function LaptopInventory() {
     const map = new Map<string, number>();
     incoming.forEach((i) => {
       const d = i.expectedDate ? new Date(i.expectedDate) : null;
-      const key = d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` : "TBD";
+      const key = d
+        ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+        : "TBD";
       map.set(key, (map.get(key) || 0) + 1);
     });
     return Array.from(map.entries()).map(([name, value]) => ({ name, value }));
@@ -826,14 +1026,18 @@ export default function LaptopInventory() {
       },
     ]);
     setLaptops((prev) =>
-      prev.map((l) => (l.assetTag === asset.assetTag ? { ...l, status: "Issues" } : l)),
+      prev.map((l) =>
+        l.assetTag === asset.assetTag ? { ...l, status: "Issues" } : l,
+      ),
     );
   };
 
   const scheduleReplacement = (asset: Laptop) => {
     setLaptops((prev) =>
       prev.map((l) =>
-        l.assetTag === asset.assetTag ? { ...l, replacementScheduled: true } : l,
+        l.assetTag === asset.assetTag
+          ? { ...l, replacementScheduled: true }
+          : l,
       ),
     );
   };
@@ -847,7 +1051,9 @@ export default function LaptopInventory() {
     if (!name) return;
     setLaptops((prev) =>
       prev.map((l) =>
-        l.assetTag === asset.assetTag ? { ...l, status: "Active", employee: name } : l,
+        l.assetTag === asset.assetTag
+          ? { ...l, status: "Active", employee: name }
+          : l,
       ),
     );
   };
@@ -861,12 +1067,18 @@ export default function LaptopInventory() {
     <div className="space-y-6">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Laptop Inventory</h1>
-          <p className="text-muted-foreground">Simple dashboard to track assets, issues, incoming, and employees</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Laptop Inventory
+          </h1>
+          <p className="text-muted-foreground">
+            Simple dashboard to track assets, issues, incoming, and employees
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Label htmlFor="file" className="sr-only">Upload Excel</Label>
+          <Label htmlFor="file" className="sr-only">
+            Upload Excel
+          </Label>
           <Input
             id="file"
             type="file"
@@ -877,7 +1089,12 @@ export default function LaptopInventory() {
               if (f) onFileUpload(f);
             }}
           />
-          <Button variant="outline" onClick={() => { document.getElementById("file")?.click(); }}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              document.getElementById("file")?.click();
+            }}
+          >
             <Upload className="h-4 w-4 mr-2" /> Upload
           </Button>
         </div>
@@ -902,7 +1119,9 @@ export default function LaptopInventory() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summary.active}</div>
-            <p className="text-xs text-muted-foreground">Assigned to employees</p>
+            <p className="text-xs text-muted-foreground">
+              Assigned to employees
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -912,7 +1131,9 @@ export default function LaptopInventory() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summary.spare}</div>
-            <p className="text-xs text-muted-foreground">Available for assignment</p>
+            <p className="text-xs text-muted-foreground">
+              Available for assignment
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -922,7 +1143,9 @@ export default function LaptopInventory() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summary.issueCount}</div>
-            <p className="text-xs text-muted-foreground">Reported or in repair</p>
+            <p className="text-xs text-muted-foreground">
+              Reported or in repair
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -931,32 +1154,79 @@ export default function LaptopInventory() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Needs Attention</CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" /> Needs Attention
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex items-center justify-between"><span>Old laptops (7+ years)</span><Badge variant={summary.over7yrs ? "destructive" : "secondary"}>{summary.over7yrs}</Badge></div>
-            <div className="flex items-center justify-between"><span>Assets with issues</span><Badge variant={summary.issueCount ? "destructive" : "secondary"}>{summary.issueCount}</Badge></div>
-            <div className="flex items-center justify-between"><span>Low spare inventory</span><Badge variant={summary.spareLow ? "destructive" : "secondary"}>{summary.spareLow ? "Yes" : "No"}</Badge></div>
+            <div className="flex items-center justify-between">
+              <span>Old laptops (7+ years)</span>
+              <Badge variant={summary.over7yrs ? "destructive" : "secondary"}>
+                {summary.over7yrs}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Assets with issues</span>
+              <Badge variant={summary.issueCount ? "destructive" : "secondary"}>
+                {summary.issueCount}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Low spare inventory</span>
+              <Badge variant={summary.spareLow ? "destructive" : "secondary"}>
+                {summary.spareLow ? "Yes" : "No"}
+              </Badge>
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium flex items-center gap-2"><Users className="h-4 w-4" /> Employee Summary</CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Users className="h-4 w-4" /> Employee Summary
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex items-center justify-between"><span>Total employees</span><Badge variant="secondary">{employees.length}</Badge></div>
-            <div className="flex items-center justify-between"><span>Multiple laptops</span><Badge variant={multiAssetEmployees.length ? "default" : "secondary"}>{multiAssetEmployees.length}</Badge></div>
-            <div className="flex items-center justify-between"><span>CYOD users</span><Badge variant="secondary">{summary.cyodCount}</Badge></div>
+            <div className="flex items-center justify-between">
+              <span>Total employees</span>
+              <Badge variant="secondary">{employees.length}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Multiple laptops</span>
+              <Badge
+                variant={multiAssetEmployees.length ? "default" : "secondary"}
+              >
+                {multiAssetEmployees.length}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>CYOD users</span>
+              <Badge variant="secondary">{summary.cyodCount}</Badge>
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium flex items-center gap-2"><Cpu className="h-4 w-4" /> Age Analysis</CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Cpu className="h-4 w-4" /> Age Analysis
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex items-center justify-between"><span>5+ years old</span><Badge variant={fiveYearCount ? "default" : "secondary"}>{fiveYearCount}</Badge></div>
-            <div className="flex items-center justify-between"><span>7+ years old</span><Badge variant={summary.over7yrs ? "destructive" : "secondary"}>{summary.over7yrs}</Badge></div>
-            <div className="flex items-center justify-between"><span>Need replacement</span><Badge variant="destructive">{summary.over7yrs}</Badge></div>
+            <div className="flex items-center justify-between">
+              <span>5+ years old</span>
+              <Badge variant={fiveYearCount ? "default" : "secondary"}>
+                {fiveYearCount}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>7+ years old</span>
+              <Badge variant={summary.over7yrs ? "destructive" : "secondary"}>
+                {summary.over7yrs}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Need replacement</span>
+              <Badge variant="destructive">{summary.over7yrs}</Badge>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -974,7 +1244,9 @@ export default function LaptopInventory() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium flex items-center gap-2"><Cpu className="h-4 w-4"/> Laptop Age Distribution</CardTitle>
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Cpu className="h-4 w-4" /> Laptop Age Distribution
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {ageData.length ? (
@@ -983,26 +1255,42 @@ export default function LaptopInventory() {
                       <CartesianGrid vertical={false} strokeDasharray="3 3" />
                       <XAxis dataKey="name" tickLine={false} axisLine={false} />
                       <YAxis allowDecimals={false} width={24} />
-                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={4} />
+                      <Bar
+                        dataKey="value"
+                        fill="hsl(var(--primary))"
+                        radius={4}
+                      />
                       <ChartTooltip content={<ChartTooltipContent />} />
                     </BarChart>
                   </ChartContainer>
                 ) : (
-                  <p className="text-sm text-muted-foreground">Upload data to see chart</p>
+                  <p className="text-sm text-muted-foreground">
+                    Upload data to see chart
+                  </p>
                 )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">Brand Distribution</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Brand Distribution
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {brandData.length ? (
                   <ChartContainer config={donutConfig}>
                     <PieChart>
-                      <Pie data={brandData} dataKey="value" nameKey="name" innerRadius={40} fill="hsl(var(--accent))" />
-                      <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
+                      <Pie
+                        data={brandData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={40}
+                        fill="hsl(var(--accent))"
+                      />
+                      <ChartTooltip
+                        content={<ChartTooltipContent nameKey="name" />}
+                      />
                       <ChartLegend content={<ChartLegendContent />} />
                     </PieChart>
                   </ChartContainer>
@@ -1014,16 +1302,30 @@ export default function LaptopInventory() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">Department Overview</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Department Overview
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {deptData.length ? (
                   <ChartContainer config={{}}>
                     <BarChart data={deptData}>
                       <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                      <XAxis dataKey="name" tickLine={false} axisLine={false} interval={0} angle={-15} height={50} textAnchor="end" />
+                      <XAxis
+                        dataKey="name"
+                        tickLine={false}
+                        axisLine={false}
+                        interval={0}
+                        angle={-15}
+                        height={50}
+                        textAnchor="end"
+                      />
                       <YAxis allowDecimals={false} width={24} />
-                      <Bar dataKey="value" fill="hsl(var(--secondary-foreground))" radius={4} />
+                      <Bar
+                        dataKey="value"
+                        fill="hsl(var(--secondary-foreground))"
+                        radius={4}
+                      />
                       <ChartTooltip content={<ChartTooltipContent />} />
                     </BarChart>
                   </ChartContainer>
@@ -1039,7 +1341,9 @@ export default function LaptopInventory() {
             <Card>
               <CardContent className="p-4">
                 <div className="text-2xl font-bold">{fiveYearCount}</div>
-                <p className="text-xs text-muted-foreground">Assets 5+ years old</p>
+                <p className="text-xs text-muted-foreground">
+                  Assets 5+ years old
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -1057,7 +1361,9 @@ export default function LaptopInventory() {
             <Card>
               <CardContent className="p-4">
                 <div className="text-2xl font-bold">{employees.length}</div>
-                <p className="text-xs text-muted-foreground">Employees with laptops</p>
+                <p className="text-xs text-muted-foreground">
+                  Employees with laptops
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -1067,7 +1373,9 @@ export default function LaptopInventory() {
         <TabsContent value="employees" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Search className="h-4 w-4"/> Search & Filter</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Search className="h-4 w-4" /> Search & Filter
+              </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-3">
               <Input
@@ -1076,19 +1384,34 @@ export default function LaptopInventory() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <Select value={deptFilter} onValueChange={setDeptFilter}>
-                <SelectTrigger><SelectValue placeholder="Department" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Department" />
+                </SelectTrigger>
                 <SelectContent>
                   {departments.map((d) => (
-                    <SelectItem key={d} value={d}>{d === "all" ? "All Departments" : d}</SelectItem>
+                    <SelectItem key={d} value={d}>
+                      {d === "all" ? "All Departments" : d}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <div className="flex items-center gap-2">
-                <Button variant={problemOnly?"destructive":"outline"} onClick={() => setProblemOnly((v) => !v)}>
-                  <AlertCircle className="h-4 w-4 mr-2"/> {problemOnly ? "Showing Problems" : "Show Problems"}
+                <Button
+                  variant={problemOnly ? "destructive" : "outline"}
+                  onClick={() => setProblemOnly((v) => !v)}
+                >
+                  <AlertCircle className="h-4 w-4 mr-2" />{" "}
+                  {problemOnly ? "Showing Problems" : "Show Problems"}
                 </Button>
-                <Button variant="ghost" onClick={()=>{setSearchQuery(""); setDeptFilter("all"); setProblemOnly(false);}}>
-                  <RefreshCcw className="h-4 w-4 mr-2"/> Reset
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setDeptFilter("all");
+                    setProblemOnly(false);
+                  }}
+                >
+                  <RefreshCcw className="h-4 w-4 mr-2" /> Reset
                 </Button>
               </div>
             </CardContent>
@@ -1110,23 +1433,45 @@ export default function LaptopInventory() {
                   </TableHeader>
                   <TableBody>
                     {employees.length === 0 && (
-                      <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">No employees yet</TableCell></TableRow>
+                      <TableRow>
+                        <TableCell
+                          colSpan={3}
+                          className="text-center text-muted-foreground"
+                        >
+                          No employees yet
+                        </TableCell>
+                      </TableRow>
                     )}
                     {employees.map(({ name, items }, empIdx) => {
-                      const matchItems = items.filter((l)=> filteredLaptops.find(fl => fl.assetTag === l.assetTag));
+                      const matchItems = items.filter((l) =>
+                        filteredLaptops.find(
+                          (fl) => fl.assetTag === l.assetTag,
+                        ),
+                      );
                       if (!matchItems.length) return null;
                       return (
-                        <TableRow key={`${name || 'employee'}-${empIdx}`}>
+                        <TableRow key={`${name || "employee"}-${empIdx}`}>
                           <TableCell className="font-medium">
                             {name}
                             {matchItems.length > 1 && (
-                              <Badge className="ml-2" variant="outline">{matchItems.length} assets</Badge>
+                              <Badge className="ml-2" variant="outline">
+                                {matchItems.length} assets
+                              </Badge>
                             )}
                           </TableCell>
-                          <TableCell>{matchItems[0]?.department || "Unknown"}</TableCell>
+                          <TableCell>
+                            {matchItems[0]?.department || "Unknown"}
+                          </TableCell>
                           <TableCell className="space-x-2">
                             {matchItems.map((l, i) => (
-                              <Badge key={`${l.assetTag || l.serial || l.model || 'asset'}-${i}`} variant={l.status.toLowerCase()==="issues"?"destructive":"secondary"}>
+                              <Badge
+                                key={`${l.assetTag || l.serial || l.model || "asset"}-${i}`}
+                                variant={
+                                  l.status.toLowerCase() === "issues"
+                                    ? "destructive"
+                                    : "secondary"
+                                }
+                              >
                                 {l.assetTag || l.model}
                               </Badge>
                             ))}
@@ -1146,7 +1491,7 @@ export default function LaptopInventory() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Search className="h-4 w-4"/>
+                <Search className="h-4 w-4" />
                 Search & Filter Assets
               </CardTitle>
             </CardHeader>
@@ -1157,18 +1502,33 @@ export default function LaptopInventory() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <Select value={deptFilter} onValueChange={setDeptFilter}>
-                <SelectTrigger><SelectValue placeholder="Department" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Department" />
+                </SelectTrigger>
                 <SelectContent>
                   {departments.map((d) => (
-                    <SelectItem key={d} value={d}>{d === "all" ? "All Departments" : d}</SelectItem>
+                    <SelectItem key={d} value={d}>
+                      {d === "all" ? "All Departments" : d}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant={problemOnly?"destructive":"outline"} onClick={() => setProblemOnly((v) => !v)}>
-                <AlertCircle className="h-4 w-4 mr-2"/> {problemOnly ? "Issues Only" : "Show Issues"}
+              <Button
+                variant={problemOnly ? "destructive" : "outline"}
+                onClick={() => setProblemOnly((v) => !v)}
+              >
+                <AlertCircle className="h-4 w-4 mr-2" />{" "}
+                {problemOnly ? "Issues Only" : "Show Issues"}
               </Button>
-              <Button variant="ghost" onClick={()=>{setSearchQuery(""); setDeptFilter("all"); setProblemOnly(false);}}>
-                <RefreshCcw className="h-4 w-4 mr-2"/> Reset
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setSearchQuery("");
+                  setDeptFilter("all");
+                  setProblemOnly(false);
+                }}
+              >
+                <RefreshCcw className="h-4 w-4 mr-2" /> Reset
               </Button>
             </CardContent>
           </Card>
@@ -1193,28 +1553,64 @@ export default function LaptopInventory() {
                   </TableHeader>
                   <TableBody>
                     {filteredLaptops.length === 0 && (
-                      <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No assets match your search</TableCell></TableRow>
+                      <TableRow>
+                        <TableCell
+                          colSpan={7}
+                          className="text-center text-muted-foreground"
+                        >
+                          No assets match your search
+                        </TableCell>
+                      </TableRow>
                     )}
                     {filteredLaptops.slice(0, 50).map((l, idx) => (
-                      <TableRow key={`${l.assetTag || l.serial || l.model || 'row'}-${idx}`} className={l.status.toLowerCase()==="issues"?"bg-destructive/5":""}>
-                        <TableCell className="font-medium">{l.assetTag || "—"}</TableCell>
+                      <TableRow
+                        key={`${l.assetTag || l.serial || l.model || "row"}-${idx}`}
+                        className={
+                          l.status.toLowerCase() === "issues"
+                            ? "bg-destructive/5"
+                            : ""
+                        }
+                      >
+                        <TableCell className="font-medium">
+                          {l.assetTag || "—"}
+                        </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-medium">{l.brand}</span>
-                            <span className="text-xs text-muted-foreground">{l.model}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {l.model}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={l.status.toLowerCase()==="issues"?"destructive": l.status.toLowerCase()==="active"?"default":"secondary"}>
+                          <Badge
+                            variant={
+                              l.status.toLowerCase() === "issues"
+                                ? "destructive"
+                                : l.status.toLowerCase() === "active"
+                                  ? "default"
+                                  : "secondary"
+                            }
+                          >
                             {l.status || "—"}
                           </Badge>
-                          {l.cyod && <Badge variant="outline" className="ml-1">CYOD</Badge>}
-                          {l.ageYears >= 7 && <Badge variant="destructive" className="ml-1">Old</Badge>}
+                          {l.cyod && (
+                            <Badge variant="outline" className="ml-1">
+                              CYOD
+                            </Badge>
+                          )}
+                          {l.ageYears >= 7 && (
+                            <Badge variant="destructive" className="ml-1">
+                              Old
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell>{l.employee || "—"}</TableCell>
                         <TableCell>{l.department || "Unknown"}</TableCell>
                         <TableCell>{l.ageYears}y</TableCell>
-                        <TableCell className="max-w-xs truncate text-xs text-muted-foreground">{l.notes || "—"}</TableCell>
+                        <TableCell className="max-w-xs truncate text-xs text-muted-foreground">
+                          {l.notes || "—"}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -1222,7 +1618,8 @@ export default function LaptopInventory() {
               </div>
               {filteredLaptops.length > 50 && (
                 <p className="text-sm text-muted-foreground text-center mt-4">
-                  Showing first 50 of {filteredLaptops.length} assets. Use filters to narrow down results.
+                  Showing first 50 of {filteredLaptops.length} assets. Use
+                  filters to narrow down results.
                 </p>
               )}
             </CardContent>
@@ -1234,13 +1631,21 @@ export default function LaptopInventory() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">Problem Types</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Problem Types
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {problemTypeData.length ? (
                   <ChartContainer config={donutConfig}>
                     <PieChart>
-                      <Pie data={problemTypeData} dataKey="value" nameKey="name" innerRadius={40} fill="hsl(var(--destructive))" />
+                      <Pie
+                        data={problemTypeData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={40}
+                        fill="hsl(var(--destructive))"
+                      />
                       <ChartTooltip content={<ChartTooltipContent />} />
                       <ChartLegend content={<ChartLegendContent />} />
                     </PieChart>
@@ -1252,32 +1657,52 @@ export default function LaptopInventory() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">Repair Status</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Repair Status
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {repairStatusData.length ? (
                   <ChartContainer config={donutConfig}>
                     <PieChart>
-                      <Pie data={repairStatusData} dataKey="value" nameKey="name" innerRadius={40} fill="hsl(var(--warning))" />
+                      <Pie
+                        data={repairStatusData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={40}
+                        fill="hsl(var(--warning))"
+                      />
                       <ChartTooltip content={<ChartTooltipContent />} />
                       <ChartLegend content={<ChartLegendContent />} />
                     </PieChart>
                   </ChartContainer>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No repair data</p>
+                  <p className="text-sm text-muted-foreground">
+                    No repair data
+                  </p>
                 )}
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">Problem Models</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Problem Models
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {problemModelsData.length ? (
                   <ChartContainer config={{}}>
                     <BarChart data={problemModelsData}>
                       <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                      <XAxis dataKey="name" tickLine={false} axisLine={false} interval={0} angle={-15} height={50} textAnchor="end" />
+                      <XAxis
+                        dataKey="name"
+                        tickLine={false}
+                        axisLine={false}
+                        interval={0}
+                        angle={-15}
+                        height={50}
+                        textAnchor="end"
+                      />
                       <YAxis allowDecimals={false} width={24} />
                       <Bar dataKey="value" fill="hsl(var(--ring))" radius={4} />
                       <ChartTooltip content={<ChartTooltipContent />} />
@@ -1308,15 +1733,36 @@ export default function LaptopInventory() {
                   </TableHeader>
                   <TableBody>
                     {issues.length === 0 && (
-                      <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No issues</TableCell></TableRow>
+                      <TableRow>
+                        <TableCell
+                          colSpan={5}
+                          className="text-center text-muted-foreground"
+                        >
+                          No issues
+                        </TableCell>
+                      </TableRow>
                     )}
                     {issues.map((i, idx) => (
                       <TableRow key={idx}>
                         <TableCell>{i.assetTag || "��"}</TableCell>
                         <TableCell>{i.model || "—"}</TableCell>
                         <TableCell>{i.issueType}</TableCell>
-                        <TableCell><Badge variant={/fixed/i.test(i.status)?"secondary":"destructive"}>{i.status}</Badge></TableCell>
-                        <TableCell>{i.reportedDate ? new Date(i.reportedDate).toLocaleDateString() : "—"}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              /fixed/i.test(i.status)
+                                ? "secondary"
+                                : "destructive"
+                            }
+                          >
+                            {i.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {i.reportedDate
+                            ? new Date(i.reportedDate).toLocaleDateString()
+                            : "—"}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -1331,7 +1777,9 @@ export default function LaptopInventory() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">New Arrivals by Month</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  New Arrivals by Month
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {incomingByMonth.length ? (
@@ -1340,18 +1788,26 @@ export default function LaptopInventory() {
                       <CartesianGrid vertical={false} strokeDasharray="3 3" />
                       <XAxis dataKey="name" tickLine={false} axisLine={false} />
                       <YAxis allowDecimals={false} width={24} />
-                      <Bar dataKey="value" fill="hsl(var(--accent))" radius={4} />
+                      <Bar
+                        dataKey="value"
+                        fill="hsl(var(--accent))"
+                        radius={4}
+                      />
                       <ChartTooltip content={<ChartTooltipContent />} />
                     </BarChart>
                   </ChartContainer>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No incoming data</p>
+                  <p className="text-sm text-muted-foreground">
+                    No incoming data
+                  </p>
                 )}
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">Replacement Pipeline</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Replacement Pipeline
+                </CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-2">
                 {incomingReplacement.length === 0 ? (
@@ -1360,7 +1816,10 @@ export default function LaptopInventory() {
                   <ul className="list-disc ml-4">
                     {incomingReplacement.map((i, idx) => (
                       <li key={idx}>
-                        {i.model || i.brand || "Laptop"} • {i.expectedDate ? new Date(i.expectedDate).toLocaleDateString() : "TBD"}
+                        {i.model || i.brand || "Laptop"} •{" "}
+                        {i.expectedDate
+                          ? new Date(i.expectedDate).toLocaleDateString()
+                          : "TBD"}
                       </li>
                     ))}
                   </ul>
@@ -1369,7 +1828,9 @@ export default function LaptopInventory() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">New Hire Queue</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  New Hire Queue
+                </CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-2">
                 {incomingNewHire.length === 0 ? (
@@ -1378,7 +1839,11 @@ export default function LaptopInventory() {
                   <ul className="list-disc ml-4">
                     {incomingNewHire.map((i, idx) => (
                       <li key={idx}>
-                        {i.employee || "New hire"} • {i.model || i.brand || "Laptop"} • {i.expectedDate ? new Date(i.expectedDate).toLocaleDateString() : "TBD"}
+                        {i.employee || "New hire"} •{" "}
+                        {i.model || i.brand || "Laptop"} •{" "}
+                        {i.expectedDate
+                          ? new Date(i.expectedDate).toLocaleDateString()
+                          : "TBD"}
                       </li>
                     ))}
                   </ul>
@@ -1404,14 +1869,25 @@ export default function LaptopInventory() {
                   </TableHeader>
                   <TableBody>
                     {incoming.length === 0 && (
-                      <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No incoming items</TableCell></TableRow>
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="text-center text-muted-foreground"
+                        >
+                          No incoming items
+                        </TableCell>
+                      </TableRow>
                     )}
                     {incoming.map((i, idx) => (
                       <TableRow key={idx}>
                         <TableCell>{i.model || i.brand || "Laptop"}</TableCell>
                         <TableCell>{i.purpose}</TableCell>
                         <TableCell>{i.employee || "—"}</TableCell>
-                        <TableCell>{i.expectedDate ? new Date(i.expectedDate).toLocaleDateString() : "TBD"}</TableCell>
+                        <TableCell>
+                          {i.expectedDate
+                            ? new Date(i.expectedDate).toLocaleDateString()
+                            : "TBD"}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -1426,13 +1902,21 @@ export default function LaptopInventory() {
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">Employee Choices</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Employee Choices
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {cyodTypeBreakdown.length ? (
                   <ChartContainer config={donutConfig}>
                     <PieChart>
-                      <Pie data={cyodTypeBreakdown} dataKey="value" nameKey="name" innerRadius={40} fill="hsl(var(--primary))" />
+                      <Pie
+                        data={cyodTypeBreakdown}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={40}
+                        fill="hsl(var(--primary))"
+                      />
                       <ChartTooltip content={<ChartTooltipContent />} />
                       <ChartLegend content={<ChartLegendContent />} />
                     </PieChart>
@@ -1444,13 +1928,21 @@ export default function LaptopInventory() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">Usage Patterns</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Usage Patterns
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {cyodUsage.length ? (
                   <ChartContainer config={donutConfig}>
                     <PieChart>
-                      <Pie data={cyodUsage} dataKey="value" nameKey="name" innerRadius={40} fill="hsl(var(--secondary))" />
+                      <Pie
+                        data={cyodUsage}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={40}
+                        fill="hsl(var(--secondary))"
+                      />
                       <ChartTooltip content={<ChartTooltipContent />} />
                       <ChartLegend content={<ChartLegendContent />} />
                     </PieChart>
@@ -1478,12 +1970,28 @@ export default function LaptopInventory() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {(cyod.length ? cyod : laptops.filter((l)=>l.cyod).map((l)=>({employee:l.employee||"—", deviceType:l.brand, status:"Deployed", cost: undefined as number|undefined}))).map((c, idx) => (
+                    {(cyod.length
+                      ? cyod
+                      : laptops
+                          .filter((l) => l.cyod)
+                          .map((l) => ({
+                            employee: l.employee || "—",
+                            deviceType: l.brand,
+                            status: "Deployed",
+                            cost: undefined as number | undefined,
+                          }))
+                    ).map((c, idx) => (
                       <TableRow key={idx}>
                         <TableCell>{c.employee}</TableCell>
-                        <TableCell>{c.deviceType || c.brand || c.model || "Device"}</TableCell>
+                        <TableCell>
+                          {c.deviceType || c.brand || c.model || "Device"}
+                        </TableCell>
                         <TableCell>{c.status || "Deployed"}</TableCell>
-                        <TableCell>{typeof c.cost === "number" ? `₱${c.cost.toLocaleString()}` : "—"}</TableCell>
+                        <TableCell>
+                          {typeof c.cost === "number"
+                            ? `₱${c.cost.toLocaleString()}`
+                            : "—"}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -1498,11 +2006,17 @@ export default function LaptopInventory() {
       {laptops.length === 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium flex items-center gap-2"><Upload className="h-4 w-4"/> Upload your Excel</CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Upload className="h-4 w-4" /> Upload your Excel
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Upload your bneXt laptop inventory Excel file. The system will automatically detect and parse columns like ASSET CODE, BRAND, MODEL, VERTICAL, CUSTODIAN, TAG, INVOICE DATE, and MAINTENANCE HISTORY. Issues and CYOD data will be extracted from the TAG and maintenance history fields.
+              Upload your bneXt laptop inventory Excel file. The system will
+              automatically detect and parse columns like ASSET CODE, BRAND,
+              MODEL, VERTICAL, CUSTODIAN, TAG, INVOICE DATE, and MAINTENANCE
+              HISTORY. Issues and CYOD data will be extracted from the TAG and
+              maintenance history fields.
             </p>
           </CardContent>
         </Card>

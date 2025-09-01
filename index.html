@@ -15,13 +15,27 @@
         const origWarn = console.warn;
         const shouldFilter = (...args) => {
           try {
-            const s = args.map((a) => (typeof a === 'string' ? a : String(a))).join(' ');
-            return s.includes('Support for defaultProps will be removed from function components') &&
-                   (s.includes('XAxis') || s.includes('YAxis'));
-          } catch { return false; }
+            const s = args
+              .map((a) => (typeof a === "string" ? a : String(a)))
+              .join(" ");
+            return (
+              s.includes(
+                "Support for defaultProps will be removed from function components",
+              ) &&
+              (s.includes("XAxis") || s.includes("YAxis"))
+            );
+          } catch {
+            return false;
+          }
         };
-        console.error = (...args) => { if (shouldFilter(...args)) return; origErr(...args); };
-        console.warn = (...args) => { if (shouldFilter(...args)) return; origWarn(...args); };
+        console.error = (...args) => {
+          if (shouldFilter(...args)) return;
+          origErr(...args);
+        };
+        console.warn = (...args) => {
+          if (shouldFilter(...args)) return;
+          origWarn(...args);
+        };
       }
     </script>
 

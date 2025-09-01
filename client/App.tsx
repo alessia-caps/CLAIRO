@@ -19,9 +19,13 @@ if (import.meta && (import.meta as any).env && (import.meta as any).env.DEV) {
   const origError = console.error;
   // @ts-expect-error intentional override in dev
   console.error = (...args: any[]) => {
-    const str = args.map((a) => (typeof a === "string" ? a : String(a))).join(" ");
+    const str = args
+      .map((a) => (typeof a === "string" ? a : String(a)))
+      .join(" ");
     if (
-      str.includes("Support for defaultProps will be removed from function components") &&
+      str.includes(
+        "Support for defaultProps will be removed from function components",
+      ) &&
       (str.includes("XAxis") || str.includes("YAxis"))
     ) {
       return;
