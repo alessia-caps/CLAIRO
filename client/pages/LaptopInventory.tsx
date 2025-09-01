@@ -927,53 +927,36 @@ export default function LaptopInventory() {
         </Card>
       </div>
 
-      {/* Action Items & Alerts */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Key Insights */}
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium flex items-center gap-2"><CalendarClock className="h-4 w-4" /> Action Items</CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Needs Attention</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex items-center justify-between"><span>Over 7 years</span><Badge variant={summary.over7yrs ? "destructive" : "secondary"}>{summary.over7yrs}</Badge></div>
+            <div className="flex items-center justify-between"><span>Old laptops (7+ years)</span><Badge variant={summary.over7yrs ? "destructive" : "secondary"}>{summary.over7yrs}</Badge></div>
             <div className="flex items-center justify-between"><span>Assets with issues</span><Badge variant={summary.issueCount ? "destructive" : "secondary"}>{summary.issueCount}</Badge></div>
-            <div className="flex items-center justify-between"><span>New hires waiting</span><Badge variant={summary.newHireWaiting ? "default" : "secondary"}>{summary.newHireWaiting}</Badge></div>
-            <div className="flex items-center justify-between"><span>Spare units low</span><Badge variant={summary.spareLow ? "destructive" : "secondary"}>{summary.spareLow ? "Yes" : "No"}</Badge></div>
+            <div className="flex items-center justify-between"><span>Low spare inventory</span><Badge variant={summary.spareLow ? "destructive" : "secondary"}>{summary.spareLow ? "Yes" : "No"}</Badge></div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium flex items-center gap-2"><Users className="h-4 w-4" /> Employee View</CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2"><Users className="h-4 w-4" /> Employee Summary</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex items-center justify-between"><span>Employees with assets</span><Badge variant="secondary">{employees.length}</Badge></div>
-            <div className="flex items-center justify-between"><span>Multiple assets</span><Badge variant={multiAssetEmployees.length ? "default" : "secondary"}>{multiAssetEmployees.length}</Badge></div>
-            <div className="flex items-center justify-between"><span>Needing laptops</span><Badge variant={summary.newHireWaiting ? "default" : "secondary"}>{summary.newHireWaiting}</Badge></div>
+            <div className="flex items-center justify-between"><span>Total employees</span><Badge variant="secondary">{employees.length}</Badge></div>
+            <div className="flex items-center justify-between"><span>Multiple laptops</span><Badge variant={multiAssetEmployees.length ? "default" : "secondary"}>{multiAssetEmployees.length}</Badge></div>
+            <div className="flex items-center justify-between"><span>CYOD users</span><Badge variant="secondary">{summary.cyodCount}</Badge></div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium flex items-center gap-2"><Wrench className="h-4 w-4" /> Maintenance</CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2"><Cpu className="h-4 w-4" /> Age Analysis</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex items-center justify-between"><span>In repair</span><Badge variant={issues.filter(i=>i.status.toLowerCase().includes("repair")).length?"default":"secondary"}>{issues.filter(i=>i.status.toLowerCase().includes("repair")).length}</Badge></div>
-            <div className="flex items-center justify-between"><span>Recently fixed</span><Badge variant="secondary">{issues.filter(i=>i.status.toLowerCase().includes("fixed")).length}</Badge></div>
-            <div className="flex items-center justify-between"><span>EOL</span><Badge variant="destructive">{issues.filter(i=>/(eol|scrap|beyond)/i.test(i.status)).length}</Badge></div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium flex items-center gap-2"><Layers className="h-4 w-4" /> Peripherals</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div className="flex items-center justify-between"><span><Mouse className="inline h-3 w-3 mr-1"/>Mouse available</span><Badge variant={peripheralsSummary.mouse<5?"destructive":"secondary"}>{peripheralsSummary.mouse}</Badge></div>
-            <div className="flex items-center justify-between"><span><Headphones className="inline h-3 w-3 mr-1"/>Headset available</span><Badge variant={peripheralsSummary.headset<5?"destructive":"secondary"}>{peripheralsSummary.headset}</Badge></div>
-            {peripheralsSummary.shortages.length===0 ? (
-              <p className="text-xs text-muted-foreground">No shortages</p>
-            ) : (
-              <ul className="text-xs list-disc ml-4 text-destructive">
-                {peripheralsSummary.shortages.map((s)=> (<li key={s}>{s}</li>))}
-              </ul>
-            )}
+            <div className="flex items-center justify-between"><span>5+ years old</span><Badge variant={fiveYearCount ? "default" : "secondary"}>{fiveYearCount}</Badge></div>
+            <div className="flex items-center justify-between"><span>7+ years old</span><Badge variant={summary.over7yrs ? "destructive" : "secondary"}>{summary.over7yrs}</Badge></div>
+            <div className="flex items-center justify-between"><span>Need replacement</span><Badge variant="destructive">{summary.over7yrs}</Badge></div>
           </CardContent>
         </Card>
       </div>
