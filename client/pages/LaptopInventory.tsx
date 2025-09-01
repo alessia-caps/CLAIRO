@@ -557,6 +557,13 @@ export default function LaptopInventory() {
       return { ...l, status };
     });
 
+    console.log("Parsed data summary:");
+    console.log(`- Laptops: ${mergedLaptops.length}`);
+    console.log(`- Issues: ${parsedIssues.length}`);
+    console.log(`- Incoming: ${parsedIncoming.length}`);
+    console.log(`- CYOD: ${parsedCyod.length}`);
+    console.log(`- Peripherals: ${parsedPeripherals.length}`);
+
     setLaptops(mergedLaptops);
     setIssues(parsedIssues);
     setIncoming(parsedIncoming);
