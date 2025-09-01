@@ -328,47 +328,45 @@ export default function LaptopInventory() {
         getFirstVal(row, ["Deployment Date", "Assigned Date", "Start Date"], null),
       );
       let employee = normalizeStr(
-        getFirstVal(row, ["CUSTODIAN", "Employee", "Assigned To", "User", "Name"], ""),
+        getFirstVal(row, ["CUSTODIAN", "Employee", "Assigned To", "User", "Name", "PREVIOUS OWNER"], ""),
       );
-      if (/^no custodian/i.test(employee) || employee === "0" || employee === "#REF!") employee = "";
-      // Trim leading codes before lastname, keep from first token that contains a comma
-      if (employee.includes(",")) {
-        const commaIdx = employee.indexOf(",");
-        const pre = employee.slice(0, commaIdx);
-        const lastSpace = pre.lastIndexOf(" ");
-        if (lastSpace > -1) {
-          employee = employee.slice(lastSpace + 1).trim();
-        }
-      }
+      if (/^no custodian/i.test(employee) || /^0$/i.test(employee) || /^#ref!?$/i.test(employee)) employee = "";
+      // Normalize 'LASTNAME, FIRSTNAME' to 'LASTNAME, FIRSTNAME'
+      employee = employee.replace(/\s+\|.*/i, "").trim();
       const dept = normalizeStr(
         getFirstVal(row, ["VERTICAL", "Department", "Dept", "Team", "BU", "Business Unit"], "Unknown"),
       );
-      let statusRaw = normalizeStr(
-        getFirstVal(row, ["TYPE", "TYPE OF EMPLOYEE", "Status", "State", "REPLACE TAG", "MAINTENANCE HISTORY", "NOTES / COMMENTS"], employee ? "Active" : "Spare"),
-      );
-      if (/spare\s*unit|\bspare\b/i.test(statusRaw)) statusRaw = "Spare";
-      else if (/deploy/i.test(statusRaw)) statusRaw = "Active";
-      else if (/eol|beyond\s*repair|defective/i.test(statusRaw)) statusRaw = "Issues";
-      if (!/Spare|Issues/i.test(statusRaw) && employee) statusRaw = "Active";
+      const tagText = (
+        normalizeStr(
+          [
+            getFirstVal(row, ["TYPE OF EMPLOYEE", "TAG"], ""),
+            getFirstVal(row, ["REPLACE TAG"], ""),
+            getFirstVal(row, ["MAINTENANCE HISTORY"], ""),
+            getFirstVal(row, ["NOTES / COMMENTS"], ""),
+          ]
+            .filter(Boolean)
+            .join(" | "),
+        ) || ""
+      ).toLowerCase();
+
+      let statusRaw = "";
+      if (/spare\s*unit|\bspare\b/.test(tagText)) statusRaw = "Spare";
+      else if (/deploy/.test(tagText)) statusRaw = "Active";
+      else if (/eol|beyond\s*repair|defective/.test(tagText)) statusRaw = "Issues";
+      if (!statusRaw) statusRaw = employee ? "Active" : "Spare";
       const cyodFlag = (() => {
-        const raw = String(
-          getFirstVal(
-            row,
-            [
-              "CYOD",
-              "Is CYOD",
-              "Personal",
-              "Ownership",
-              "Employee Owned",
-              "TYPE",
-              "REPLACE TAG",
-              "MAINTENANCE HISTORY",
-              "NOTES / COMMENTS",
-            ],
-            "",
-          ),
-        ).toLowerCase();
-        return /cyod|employee owned|change ownership to employee/.test(raw);
+        const raw = (
+          [
+            getFirstVal(row, ["CYOD", "Is CYOD", "Personal", "Ownership", "Employee Owned"], ""),
+            getFirstVal(row, ["REPLACE TAG"], ""),
+            getFirstVal(row, ["MAINTENANCE HISTORY"], ""),
+            getFirstVal(row, ["NOTES / COMMENTS"], ""),
+          ]
+            .filter(Boolean)
+            .join(" | ")
+            .toLowerCase()
+        );
+        return /\bcyod\b|employee owned|change ownership to employee/.test(raw);
       })();
 
       return {
@@ -399,8 +397,8 @@ export default function LaptopInventory() {
       assetTag: normalizeStr(getFirstVal(row, ["ASSET CODE", "Asset Tag", "Asset", "Code", "ID"], "")),
       model: normalizeStr(getFirstVal(row, ["MODEL", "Model"], "")),
       serial: normalizeStr(getFirstVal(row, ["SERIAL NUM", "Serial Number", "Serial", "SN"], "")),
-      issueType: normalizeStr(getFirstVal(row, ["ISSUE (BNEXT)", "Issue Type", "Problem", "Category", "MAINTENANCE HISTORY"], "Unknown")),
-      status: normalizeStr(getFirstVal(row, ["TYPE", "Status", "State"], "In Repair")),
+      issueType: normalizeStr(getFirstVal(row, ["ISSUE (BNEXT)", "Issue Type", "Problem", "Category", "MAINTENANCE HISTORY", "DATE NEXUS SERVICE"], "Unknown")),
+      status: normalizeStr(getFirstVal(row, ["TAG", "TYPE", "Status", "State"], "In Repair")),
       reportedDate: tryParseDate(getFirstVal(row, ["DATE REPORTED ISSUE (BNEXT)", "Reported Date", "Date", "Opened"], null)),
     }));
 
@@ -473,17 +471,16 @@ export default function LaptopInventory() {
     const incomingByAsset = new Map(parsedIncoming.filter((i) => i.assetTag).map((i) => [i.assetTag!, i]));
 
     const mergedLaptops = parsedLaptops.map((l) => {
-      let hasIssue = false;
       let status = l.status;
       let issueMatch: Issue | undefined;
       if (l.assetTag && issueByAsset.has(l.assetTag)) issueMatch = issueByAsset.get(l.assetTag);
       if (!issueMatch && l.serial && issueBySerial.has(l.serial)) issueMatch = issueBySerial.get(l.serial);
       if (!issueMatch && l.model && issueByModel.has(l.model)) issueMatch = issueByModel.get(l.model);
       if (issueMatch) {
-        const s = issueMatch.status.toLowerCase();
-        hasIssue = !s.includes("fixed") && !s.includes("resolved");
+        const blob = [issueMatch.status, issueMatch.issueType].join(" ").toLowerCase();
+        const resolved = /repaired|fixed|redeployed/.test(blob);
+        if (!resolved) status = "Issues";
       }
-      if (hasIssue) status = "Issues";
       if (incomingByAsset.has(l.assetTag)) status = "Incoming";
       return { ...l, status };
     });
