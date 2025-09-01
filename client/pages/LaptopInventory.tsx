@@ -291,6 +291,7 @@ export default function LaptopInventory() {
         getFirstVal(
           row,
           [
+            "INVOICE DATE",
             "Purchase Date",
             "Purchased",
             "Buy Date",
