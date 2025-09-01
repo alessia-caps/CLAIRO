@@ -1047,8 +1047,8 @@ export default function LaptopInventory() {
                           </TableCell>
                           <TableCell>{matchItems[0]?.department || "Unknown"}</TableCell>
                           <TableCell className="space-x-2">
-                            {matchItems.map((l) => (
-                              <Badge key={l.assetTag} variant={l.status.toLowerCase()==="issues"?"destructive":"secondary"}>
+                            {matchItems.map((l, i) => (
+                              <Badge key={`${l.assetTag || l.serial || l.model || 'asset'}-${i}`} variant={l.status.toLowerCase()==="issues"?"destructive":"secondary"}>
                                 {l.assetTag || l.model}
                               </Badge>
                             ))}
@@ -1088,8 +1088,8 @@ export default function LaptopInventory() {
                     {filteredLaptops.length === 0 && (
                       <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">No assets match</TableCell></TableRow>
                     )}
-                    {filteredLaptops.map((l) => (
-                      <TableRow key={l.assetTag} className={l.status.toLowerCase()==="issues"?"bg-destructive/5":""}>
+                    {filteredLaptops.map((l, idx) => (
+                      <TableRow key={`${l.assetTag || l.serial || l.model || 'row'}-${idx}`} className={l.status.toLowerCase()==="issues"?"bg-destructive/5":""}>
                         <TableCell className="font-medium">{l.assetTag || "—"}</TableCell>
                         <TableCell>
                           <div className="flex flex-col">
