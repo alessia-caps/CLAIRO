@@ -14,6 +14,26 @@ import LaptopInventory from "./pages/LaptopInventory";
 import CertificationTraining from "./pages/CertificationTraining";
 import NotFound from "./pages/NotFound";
 
+// Dev-only: filter noisy defaultProps deprecation logs from Recharts XAxis/YAxis
+if (import.meta && (import.meta as any).env && (import.meta as any).env.DEV) {
+  const origError = console.error;
+  // @ts-expect-error intentional override in dev
+  console.error = (...args: any[]) => {
+    const str = args
+      .map((a) => (typeof a === "string" ? a : String(a)))
+      .join(" ");
+    if (
+      str.includes(
+        "Support for defaultProps will be removed from function components",
+      ) &&
+      (str.includes("XAxis") || str.includes("YAxis"))
+    ) {
+      return;
+    }
+    origError(...args);
+  };
+}
+
 const queryClient = new QueryClient();
 
 const App = () => (
