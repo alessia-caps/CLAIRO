@@ -247,16 +247,17 @@ export default function LaptopInventory() {
     };
 
     let laptopsSheet = getSheet([
+      "bneXt Laptop Inventory",
+      "Laptop Inventory",
       "Laptops",
       "Assets",
-      "Laptop Inventory",
       "Computers",
-      "Laptop",
+      "Sheet1",
     ]);
     if (!laptopsSheet.length) {
       laptopsSheet = detectBy((rows) =>
         scoreSheet(rows, [
-          "asset", "serial", "brand", "model", "department", "dept", "team", "business unit", "employee", "status", "purchase", "acquisition", "procure"
+          "asset code", "invoice date", "custodian", "brand", "model", "vertical", "serial num", "tag", "maintenance history"
         ]),
       );
     }
