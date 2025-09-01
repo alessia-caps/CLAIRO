@@ -68,6 +68,8 @@ type Laptop = {
   employee?: string;
   status: string;
   purchaseDate: NullableDate;
+  ownershipDate?: NullableDate;
+  deploymentDate?: NullableDate;
   ageYears: number;
   cyod: boolean;
   notes?: string;
