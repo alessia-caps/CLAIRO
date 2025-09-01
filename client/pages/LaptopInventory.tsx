@@ -383,7 +383,7 @@ export default function LaptopInventory() {
       laptops.filter((l) => l.cyod).length;
 
     const over7yrs = laptops.filter((l) => l.ageYears >= 7).length;
-    const newHireWaiting = incoming.filter((i) => i.purpose.toLowerCase().includes("hire")).length;
+    const newHireWaiting = incoming.filter((i) => /hire|new\s*hire|onboard/i.test(i.purpose)).length;
 
     const spareLow = spare < 5; // threshold
 
