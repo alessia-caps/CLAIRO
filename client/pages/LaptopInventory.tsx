@@ -961,15 +961,12 @@ export default function LaptopInventory() {
         </Card>
       </div>
 
-      {/* Visual Insights & Views */}
+      {/* Main Views */}
       <Tabs defaultValue="overview">
-        <TabsList className="flex flex-wrap gap-2">
+        <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="employees">Employee List</TabsTrigger>
           <TabsTrigger value="assets">Asset List</TabsTrigger>
-          <TabsTrigger value="issues">Issues</TabsTrigger>
-          <TabsTrigger value="incoming">Incoming</TabsTrigger>
-          <TabsTrigger value="cyod">CYOD</TabsTrigger>
+          <TabsTrigger value="employees">Employee List</TabsTrigger>
         </TabsList>
 
         {/* Overview */}
