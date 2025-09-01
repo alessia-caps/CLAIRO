@@ -1478,7 +1478,9 @@ export default function LaptopInventory() {
             <CardTitle className="text-sm font-medium flex items-center gap-2"><Upload className="h-4 w-4"/> Upload your Excel</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">Read all 5 sheets: Laptops, Incoming, Issues, CYOD, Mouse & Headset. The dashboard will populate automatically with counts, charts, and lists. You can use the sample you attached.</p>
+            <p className="text-sm text-muted-foreground">
+              Upload your bneXt laptop inventory Excel file. The system will automatically detect and parse columns like ASSET CODE, BRAND, MODEL, VERTICAL, CUSTODIAN, TAG, INVOICE DATE, and MAINTENANCE HISTORY. Issues and CYOD data will be extracted from the TAG and maintenance history fields.
+            </p>
           </CardContent>
         </Card>
       )}
