@@ -306,72 +306,54 @@ export default function LaptopInventory() {
 
     const parsedLaptops: Laptop[] = laptopsSheet.map((row: any) => {
       const purchaseDate = tryParseDate(
-        getFirstVal(
-          row,
-          [
-            "INVOICE DATE",
-            "Purchase Date",
-            "Purchased",
-            "Buy Date",
-            "Date Purchased",
-            "Acquisition Date",
-            "Procurement Date",
-            "Date",
-          ],
-          null,
-        ),
-      );
-      const ownershipDate = tryParseDate(
-        getFirstVal(row, ["Ownership Date", "EOU Date", "CYOD Start"], null),
+        getFirstVal(row, ["INVOICE DATE", "Purchase Date", "Purchased", "Buy Date"], null),
       );
       const deploymentDate = tryParseDate(
-        getFirstVal(row, ["Deployment Date", "Assigned Date", "Start Date"], null),
+        getFirstVal(row, ["ASSET DEPLOYMNT", "EMP DATE", "Deployment Date", "Assigned Date"], null),
       );
+
       let employee = normalizeStr(
-        getFirstVal(row, ["CUSTODIAN", "Employee", "Assigned To", "User", "Name", "PREVIOUS OWNER"], ""),
+        getFirstVal(row, ["CUSTODIAN", "Employee", "Assigned To", "User", "Name"], ""),
       );
-      if (/^no custodian/i.test(employee) || /^0$/i.test(employee) || /^#ref!?$/i.test(employee)) employee = "";
-      // Normalize 'LASTNAME, FIRSTNAME' to 'LASTNAME, FIRSTNAME'
-      employee = employee.replace(/\s+\|.*/i, "").trim();
+      // Handle various "no custodian" formats from your data
+      if (/^no custodian/i.test(employee) || /^0$/i.test(employee) || /^#ref!?$/i.test(employee) ||
+          /^dead unit/i.test(employee) || /^defective/i.test(employee) || employee === "CH") {
+        employee = "";
+      }
+
       const dept = normalizeStr(
         getFirstVal(row, ["VERTICAL", "Department", "Dept", "Team", "BU", "Business Unit"], "Unknown"),
       );
-      const tagText = (
-        normalizeStr(
-          [
-            getFirstVal(row, ["TYPE OF EMPLOYEE", "TAG"], ""),
-            getFirstVal(row, ["REPLACE TAG"], ""),
-            getFirstVal(row, ["MAINTENANCE HISTORY"], ""),
-            getFirstVal(row, ["NOTES / COMMENTS"], ""),
-          ]
-            .filter(Boolean)
-            .join(" | "),
-        ) || ""
-      ).toLowerCase();
+
+      // Parse TAG field to determine status
+      const tagText = normalizeStr(getFirstVal(row, ["TAG", "Status"], "")).toLowerCase();
+      const maintenanceHistory = normalizeStr(getFirstVal(row, ["MAINTENANCE HISTORY"], ""));
 
       let statusRaw = "";
-      if (/spare\s*unit|\bspare\b/.test(tagText)) statusRaw = "Spare";
-      else if (/deploy/.test(tagText)) statusRaw = "Active";
-      else if (/eol|beyond\s*repair|defective/.test(tagText)) statusRaw = "Issues";
-      if (!statusRaw) statusRaw = employee ? "Active" : "Spare";
-      const cyodFlag = (() => {
-        const raw = (
-          [
-            getFirstVal(row, ["CYOD", "Is CYOD", "Personal", "Ownership", "Employee Owned"], ""),
-            getFirstVal(row, ["REPLACE TAG"], ""),
-            getFirstVal(row, ["MAINTENANCE HISTORY"], ""),
-            getFirstVal(row, ["NOTES / COMMENTS"], ""),
-          ]
-            .filter(Boolean)
-            .join(" | ")
-            .toLowerCase()
-        );
-        return /\bcyod\b|employee owned|change ownership to employee/.test(raw);
-      })();
+      if (/spare\s*unit|spare|common area/.test(tagText)) {
+        statusRaw = "Spare";
+      } else if (/deployed?\s*unit|cyod|change ownership to employee/.test(tagText)) {
+        statusRaw = employee ? "Active" : "Spare";
+      } else if (/eol|beyond\s*repair|dead unit|under repair|for repair/.test(tagText)) {
+        statusRaw = "Issues";
+      } else if (/test eqpt|borrowed/.test(tagText)) {
+        statusRaw = "Spare";
+      } else {
+        // Default logic based on employee assignment
+        statusRaw = employee ? "Active" : "Spare";
+      }
+
+      // Check if it's CYOD
+      const cyodFlag = /cyod|change ownership to employee|sold/.test(tagText.toLowerCase());
+
+      // Parse age from LAPTOP AGE column
+      const laptopAgeStr = normalizeStr(getFirstVal(row, ["LAPTOP AGE"], ""));
+      const ageMatch = laptopAgeStr.match(/(\d+\.?\d*)/);
+      const ageYears = ageMatch ? Math.floor(parseFloat(ageMatch[1])) : fullYearsBetween(purchaseDate);
 
       return {
         assetTag: normalizeStr(
-          getFirstVal(row, ["ASSET CODE", "OLD CODE", "TAG", "Asset Tag", "Asset", "Code", "ID", "Asset Code"], ""),
+          getFirstVal(row, ["ASSET CODE", "OLD CODE", "Asset Tag", "Asset", "Code", "ID"], ""),
         ),
         serial: normalizeStr(
           getFirstVal(row, ["SERIAL NUM", "Serial Number", "Serial", "SN"], ""),
@@ -380,16 +362,14 @@ export default function LaptopInventory() {
         model: normalizeStr(getFirstVal(row, ["MODEL", "Model"], "Unknown")),
         department: dept || "Unknown",
         employee: employee || undefined,
-        status: statusRaw || (employee ? "Active" : "Spare"),
+        status: statusRaw,
         purchaseDate,
-        ownershipDate,
+        ownershipDate: null,
         deploymentDate,
-        ageYears: fullYearsBetween(purchaseDate),
+        ageYears,
         cyod: cyodFlag,
-        notes: normalizeStr([
-          getFirstVal(row, ["NOTES / COMMENTS", "Notes", "Remarks"], ""),
-          getFirstVal(row, ["MAINTENANCE HISTORY"], ""),
-        ].filter(Boolean).join(" | ")),
+        notes: maintenanceHistory || "",
+        replacementScheduled: /replace/.test(tagText.toLowerCase()),
       };
     });
 
