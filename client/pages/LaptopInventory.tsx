@@ -374,14 +374,48 @@ export default function LaptopInventory() {
       };
     });
 
-    const parsedIssues: Issue[] = issuesSheet.map((row: any) => ({
-      assetTag: normalizeStr(getFirstVal(row, ["ASSET CODE", "Asset Tag", "Asset", "Code", "ID"], "")),
-      model: normalizeStr(getFirstVal(row, ["MODEL", "Model"], "")),
-      serial: normalizeStr(getFirstVal(row, ["SERIAL NUM", "Serial Number", "Serial", "SN"], "")),
-      issueType: normalizeStr(getFirstVal(row, ["ISSUE (BNEXT)", "Issue Type", "Problem", "Category", "MAINTENANCE HISTORY", "DATE NEXUS SERVICE"], "Unknown")),
-      status: normalizeStr(getFirstVal(row, ["TAG", "TYPE", "Status", "State"], "In Repair")),
-      reportedDate: tryParseDate(getFirstVal(row, ["DATE REPORTED ISSUE (BNEXT)", "Reported Date", "Date", "Opened"], null)),
-    }));
+    let parsedIssues: Issue[] = [];
+
+    if (issuesSheet.length > 0) {
+      // If we have a separate issues sheet, parse it
+      parsedIssues = issuesSheet.map((row: any) => ({
+        assetTag: normalizeStr(getFirstVal(row, ["ASSET CODE", "Asset Tag", "Asset", "Code", "ID"], "")),
+        model: normalizeStr(getFirstVal(row, ["MODEL", "Model"], "")),
+        serial: normalizeStr(getFirstVal(row, ["SERIAL NUM", "Serial Number", "Serial", "SN"], "")),
+        issueType: normalizeStr(getFirstVal(row, ["ISSUE (BNEXT)", "Issue Type", "Problem", "Category", "MAINTENANCE HISTORY"], "Unknown")),
+        status: normalizeStr(getFirstVal(row, ["TAG", "TYPE", "Status", "State"], "In Repair")),
+        reportedDate: tryParseDate(getFirstVal(row, ["DATE REPORTED ISSUE (BNEXT)", "Reported Date", "Date", "Opened"], null)),
+      }));
+    } else {
+      // Extract issues from main laptop data based on status and maintenance history
+      parsedIssues = laptopsSheet
+        .filter((row: any) => {
+          const tag = normalizeStr(getFirstVal(row, ["TAG"], "")).toLowerCase();
+          const maintenance = normalizeStr(getFirstVal(row, ["MAINTENANCE HISTORY"], "")).toLowerCase();
+          return /eol|beyond repair|dead unit|under repair|defective|for repair|nexus|broken|battery|keyboard|screen|lcd|overheating/.test(tag + " " + maintenance);
+        })
+        .map((row: any) => {
+          const maintenance = normalizeStr(getFirstVal(row, ["MAINTENANCE HISTORY"], ""));
+          let issueType = "Hardware Issue";
+
+          // Extract specific issue types from maintenance history
+          if (/battery|charging/.test(maintenance.toLowerCase())) issueType = "Battery Issue";
+          else if (/keyboard|key/.test(maintenance.toLowerCase())) issueType = "Keyboard Issue";
+          else if (/screen|lcd|display/.test(maintenance.toLowerCase())) issueType = "Display Issue";
+          else if (/overheating|shutdown|fan/.test(maintenance.toLowerCase())) issueType = "Thermal Issue";
+          else if (/hard.?drive|hdd|ssd/.test(maintenance.toLowerCase())) issueType = "Storage Issue";
+          else if (/beyond repair|eol/.test(maintenance.toLowerCase())) issueType = "End of Life";
+
+          return {
+            assetTag: normalizeStr(getFirstVal(row, ["ASSET CODE"], "")),
+            model: normalizeStr(getFirstVal(row, ["MODEL"], "")),
+            serial: normalizeStr(getFirstVal(row, ["SERIAL NUM"], "")),
+            issueType,
+            status: /beyond repair|eol|dead/.test(maintenance.toLowerCase()) ? "Beyond Repair" : "Under Repair",
+            reportedDate: null,
+          };
+        });
+    }
 
     const parsedIncoming: Incoming[] = incomingSheet.map((row: any) => {
       const comments = normalizeStr(getFirstVal(row, ["COMMENTS", "Comments", "Notes"], ""));
