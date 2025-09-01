@@ -95,6 +95,7 @@ type Laptop = {
 type Issue = {
   assetTag?: string;
   model?: string;
+  serial?: string;
   issueType: string;
   status: string;
   reportedDate: NullableDate;
@@ -146,9 +147,26 @@ const fullYearsBetween = (from: NullableDate, to: Date = new Date()) => {
   return Math.max(0, years);
 };
 
+const normalizeKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 const getFirstVal = (row: any, keys: string[], fallback = ""): any => {
+  if (!row || typeof row !== "object") return fallback;
+  // 1) exact
   for (const k of keys) {
     if (row[k] !== undefined && row[k] !== null && row[k] !== "") return row[k];
+  }
+  const rowKeys = Object.keys(row);
+  // 2) case-insensitive
+  for (const k of keys) {
+    const idx = rowKeys.find((rk) => rk.toLowerCase() === k.toLowerCase());
+    if (idx && row[idx] !== undefined && row[idx] !== null && row[idx] !== "") return row[idx];
+  }
+  // 3) normalized (remove spaces/symbols)
+  const normMap = new Map<string, string>();
+  rowKeys.forEach((rk) => normMap.set(normalizeKey(rk), rk));
+  for (const k of keys) {
+    const nk = normalizeKey(k);
+    const match = normMap.get(nk);
+    if (match && row[match] !== undefined && row[match] !== null && row[match] !== "") return row[match];
   }
   return fallback;
 };
@@ -312,7 +330,16 @@ export default function LaptopInventory() {
       let employee = normalizeStr(
         getFirstVal(row, ["CUSTODIAN", "Employee", "Assigned To", "User", "Name"], ""),
       );
-      if (/^no custodian/i.test(employee)) employee = "";
+      if (/^no custodian/i.test(employee) || employee === "0" || employee === "#REF!") employee = "";
+      // Trim leading codes before lastname, keep from first token that contains a comma
+      if (employee.includes(",")) {
+        const commaIdx = employee.indexOf(",");
+        const pre = employee.slice(0, commaIdx);
+        const lastSpace = pre.lastIndexOf(" ");
+        if (lastSpace > -1) {
+          employee = employee.slice(lastSpace + 1).trim();
+        }
+      }
       const dept = normalizeStr(
         getFirstVal(row, ["VERTICAL", "Department", "Dept", "Team", "BU", "Business Unit"], "Unknown"),
       );
@@ -369,8 +396,9 @@ export default function LaptopInventory() {
     });
 
     const parsedIssues: Issue[] = issuesSheet.map((row: any) => ({
-      assetTag: normalizeStr(getFirstVal(row, ["ASSET CODE", "TAG", "Asset Tag", "Asset", "Code", "ID"], "")),
+      assetTag: normalizeStr(getFirstVal(row, ["ASSET CODE", "Asset Tag", "Asset", "Code", "ID"], "")),
       model: normalizeStr(getFirstVal(row, ["MODEL", "Model"], "")),
+      serial: normalizeStr(getFirstVal(row, ["SERIAL NUM", "Serial Number", "Serial", "SN"], "")),
       issueType: normalizeStr(getFirstVal(row, ["ISSUE (BNEXT)", "Issue Type", "Problem", "Category", "MAINTENANCE HISTORY"], "Unknown")),
       status: normalizeStr(getFirstVal(row, ["TYPE", "Status", "State"], "In Repair")),
       reportedDate: tryParseDate(getFirstVal(row, ["DATE REPORTED ISSUE (BNEXT)", "Reported Date", "Date", "Opened"], null)),
@@ -412,26 +440,26 @@ export default function LaptopInventory() {
       quantity: Number(getFirstVal(row, ["Quantity", "Qty"], 0)) || 0,
       available: Number(getFirstVal(row, ["Available", "In Stock"], 0)) || 0,
     }));
-    // Fallbacks for two-column list without headers (Mouse 21, Headset 0, ...)
     if (peripheralsSheet.length) {
       const extra: Peripheral[] = [];
       peripheralsSheet.forEach((row: any) => {
         const entries = Object.entries(row);
-        // Case A: key is label, value is number
         entries.forEach(([k, v]) => {
-          if (typeof v === "number" && isFinite(v) && String(k).trim()) {
-            extra.push({ item: String(k).trim(), quantity: Number(v), available: Number(v) });
+          const label = String(k).trim();
+          if (label && (typeof v === "number" || (typeof v === "string" && /^\d+(?:\.\d+)?$/.test(v)))) {
+            const num = Number(v);
+            if (!isNaN(num)) extra.push({ item: label, quantity: num, available: num });
           }
         });
-        // Case B: one string cell and one numeric cell in same row
-        if (!entries.some(([_, v]) => typeof v === "number")) {
-          const label = entries.map(([_, v]) => (typeof v === "string" ? v.trim() : "")).find(Boolean);
-          const num = entries
-            .map(([_, v]) => (typeof v === "string" && /^\d+(?:\.\d+)?$/.test(v) ? Number(v) : NaN))
-            .find((n) => !isNaN(n));
-          if (label && typeof num === "number" && !isNaN(num)) {
-            extra.push({ item: label, quantity: num, available: num });
-          }
+        // Also support value-as-label when key is generic
+        if (entries.length === 2) {
+          const [a, b] = entries;
+          const sA = typeof a[1] === "string" ? a[1].trim() : "";
+          const sB = typeof b[1] === "string" ? b[1].trim() : "";
+          const nA = typeof a[1] === "number" ? a[1] : Number(sA);
+          const nB = typeof b[1] === "number" ? b[1] : Number(sB);
+          if (sA && !isNaN(nB)) extra.push({ item: sA, quantity: Number(nB), available: Number(nB) });
+          if (sB && !isNaN(nA)) extra.push({ item: sB, quantity: Number(nA), available: Number(nA) });
         }
       });
       const combined = [...parsedPeripherals, ...extra].filter((p) => p.item);
@@ -439,24 +467,25 @@ export default function LaptopInventory() {
     }
 
     // Cross-mark laptops with active issues or incoming
-    const issueByAsset = new Map(
-      parsedIssues.filter((i) => i.assetTag).map((i) => [i.assetTag!, i]),
-    );
-    const incomingByAsset = new Map(
-      parsedIncoming.filter((i) => i.assetTag).map((i) => [i.assetTag!, i]),
-    );
+    const issueByAsset = new Map(parsedIssues.filter((i) => i.assetTag).map((i) => [i.assetTag!, i]));
+    const issueBySerial = new Map(parsedIssues.filter((i) => i.serial).map((i) => [i.serial!, i]));
+    const issueByModel = new Map(parsedIssues.filter((i) => i.model).map((i) => [i.model!, i]));
+    const incomingByAsset = new Map(parsedIncoming.filter((i) => i.assetTag).map((i) => [i.assetTag!, i]));
 
     const mergedLaptops = parsedLaptops.map((l) => {
-      if (issueByAsset.has(l.assetTag)) {
-        const s = issueByAsset.get(l.assetTag)!.status.toLowerCase();
-        if (!s.includes("fixed") && !s.includes("resolved")) {
-          return { ...l, status: "Issues" };
-        }
+      let hasIssue = false;
+      let status = l.status;
+      let issueMatch: Issue | undefined;
+      if (l.assetTag && issueByAsset.has(l.assetTag)) issueMatch = issueByAsset.get(l.assetTag);
+      if (!issueMatch && l.serial && issueBySerial.has(l.serial)) issueMatch = issueBySerial.get(l.serial);
+      if (!issueMatch && l.model && issueByModel.has(l.model)) issueMatch = issueByModel.get(l.model);
+      if (issueMatch) {
+        const s = issueMatch.status.toLowerCase();
+        hasIssue = !s.includes("fixed") && !s.includes("resolved");
       }
-      if (incomingByAsset.has(l.assetTag)) {
-        return { ...l, status: "Incoming" };
-      }
-      return l;
+      if (hasIssue) status = "Issues";
+      if (incomingByAsset.has(l.assetTag)) status = "Incoming";
+      return { ...l, status };
     });
 
     setLaptops(mergedLaptops);
