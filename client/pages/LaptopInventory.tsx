@@ -120,11 +120,14 @@ const tryParseDate = (val: any): NullableDate => {
   return isNaN(d.getTime()) ? null : d;
 };
 
-const yearsDiff = (d: NullableDate) => {
-  if (!d) return 0;
-  const now = new Date();
-  const diff = now.getTime() - d.getTime();
-  return Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
+const fullYearsBetween = (from: NullableDate, to: Date = new Date()) => {
+  if (!from) return 0;
+  let years = to.getFullYear() - from.getFullYear();
+  const beforeAnniversary =
+    to.getMonth() < from.getMonth() ||
+    (to.getMonth() === from.getMonth() && to.getDate() < from.getDate());
+  if (beforeAnniversary) years -= 1;
+  return Math.max(0, years);
 };
 
 const getFirstVal = (row: any, keys: string[], fallback = ""): any => {
@@ -148,8 +151,10 @@ export default function LaptopInventory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [deptFilter, setDeptFilter] = useState<string>("all");
   const [problemOnly, setProblemOnly] = useState(false);
+  const [excelUrl, setExcelUrl] = useState("");
+  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
 
-  // File upload
+  // File/URL upload
   const onFileUpload = async (file: File) => {
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: "array" });
@@ -205,20 +210,44 @@ export default function LaptopInventory() {
 
     const parsedLaptops: Laptop[] = laptopsSheet.map((row: any) => {
       const purchaseDate = tryParseDate(
-        getFirstVal(row, ["Purchase Date", "Purchased", "Buy Date", "Date"], null),
+        getFirstVal(
+          row,
+          [
+            "Purchase Date",
+            "Purchased",
+            "Buy Date",
+            "Date Purchased",
+            "Acquisition Date",
+            "Procurement Date",
+            "Date",
+          ],
+          null,
+        ),
+      );
+      const ownershipDate = tryParseDate(
+        getFirstVal(row, ["Ownership Date", "EOU Date", "CYOD Start"], null),
+      );
+      const deploymentDate = tryParseDate(
+        getFirstVal(row, ["Deployment Date", "Assigned Date", "Start Date"], null),
       );
       const employee = normalizeStr(
         getFirstVal(row, ["Employee", "Assigned To", "User", "Name"], ""),
       );
       const dept = normalizeStr(
-        getFirstVal(row, ["Department", "Dept", "Team", "BU"], "Unknown"),
+        getFirstVal(row, ["Department", "Dept", "Team", "BU", "Business Unit"], "Unknown"),
       );
       const statusRaw = normalizeStr(
         getFirstVal(row, ["Status", "State"], employee ? "Active" : "Spare"),
       );
+      const cyodFlag = String(
+        getFirstVal(row, ["CYOD", "Is CYOD", "Personal", "Ownership", "Employee Owned"], "No"),
+      )
+        .toLowerCase()
+        .match(/^(y|yes|true|employee|owned)/) !== null;
+
       return {
         assetTag: normalizeStr(
-          getFirstVal(row, ["Asset Tag", "Asset", "Code", "ID"], ""),
+          getFirstVal(row, ["Asset Tag", "Asset", "Code", "ID", "Asset Code"], ""),
         ),
         serial: normalizeStr(
           getFirstVal(row, ["Serial Number", "Serial", "SN"], ""),
@@ -229,12 +258,10 @@ export default function LaptopInventory() {
         employee: employee || undefined,
         status: statusRaw || (employee ? "Active" : "Spare"),
         purchaseDate,
-        ageYears: yearsDiff(purchaseDate),
-        cyod: String(
-          getFirstVal(row, ["CYOD", "Is CYOD", "Personal"], "No"),
-        )
-          .toLowerCase()
-          .startsWith("y"),
+        ownershipDate,
+        deploymentDate,
+        ageYears: fullYearsBetween(purchaseDate),
+        cyod: cyodFlag,
         notes: normalizeStr(getFirstVal(row, ["Notes", "Remarks"], "")),
       };
     });
@@ -401,10 +428,14 @@ export default function LaptopInventory() {
     return Array.from(dmap.entries()).map(([name, value]) => ({ name, value }));
   }, [laptops]);
 
-  const fiveYearCount = useMemo(
-    () => laptops.filter((l) => l.ageYears >= 5).length,
-    [laptops],
-  );
+  const fiveYearCount = useMemo(() => {
+    const today = new Date();
+    return laptops.filter((l) => {
+      const base = l.purchaseDate;
+      const yrs = fullYearsBetween(base, today);
+      return (l.status.toLowerCase() === "active" ? yrs >= 5 : yrs >= 5);
+    }).length;
+  }, [laptops]);
 
   const problemTypeData = useMemo(() => {
     const map = new Map<string, number>();
@@ -600,9 +631,7 @@ export default function LaptopInventory() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Label htmlFor="file" className="sr-only">
-            Upload Excel
-          </Label>
+          <Label htmlFor="file" className="sr-only">Upload Excel</Label>
           <Input
             id="file"
             type="file"
@@ -616,6 +645,26 @@ export default function LaptopInventory() {
           <Button variant="outline" onClick={() => { document.getElementById("file")?.click(); }}>
             <Upload className="h-4 w-4 mr-2" /> Upload
           </Button>
+          <Input
+            placeholder="Paste Excel URL and press Load"
+            value={excelUrl}
+            onChange={(e) => setExcelUrl(e.target.value)}
+            className="w-72"
+          />
+          <Button disabled={!excelUrl || isLoadingUrl} onClick={async () => {
+            try {
+              setIsLoadingUrl(true);
+              const res = await fetch(excelUrl);
+              if (!res.ok) throw new Error("Failed to fetch file");
+              const buf = await res.arrayBuffer();
+              const file = new File([buf], "remote.xlsx", { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+              await onFileUpload(file);
+            } catch (e) {
+              alert("Could not load the Excel from URL. Please verify the link.");
+            } finally {
+              setIsLoadingUrl(false);
+            }
+          }}>{isLoadingUrl ? "Loading..." : "Load"}</Button>
         </div>
       </div>
 
