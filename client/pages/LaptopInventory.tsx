@@ -844,7 +844,7 @@ export default function LaptopInventory() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{fiveYearCount}</div>
-                <p className="text-xs text-muted-foreground">Assets becoming employee-owned soon</p>
+                <p className="text-xs text-muted-foreground">Assets at or beyond 5 years (based on purchase date)</p>
               </CardContent>
             </Card>
           </div>
