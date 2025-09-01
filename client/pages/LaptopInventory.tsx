@@ -1034,11 +1034,11 @@ export default function LaptopInventory() {
                     {employees.length === 0 && (
                       <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">No employees yet</TableCell></TableRow>
                     )}
-                    {employees.map(({ name, items }) => {
+                    {employees.map(({ name, items }, empIdx) => {
                       const matchItems = items.filter((l)=> filteredLaptops.find(fl => fl.assetTag === l.assetTag));
                       if (!matchItems.length) return null;
                       return (
-                        <TableRow key={name}>
+                        <TableRow key={`${name || 'employee'}-${empIdx}`}>
                           <TableCell className="font-medium">
                             {name}
                             {matchItems.length > 1 && (
