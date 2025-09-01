@@ -471,7 +471,7 @@ export default function LaptopInventory() {
   }, [laptops, searchQuery, deptFilter, problemOnly]);
 
   const summary = useMemo(() => {
-    const active = laptops.filter((l) => l.status.toLowerCase() === "active").length;
+    const active = laptops.filter((l) => l.status.toLowerCase() === "active" || (!!l.employee && l.status.toLowerCase() !== "spare" && l.status.toLowerCase() !== "issues")).length;
     const spare = laptops.filter((l) => l.status.toLowerCase() === "spare").length;
     const issueCount = laptops.filter((l) => l.status.toLowerCase() === "issues").length;
     const incomingCount = laptops.filter((l) => l.status.toLowerCase() === "incoming").length || incoming.length;
