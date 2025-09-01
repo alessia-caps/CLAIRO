@@ -290,7 +290,7 @@ export default function LaptopInventory() {
         getFirstVal(row, ["Expected Date", "ETA", "Arrival"], null),
       ),
       purpose: normalizeStr(
-        getFirstVal(row, ["Purpose", "Reason"], "Spare"),
+        getFirstVal(row, ["Purpose", "Reason", "Type"], "Spare"),
       ),
       employee: normalizeStr(getFirstVal(row, ["Employee", "Name"], "")) || undefined,
     }));
