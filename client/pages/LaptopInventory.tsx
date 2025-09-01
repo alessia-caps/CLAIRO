@@ -437,16 +437,34 @@ export default function LaptopInventory() {
       } as Incoming;
     });
 
-    const parsedCyod: Cyod[] = cyodSheet.map((row: any) => ({
-      employee: normalizeStr(getFirstVal(row, ["Employee", "Name"], "")),
-      brand: normalizeStr(getFirstVal(row, ["Brand", "Make"], "")),
-      deviceType: normalizeStr(
-        getFirstVal(row, ["Device Type", "Type"], ""),
-      ),
-      model: normalizeStr(getFirstVal(row, ["Model"], "")),
-      status: normalizeStr(getFirstVal(row, ["Status", "State"], "")),
-      cost: Number(getFirstVal(row, ["Cost", "Price"], "")) || undefined,
-    }));
+    let parsedCyod: Cyod[] = [];
+
+    if (cyodSheet.length > 0) {
+      // If we have a separate CYOD sheet, parse it
+      parsedCyod = cyodSheet.map((row: any) => ({
+        employee: normalizeStr(getFirstVal(row, ["Employee", "Name"], "")),
+        brand: normalizeStr(getFirstVal(row, ["Brand", "Make"], "")),
+        deviceType: normalizeStr(getFirstVal(row, ["Device Type", "Type"], "")),
+        model: normalizeStr(getFirstVal(row, ["Model"], "")),
+        status: normalizeStr(getFirstVal(row, ["Status", "State"], "")),
+        cost: Number(getFirstVal(row, ["Cost", "Price"], "")) || undefined,
+      }));
+    } else {
+      // Extract CYOD from main laptop data
+      parsedCyod = laptopsSheet
+        .filter((row: any) => {
+          const tag = normalizeStr(getFirstVal(row, ["TAG"], "")).toLowerCase();
+          return /cyod|change ownership to employee|sold/.test(tag);
+        })
+        .map((row: any) => ({
+          employee: normalizeStr(getFirstVal(row, ["CUSTODIAN"], "")),
+          brand: normalizeStr(getFirstVal(row, ["BRAND"], "")),
+          deviceType: normalizeStr(getFirstVal(row, ["MODEL"], "")),
+          model: normalizeStr(getFirstVal(row, ["MODEL"], "")),
+          status: /sold/.test(normalizeStr(getFirstVal(row, ["TAG"], "")).toLowerCase()) ? "Sold" : "Deployed",
+          cost: undefined,
+        }));
+    }
 
     let parsedPeripherals: Peripheral[] = peripheralsSheet.map((row: any) => ({
       item: normalizeStr(getFirstVal(row, ["Item", "Type"], "")),
