@@ -33,7 +33,7 @@ import {
   Users,
   AlertCircle,
   Headphones,
-  MousePointerSquareDashed,
+  Mouse,
   Cpu,
   Layers,
   RefreshCcw,
