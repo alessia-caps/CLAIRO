@@ -288,21 +288,36 @@ export default function LaptopInventory() {
       if (/spare/i.test(statusRaw)) statusRaw = "Spare";
       else if (/deploy/i.test(statusRaw)) statusRaw = "Active";
       else if (/eol|beyond repair/i.test(statusRaw)) statusRaw = "Issues";
-      const cyodFlag = String(
-        getFirstVal(row, ["CYOD", "Is CYOD", "Personal", "Ownership", "Employee Owned"], "No"),
-      )
-        .toLowerCase()
-        .match(/^(y|yes|true|employee|owned)/) !== null;
+      const cyodFlag = (() => {
+        const raw = String(
+          getFirstVal(
+            row,
+            [
+              "CYOD",
+              "Is CYOD",
+              "Personal",
+              "Ownership",
+              "Employee Owned",
+              "TYPE",
+              "REPLACE TAG",
+              "MAINTENANCE HISTORY",
+              "NOTES / COMMENTS",
+            ],
+            "",
+          ),
+        ).toLowerCase();
+        return /cyod|employee owned|change ownership to employee/.test(raw);
+      })();
 
       return {
         assetTag: normalizeStr(
-          getFirstVal(row, ["Asset Tag", "Asset", "Code", "ID", "Asset Code"], ""),
+          getFirstVal(row, ["ASSET CODE", "OLD CODE", "TAG", "Asset Tag", "Asset", "Code", "ID", "Asset Code"], ""),
         ),
         serial: normalizeStr(
-          getFirstVal(row, ["Serial Number", "Serial", "SN"], ""),
+          getFirstVal(row, ["SERIAL NUM", "Serial Number", "Serial", "SN"], ""),
         ),
-        brand: normalizeStr(getFirstVal(row, ["Brand", "Make"], "Unknown")),
-        model: normalizeStr(getFirstVal(row, ["Model"], "Unknown")),
+        brand: normalizeStr(getFirstVal(row, ["BRAND", "Brand", "Make"], "Unknown")),
+        model: normalizeStr(getFirstVal(row, ["MODEL", "Model"], "Unknown")),
         department: dept || "Unknown",
         employee: employee || undefined,
         status: statusRaw || (employee ? "Active" : "Spare"),
@@ -311,38 +326,40 @@ export default function LaptopInventory() {
         deploymentDate,
         ageYears: fullYearsBetween(purchaseDate),
         cyod: cyodFlag,
-        notes: normalizeStr(getFirstVal(row, ["Notes", "Remarks"], "")),
+        notes: normalizeStr([
+          getFirstVal(row, ["NOTES / COMMENTS", "Notes", "Remarks"], ""),
+          getFirstVal(row, ["MAINTENANCE HISTORY"], ""),
+        ].filter(Boolean).join(" | ")),
       };
     });
 
     const parsedIssues: Issue[] = issuesSheet.map((row: any) => ({
-      assetTag: normalizeStr(
-        getFirstVal(row, ["Asset Tag", "Asset", "Code", "ID"], ""),
-      ),
-      model: normalizeStr(getFirstVal(row, ["Model"], "")),
-      issueType: normalizeStr(
-        getFirstVal(row, ["Issue Type", "Problem", "Category"], "Unknown"),
-      ),
-      status: normalizeStr(
-        getFirstVal(row, ["Status", "State"], "In Repair"),
-      ),
-      reportedDate: tryParseDate(
-        getFirstVal(row, ["Reported Date", "Date", "Opened"], null),
-      ),
+      assetTag: normalizeStr(getFirstVal(row, ["ASSET CODE", "TAG", "Asset Tag", "Asset", "Code", "ID"], "")),
+      model: normalizeStr(getFirstVal(row, ["MODEL", "Model"], "")),
+      issueType: normalizeStr(getFirstVal(row, ["ISSUE (BNEXT)", "Issue Type", "Problem", "Category", "MAINTENANCE HISTORY"], "Unknown")),
+      status: normalizeStr(getFirstVal(row, ["TYPE", "Status", "State"], "In Repair")),
+      reportedDate: tryParseDate(getFirstVal(row, ["DATE REPORTED ISSUE (BNEXT)", "Reported Date", "Date", "Opened"], null)),
     }));
 
-    const parsedIncoming: Incoming[] = incomingSheet.map((row: any) => ({
-      assetTag: normalizeStr(getFirstVal(row, ["Asset Tag", "Asset", "ID"], "")),
-      brand: normalizeStr(getFirstVal(row, ["Brand", "Make"], "")),
-      model: normalizeStr(getFirstVal(row, ["Model"], "")),
-      expectedDate: tryParseDate(
-        getFirstVal(row, ["Expected Date", "ETA", "Arrival"], null),
-      ),
-      purpose: normalizeStr(
-        getFirstVal(row, ["Purpose", "Reason", "Type"], "Spare"),
-      ),
-      employee: normalizeStr(getFirstVal(row, ["Employee", "Name"], "")) || undefined,
-    }));
+    const parsedIncoming: Incoming[] = incomingSheet.map((row: any) => {
+      const comments = normalizeStr(getFirstVal(row, ["COMMENTS", "Comments", "Notes"], ""));
+      const model = normalizeStr(getFirstVal(row, ["MODEL", "Model"], ""));
+      const brand = normalizeStr(getFirstVal(row, ["BRAND", "Brand", "Make"], ""));
+      const startDate = tryParseDate(getFirstVal(row, ["NEW HIRE START DATE"], null));
+      const invoiceDate = tryParseDate(getFirstVal(row, ["INVOICE DATE"], null));
+      let purpose = "Spare";
+      if (/new\s*hire/i.test(comments) || startDate) purpose = "New Hire";
+      else if (/replace/i.test(comments)) purpose = "Replacement";
+      else if (/purchase/i.test(comments)) purpose = "Spare";
+      return {
+        assetTag: normalizeStr(getFirstVal(row, ["ASSET CODE", "Asset", "ID"], "")),
+        brand,
+        model: model || brand,
+        expectedDate: startDate || invoiceDate,
+        purpose,
+        employee: normalizeStr(getFirstVal(row, ["Employee", "Name"], "")) || undefined,
+      } as Incoming;
+    });
 
     const parsedCyod: Cyod[] = cyodSheet.map((row: any) => ({
       employee: normalizeStr(getFirstVal(row, ["Employee", "Name"], "")),
@@ -355,11 +372,16 @@ export default function LaptopInventory() {
       cost: Number(getFirstVal(row, ["Cost", "Price"], "")) || undefined,
     }));
 
-    const parsedPeripherals: Peripheral[] = peripheralsSheet.map((row: any) => ({
+    let parsedPeripherals: Peripheral[] = peripheralsSheet.map((row: any) => ({
       item: normalizeStr(getFirstVal(row, ["Item", "Type"], "")),
       quantity: Number(getFirstVal(row, ["Quantity", "Qty"], 0)) || 0,
       available: Number(getFirstVal(row, ["Available", "In Stock"], 0)) || 0,
     }));
+    if ((!parsedPeripherals.length || parsedPeripherals.every(p=>!p.item)) && peripheralsSheet.length) {
+      const row = peripheralsSheet[0];
+      const entries = Object.entries(row).filter(([k,v]) => k && (typeof v === "number" || (typeof v === "string" && v.trim() !== "")));
+      parsedPeripherals = entries.map(([k,v]) => ({ item: String(k), quantity: Number(v)||0, available: Number(v)||0 }));
+    }
 
     // Cross-mark laptops with active issues or incoming
     const issueByAsset = new Map(
