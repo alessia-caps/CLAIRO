@@ -412,10 +412,30 @@ export default function LaptopInventory() {
       quantity: Number(getFirstVal(row, ["Quantity", "Qty"], 0)) || 0,
       available: Number(getFirstVal(row, ["Available", "In Stock"], 0)) || 0,
     }));
-    if ((!parsedPeripherals.length || parsedPeripherals.every(p=>!p.item)) && peripheralsSheet.length) {
-      const row = peripheralsSheet[0];
-      const entries = Object.entries(row).filter(([k,v]) => k && (typeof v === "number" || (typeof v === "string" && v.trim() !== "")));
-      parsedPeripherals = entries.map(([k,v]) => ({ item: String(k), quantity: Number(v)||0, available: Number(v)||0 }));
+    // Fallbacks for two-column list without headers (Mouse 21, Headset 0, ...)
+    if (peripheralsSheet.length) {
+      const extra: Peripheral[] = [];
+      peripheralsSheet.forEach((row: any) => {
+        const entries = Object.entries(row);
+        // Case A: key is label, value is number
+        entries.forEach(([k, v]) => {
+          if (typeof v === "number" && isFinite(v) && String(k).trim()) {
+            extra.push({ item: String(k).trim(), quantity: Number(v), available: Number(v) });
+          }
+        });
+        // Case B: one string cell and one numeric cell in same row
+        if (!entries.some(([_, v]) => typeof v === "number")) {
+          const label = entries.map(([_, v]) => (typeof v === "string" ? v.trim() : "")).find(Boolean);
+          const num = entries
+            .map(([_, v]) => (typeof v === "string" && /^\d+(?:\.\d+)?$/.test(v) ? Number(v) : NaN))
+            .find((n) => !isNaN(n));
+          if (label && typeof num === "number" && !isNaN(num)) {
+            extra.push({ item: label, quantity: num, available: num });
+          }
+        }
+      });
+      const combined = [...parsedPeripherals, ...extra].filter((p) => p.item);
+      if (combined.length) parsedPeripherals = combined;
     }
 
     // Cross-mark laptops with active issues or incoming
