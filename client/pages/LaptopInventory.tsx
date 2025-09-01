@@ -275,9 +275,10 @@ export default function LaptopInventory() {
       const deploymentDate = tryParseDate(
         getFirstVal(row, ["Deployment Date", "Assigned Date", "Start Date"], null),
       );
-      const employee = normalizeStr(
-        getFirstVal(row, ["Employee", "Assigned To", "User", "Name"], ""),
+      let employee = normalizeStr(
+        getFirstVal(row, ["CUSTODIAN", "Employee", "Assigned To", "User", "Name"], ""),
       );
+      if (/^no custodian/i.test(employee)) employee = "";
       const dept = normalizeStr(
         getFirstVal(row, ["Department", "Dept", "Team", "BU", "Business Unit"], "Unknown"),
       );
