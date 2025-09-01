@@ -56,6 +56,22 @@ import {
   YAxis,
 } from "recharts";
 
+// Dev-only: suppress Recharts defaultProps warnings (library issue)
+if (typeof window !== "undefined" && import.meta && (import.meta as any).env && (import.meta as any).env.DEV) {
+  const originalError = console.error;
+  // @ts-expect-error override
+  console.error = (...args: any[]) => {
+    const joined = args.map((a) => (typeof a === "string" ? a : String(a))).join(" ");
+    if (
+      joined.includes("Support for defaultProps will be removed from function components") &&
+      (joined.includes("XAxis") || joined.includes("YAxis"))
+    ) {
+      return;
+    }
+    originalError(...args);
+  };
+}
+
 // Types
 type NullableDate = Date | null;
 
