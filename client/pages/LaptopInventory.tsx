@@ -140,6 +140,23 @@ const getFirstVal = (row: any, keys: string[], fallback = ""): any => {
 const normalizeStr = (v: any) => String(v || "").trim();
 
 export default function LaptopInventory() {
+  useEffect(() => {
+    if (typeof window !== "undefined" && import.meta && (import.meta as any).env && (import.meta as any).env.DEV) {
+      const originalError = console.error;
+      console.error = (...args: any[]) => {
+        const msg = typeof args[0] === "string" ? args[0] : "";
+        const joined = args.map(String).join(" ");
+        const isRechartsDefaultPropsWarning =
+          msg.includes("Support for defaultProps will be removed from function components") &&
+          (joined.includes("XAxis") || joined.includes("YAxis"));
+        if (isRechartsDefaultPropsWarning) return;
+        originalError(...args);
+      };
+      return () => {
+        console.error = originalError;
+      };
+    }
+  }, []);
   // Data state
   const [laptops, setLaptops] = useState<Laptop[]>([]);
   const [issues, setIssues] = useState<Issue[]>([]);
