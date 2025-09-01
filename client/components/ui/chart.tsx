@@ -3,6 +3,29 @@ import * as RechartsPrimitive from "recharts";
 
 import { cn } from "@/lib/utils";
 
+// Dev-only suppression for Recharts defaultProps warnings coming from XAxis/YAxis
+if (typeof window !== "undefined" && import.meta && (import.meta as any).env && (import.meta as any).env.DEV) {
+  const originalError = console.error;
+  const originalWarn = console.warn;
+  const shouldFilter = (...args: any[]) => {
+    const joined = args.map((a) => (typeof a === "string" ? a : String(a))).join(" ");
+    return (
+      joined.includes("Support for defaultProps will be removed from function components") &&
+      (joined.includes("XAxis") || joined.includes("YAxis"))
+    );
+  };
+  // @ts-expect-error overriding console for dev
+  console.error = (...args: any[]) => {
+    if (shouldFilter(...args)) return;
+    originalError(...args);
+  };
+  // @ts-expect-error overriding console for dev
+  console.warn = (...args: any[]) => {
+    if (shouldFilter(...args)) return;
+    originalWarn(...args);
+  };
+}
+
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
 
