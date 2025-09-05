@@ -1,10 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Laptop, CheckCircle, AlertTriangle, Package, PieChart, RefreshCw, Clock, Upload, Filter } from "lucide-react";
-import { PieChart as RePieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { Laptop, CheckCircle, AlertTriangle, Package, PieChart, RefreshCw, Upload, Filter } from "lucide-react";
+import { PieChart as RePieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, RadialBarChart, RadialBar, Legend } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useMemo, useRef } from "react";
 import * as XLSX from "xlsx";
+import { ChartFilterDialog } from "@/components/analytics/ChartFilterDialog";
 
 const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
@@ -26,7 +28,6 @@ function groupIssue(issue: string) {
 }
 
 function parseSheetData(data: any[][], headerKeywords: string[]) {
-  // Find header row by keywords
   const headerIdx = data.findIndex(row =>
     row[0] && headerKeywords.some(keyword => row[0].toString().trim().toUpperCase().includes(keyword))
   );
@@ -55,8 +56,10 @@ export default function LaptopInventory() {
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedAgeBracket, setSelectedAgeBracket] = useState("");
   const [selectedCard, setSelectedCard] = useState("");
+  const [activeTab, setActiveTab] = useState("overview");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [pendingFilter, setPendingFilter] = useState<{ type: "brand" | "model" | "age" | "issue"; value: string; count: number } | null>(null);
 
-  // File upload handler
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -70,7 +73,6 @@ export default function LaptopInventory() {
         workbook.SheetNames.forEach(sheetName => {
           const sheet = workbook.Sheets[sheetName];
           const sheetDataArr = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-          // Detect sheet type by name
           if (sheetName.toLowerCase().includes("inventory")) {
             newSheetData["Laptop Inventory"] = parseSheetData(sheetDataArr as any[][], ["INVOICE DATE"]);
           } else if (sheetName.toLowerCase().includes("laptops with issues")) {
@@ -80,7 +82,6 @@ export default function LaptopInventory() {
           } else if (sheetName.toLowerCase().includes("incoming")) {
             newSheetData["Incoming"] = parseSheetData(sheetDataArr as any[][], ["INVOICE DATE"]);
           } else if (sheetName.toLowerCase().includes("mouse")) {
-            // Mouse and Headset: simple key-value
             const items = sheetDataArr.filter(row => (row as any[]).length >= 2 && (row as any[])[0]);
             newSheetData["Mouse and Headset"] = items.map(row => ({
               item: row[0],
@@ -95,19 +96,17 @@ export default function LaptopInventory() {
     reader.readAsBinaryString(file);
   };
 
-  // Combine all laptop rows for analytics
   const allLaptops = useMemo(() => {
     const laptops = (sheetData["Laptops"] || []).concat(sheetData["Laptop Inventory"] || []);
     return laptops;
   }, [sheetData]);
 
-  // Analytics
   const analytics = useMemo(() => {
     if (!allLaptops.length) return {
       total: 0, assigned: 0, available: 0, maintenance: 0, replacement: 0, recent: 0,
       brandDist: [], modelDist: [], ageDist: [],
       owned: [], newUnits: [],
-    };
+    } as any;
     const now = new Date();
     let total = 0, assigned = 0, available = 0, maintenance = 0, replacement = 0, recent = 0;
     const brandCount: Record<string, number> = {};
@@ -125,12 +124,10 @@ export default function LaptopInventory() {
       brandCount[brand] = (brandCount[brand] || 0) + 1;
       modelCount[model] = (modelCount[model] || 0) + 1;
 
-      // Owned units: has custodian and not defective/dead
       if (custodian && !custodian.includes("no custodian") && !custodian.includes("defective") && !custodian.includes("dead unit")) {
         owned.push(row);
         assigned++;
       }
-      // New units: deployed in last 3 months
       const deployDate = row["ASSET DEPLOYMNT"] || row["Asset Deployment"];
       if (deployDate && !deployDate.startsWith("00-Jan-00")) {
         const [day, mon, yr] = deployDate.split("-");
@@ -147,7 +144,6 @@ export default function LaptopInventory() {
           }
         }
       }
-      // Available: marked as spare unit or similar
       if (
         status?.includes("spare unit") ||
         type?.includes("spare unit") ||
@@ -156,7 +152,6 @@ export default function LaptopInventory() {
       ) {
         available++;
       }
-      // Maintenance: EOL/BEYOND REPAIR or maintenance history or UNDER REPAIR
       if (
         status?.includes("eol") ||
         status?.includes("beyond repair") ||
@@ -165,24 +160,20 @@ export default function LaptopInventory() {
       ) {
         maintenance++;
       }
-      // Replacement: age > 5 years or marked for replacement
       const age = parseFloat((row["LAPTOP AGE"] || row["Laptop Age"] || "").replace(/[^\d.]/g, "") || "0");
       if (age > 5 || status?.includes("replace")) {
         replacement++;
       }
     });
 
-    // Brand distribution
     const brandDist = Object.entries(brandCount).map(([name, value], i) => ({
       name, value, color: COLORS[i % COLORS.length]
     }));
-    // Top 5 models
     const modelDist = Object.entries(modelCount)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([name, value], i) => ({ name, value, color: COLORS[i % COLORS.length] }));
 
-    // Age breakdown
     const ageBrackets = [
       { label: "<2 years", min: 0, max: 2 },
       { label: "2-5 years", min: 2, max: 5 },
@@ -200,10 +191,8 @@ export default function LaptopInventory() {
     return { total, assigned, available, maintenance, replacement, recent, brandDist, modelDist, ageDist, owned, newUnits };
   }, [allLaptops]);
 
-  // Mouse and Headset summary
   const mouseHeadsetSummary = sheetData["Mouse and Headset"] || [];
 
-  // Issue breakdown for Laptops With Issues (grouped)
   const issuesRaw = sheetData["Laptops With Issues"] || [];
   const issueBreakdown = useMemo(() => {
     const issueCount: Record<string, number> = {};
@@ -219,12 +208,10 @@ export default function LaptopInventory() {
     }));
   }, [issuesRaw]);
 
-  // For filtering by issue, brand, model, age bracket, card
   const brands = useMemo(() => Array.from(new Set(allLaptops.map(row => row["BRAND"] || row["Brand"]))).filter(Boolean), [allLaptops]);
   const models = useMemo(() => Array.from(new Set(allLaptops.map(row => row["MODEL"] || row["Model"]))).filter(Boolean), [allLaptops]);
   const ageBrackets = ["<2 years", "2-5 years", ">5 years"];
 
-  // Inventory Table Filters
   const filteredData = useMemo(() => {
     let rows = allLaptops;
     if (search) {
@@ -267,12 +254,9 @@ export default function LaptopInventory() {
     return rows;
   }, [search, brandFilter, modelFilter, statusFilter, selectedIssue, selectedBrand, selectedModel, selectedAgeBracket, selectedCard, allLaptops, issuesRaw, analytics.owned, analytics.newUnits]);
 
-  // Incoming laptops summary
   const incomingSummary = sheetData["Incoming"] || [];
 
-  // Comments/issues review section
   const reviewRows = useMemo(() => {
-    // Find rows with long comments/issues
     const rows: any[] = [];
     allLaptops.forEach(row => {
       const comment = row["COMMENTS"] || row["NOTES / COMMENTS"] || "";
@@ -285,10 +269,7 @@ export default function LaptopInventory() {
     return rows;
   }, [allLaptops, issuesRaw]);
 
-  // Review action handler (stub)
   function handleReviewAction(idx: number, action: string) {
-    // Here you could update the row's status, categorize, etc.
-    // For demo, just alert
     alert(`Row ${idx + 1}: ${action}`);
   }
 
@@ -296,12 +277,8 @@ export default function LaptopInventory() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Laptop Inventory Dashboard
-          </h1>
-          <p className="text-muted-foreground">
-            Unified analytics from all sheets in your Excel file.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">Laptop Inventory Dashboard</h1>
+          <p className="text-muted-foreground">Unified analytics from all sheets in your Excel file.</p>
         </div>
         <button
           className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary/80"
@@ -310,364 +287,390 @@ export default function LaptopInventory() {
         >
           <Upload className="h-4 w-4" /> {isLoading ? "Uploading..." : "Upload Excel"}
         </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".xlsx"
-          style={{ display: "none" }}
-          onChange={handleFileUpload}
-        />
+        <input ref={fileInputRef} type="file" accept=".xlsx" style={{ display: "none" }} onChange={handleFileUpload} />
       </div>
 
-      {/* Dashboard Cards (clickable) */}
-      <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-6">
-        <Card onClick={() => setSelectedCard("")} style={{ cursor: "pointer" }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Laptops</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.total}</div>
-            <p className="text-xs text-muted-foreground">In inventory</p>
-          </CardContent>
-        </Card>
-        <Card onClick={() => setSelectedCard("owned")} style={{ cursor: "pointer" }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Owned Units</CardTitle>
-            <Laptop className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.owned.length}</div>
-            <p className="text-xs text-muted-foreground">Assigned to people</p>
-          </CardContent>
-        </Card>
-        <Card onClick={() => setSelectedCard("newUnits")} style={{ cursor: "pointer" }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">New Units</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.newUnits.length}</div>
-            <p className="text-xs text-muted-foreground">Deployed last 3 months</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Available</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.available}</div>
-            <p className="text-xs text-muted-foreground">Ready for assignment</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Maintenance</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.maintenance}</div>
-            <p className="text-xs text-muted-foreground">Under repair/EOL</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Replacement Candidates</CardTitle>
-            <RefreshCw className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.replacement}</div>
-            <p className="text-xs text-muted-foreground">Old or flagged for replacement</p>
-          </CardContent>
-        </Card>
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="inventory">Inventory</TabsTrigger>
+          <TabsTrigger value="issues">Issues</TabsTrigger>
+          <TabsTrigger value="accessories">Accessories</TabsTrigger>
+          <TabsTrigger value="reviews">Reviews</TabsTrigger>
+        </TabsList>
 
-      {/* Charts (clickable) */}
-      <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Brand Distribution</CardTitle>
-            <PieChart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent style={{ height: 250 }}>
-            {analytics.brandDist.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <RePieChart>
-                  <Pie
-                    data={analytics.brandDist}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label
-                    onClick={data => setSelectedBrand(data.name)}
-                  >
-                    {analytics.brandDist.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </RePieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="text-muted-foreground">Upload Excel to view chart</div>
-            )}
-            {selectedBrand && (
-              <div className="mt-2 text-sm">
-                <span className="font-semibold">Filtering by brand:</span> {selectedBrand}{" "}
-                <button className="ml-2 text-xs underline text-primary" onClick={() => setSelectedBrand("")}>Clear</button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Top Models</CardTitle>
-            <PieChart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent style={{ height: 250 }}>
-            {analytics.modelDist.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.modelDist}>
-                  <XAxis dataKey="name" />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip />
-                  <Bar dataKey="value" onClick={data => setSelectedModel(data.name)} cursor="pointer">
-                    {analytics.modelDist.map((entry, index) => (
-                      <Cell key={`cell-bar-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="text-muted-foreground">Upload Excel to view chart</div>
-            )}
-            {selectedModel && (
-              <div className="mt-2 text-sm">
-                <span className="font-semibold">Filtering by model:</span> {selectedModel}{" "}
-                <button className="ml-2 text-xs underline text-primary" onClick={() => setSelectedModel("")}>Clear</button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Laptop Age Breakdown</CardTitle>
-            <PieChart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent style={{ height: 250 }}>
-            {analytics.ageDist.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.ageDist}>
-                  <XAxis dataKey="name" />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip />
-                  <Bar dataKey="value" onClick={data => setSelectedAgeBracket(data.name)} cursor="pointer">
-                    {analytics.ageDist.map((entry, index) => (
-                      <Cell key={`cell-age-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="text-muted-foreground">Upload Excel to view chart</div>
-            )}
-            {selectedAgeBracket && (
-              <div className="mt-2 text-sm">
-                <span className="font-semibold">Filtering by age bracket:</span> {selectedAgeBracket}{" "}
-                <button className="ml-2 text-xs underline text-primary" onClick={() => setSelectedAgeBracket("")}>Clear</button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Mouse and Headset Summary */}
-      {mouseHeadsetSummary.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Mouse and Headset Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item</TableHead>
-                  <TableHead>Count</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {mouseHeadsetSummary.map((row, i) => (
-                  <TableRow key={i}>
-                    <TableCell>{row.item}</TableCell>
-                    <TableCell>{row.count}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Laptops With Issues Breakdown (interactive) */}
-      {issueBreakdown.length > 0 && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Laptops With Issues Breakdown</CardTitle>
-            <span className="text-xs text-muted-foreground">Click a bar to filter inventory table</span>
-          </CardHeader>
-          <CardContent style={{ height: 250 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={issueBreakdown}>
-                <XAxis dataKey="name" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="value" onClick={data => setSelectedIssue(data.name)} cursor="pointer">
-                  {issueBreakdown.map((entry, index) => (
-                    <Cell key={`cell-issue-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-            {selectedIssue && (
-              <div className="mt-2 text-sm">
-                <span className="font-semibold">Filtering by issue:</span> {selectedIssue}{" "}
-                <button className="ml-2 text-xs underline text-primary" onClick={() => setSelectedIssue("")}>Clear</button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Incoming Laptops Table */}
-      {incomingSummary.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Incoming Laptops</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>New Hire</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead>Comments</TableHead>
-                  <TableHead>Model</TableHead>
-                  <TableHead>Serial Number</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {incomingSummary.map((row, i) => (
-                  <TableRow key={i}>
-                    <TableCell>{row["NEW HIRE"]}</TableCell>
-                    <TableCell>{row["START DATE"]}</TableCell>
-                    <TableCell>{row["COMMENTS"]}</TableCell>
-                    <TableCell>{row["MODEL"]}</TableCell>
-                    <TableCell>{row["SERIAL NUMBER"]}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Searchable Inventory Table */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle>Inventory Table</CardTitle>
-          <div className="flex gap-2 items-center">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <select className="border rounded px-2 py-1 text-xs" value={brandFilter} onChange={e => setBrandFilter(e.target.value)}>
-              <option value="">Brand</option>
-              {brands.map(b => <option key={b} value={b}>{b}</option>)}
-            </select>
-            <select className="border rounded px-2 py-1 text-xs" value={modelFilter} onChange={e => setModelFilter(e.target.value)}>
-              <option value="">Model</option>
-              {models.map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-            <select className="border rounded px-2 py-1 text-xs" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-              <option value="">Status</option>
-              <option value="Assigned">Assigned</option>
-              <option value="Available">Available</option>
-              <option value="Maintenance">Maintenance</option>
-              <option value="Replacement">Replacement</option>
-            </select>
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+            <Card onClick={() => setSelectedCard("")} style={{ cursor: "pointer" }}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Laptops</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{analytics.total}</div>
+                <p className="text-xs text-muted-foreground">In inventory</p>
+              </CardContent>
+            </Card>
+            <Card onClick={() => setSelectedCard("owned")} style={{ cursor: "pointer" }}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Owned Units</CardTitle>
+                <Laptop className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{analytics.owned.length}</div>
+                <p className="text-xs text-muted-foreground">Assigned to people</p>
+              </CardContent>
+            </Card>
+            <Card onClick={() => setSelectedCard("newUnits")} style={{ cursor: "pointer" }}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">New Units</CardTitle>
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{analytics.newUnits.length}</div>
+                <p className="text-xs text-muted-foreground">Deployed last 3 months</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Available</CardTitle>
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{analytics.available}</div>
+                <p className="text-xs text-muted-foreground">Ready for assignment</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Maintenance</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{analytics.maintenance}</div>
+                <p className="text-xs text-muted-foreground">Under repair/EOL</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Replacement Candidates</CardTitle>
+                <RefreshCw className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{analytics.replacement}</div>
+                <p className="text-xs text-muted-foreground">Old or flagged for replacement</p>
+              </CardContent>
+            </Card>
           </div>
-        </CardHeader>
-        <CardContent>
-          <Input
-            placeholder="Search laptops..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="mb-4"
-          />
-          <div className="overflow-auto max-h-[400px]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Custodian</TableHead>
-                  <TableHead>Model</TableHead>
-                  <TableHead>Brand</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Age</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredData.map((row, i) => (
-                  <TableRow key={i}>
-                    <TableCell>{row["CUSTODIAN"] || row["Custodian"]}</TableCell>
-                    <TableCell>{row["MODEL"] || row["Model"]}</TableCell>
-                    <TableCell>{row["BRAND"] || row["Brand"]}</TableCell>
-                    <TableCell>{row["REPLACE"] || row["Replace"]}</TableCell>
-                    <TableCell>{row["LAPTOP AGE"] || row["Laptop Age"]}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Review Section for Long Comments/Issues */}
-      {reviewRows.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Review Long Comments & Issues</CardTitle>
-            <span className="text-xs text-muted-foreground">Categorize, flag, or mark as fixed</span>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Custodian/Unit</TableHead>
-                  <TableHead>Model</TableHead>
-                  <TableHead>Brand</TableHead>
-                  <TableHead>Comment/Issue</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reviewRows.map((row, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>{row["CUSTODIAN"] || row["Custodian"] || row["TAG"] || row["TAG"]}</TableCell>
-                    <TableCell>{row["MODEL"] || row["Model"]}</TableCell>
-                    <TableCell>{row["BRAND"] || row["Brand"]}</TableCell>
-                    <TableCell>{row.comment}</TableCell>
-                    <TableCell>
-                      <button className="text-xs px-2 py-1 bg-primary text-white rounded mr-1" onClick={() => handleReviewAction(idx, "Categorize")}>Categorize</button>
-                      <button className="text-xs px-2 py-1 bg-green-600 text-white rounded mr-1" onClick={() => handleReviewAction(idx, "Flag as Fixed")}>Flag Fixed</button>
-                      <button className="text-xs px-2 py-1 bg-yellow-500 text-white rounded" onClick={() => handleReviewAction(idx, "Needs Follow-up")}>Needs Follow-up</button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+          <div className="grid gap-6 md:grid-cols-3">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle>Brand Distribution</CardTitle>
+                <PieChart className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent style={{ height: 260 }}>
+                {analytics.brandDist.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RePieChart>
+                      <Pie
+                        data={analytics.brandDist}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={90}
+                        label
+                        onClick={(data: any) => {
+                          const count = analytics.brandDist.find(b => b.name === data.name)?.value || 0;
+                          setPendingFilter({ type: "brand", value: data.name, count });
+                          setDialogOpen(true);
+                        }}
+                      >
+                        {analytics.brandDist.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} cursor="pointer" />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </RePieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="text-muted-foreground">Upload Excel to view chart</div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle>Top Models</CardTitle>
+                <PieChart className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent style={{ height: 260 }}>
+                {analytics.modelDist.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={analytics.modelDist} layout="vertical" margin={{ left: 16 }}>
+                      <XAxis type="number" hide />
+                      <YAxis type="category" dataKey="name" width={100} />
+                      <Tooltip />
+                      <Bar dataKey="value" cursor="pointer" onClick={(data: any) => {
+                        const count = analytics.modelDist.find(m => m.name === data.name)?.value || 0;
+                        setPendingFilter({ type: "model", value: data.name, count });
+                        setDialogOpen(true);
+                      }}>
+                        {analytics.modelDist.map((entry, index) => (
+                          <Cell key={`cell-bar-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="text-muted-foreground">Upload Excel to view chart</div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle>Laptop Age Breakdown</CardTitle>
+                <PieChart className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent style={{ height: 260 }}>
+                {analytics.ageDist.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadialBarChart innerRadius="20%" outerRadius="90%" data={analytics.ageDist} startAngle={90} endAngle={-270}>
+                      <RadialBar minAngle={6} background clockWise dataKey="value" onClick={(data: any) => {
+                        const count = analytics.ageDist.find(a => a.name === data.name)?.value || 0;
+                        setPendingFilter({ type: "age", value: data.name, count });
+                        setDialogOpen(true);
+                      }} />
+                      <Legend />
+                      <Tooltip />
+                    </RadialBarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="text-muted-foreground">Upload Excel to view chart</div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="inventory" className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle>Inventory Table</CardTitle>
+              <div className="flex gap-2 items-center">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <select className="border rounded px-2 py-1 text-xs" value={brandFilter} onChange={e => setBrandFilter(e.target.value)}>
+                  <option value="">Brand</option>
+                  {brands.map(b => <option key={b} value={b}>{b}</option>)}
+                </select>
+                <select className="border rounded px-2 py-1 text-xs" value={modelFilter} onChange={e => setModelFilter(e.target.value)}>
+                  <option value="">Model</option>
+                  {models.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <select className="border rounded px-2 py-1 text-xs" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                  <option value="">Status</option>
+                  <option value="Assigned">Assigned</option>
+                  <option value="Available">Available</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Replacement">Replacement</option>
+                </select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Input placeholder="Search laptops..." value={search} onChange={e => setSearch(e.target.value)} className="mb-4" />
+              <div className="overflow-auto max-h-[480px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Custodian</TableHead>
+                      <TableHead>Model</TableHead>
+                      <TableHead>Brand</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Age</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredData.map((row, i) => (
+                      <TableRow key={i}>
+                        <TableCell>{row["CUSTODIAN"] || row["Custodian"]}</TableCell>
+                        <TableCell>{row["MODEL"] || row["Model"]}</TableCell>
+                        <TableCell>{row["BRAND"] || row["Brand"]}</TableCell>
+                        <TableCell>{row["REPLACE"] || row["Replace"]}</TableCell>
+                        <TableCell>{row["LAPTOP AGE"] || row["Laptop Age"]}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="issues" className="space-y-6">
+          {issueBreakdown.length > 0 && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle>Laptops With Issues Breakdown</CardTitle>
+                <span className="text-xs text-muted-foreground">Click a bar to filter</span>
+              </CardHeader>
+              <CardContent style={{ height: 320 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={issueBreakdown}>
+                    <XAxis dataKey="name" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Bar dataKey="value" cursor="pointer" onClick={(data: any) => {
+                      const count = issueBreakdown.find(i => i.name === data.name)?.value || 0;
+                      setPendingFilter({ type: "issue", value: data.name, count });
+                      setDialogOpen(true);
+                    }}>
+                      {issueBreakdown.map((entry, index) => (
+                        <Cell key={`cell-issue-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="accessories" className="space-y-6">
+          {mouseHeadsetSummary.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Mouse and Headset Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item</TableHead>
+                      <TableHead>Count</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {mouseHeadsetSummary.map((row, i) => (
+                      <TableRow key={i}>
+                        <TableCell>{row.item}</TableCell>
+                        <TableCell>{row.count}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+          {incomingSummary.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Incoming Laptops</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>New Hire</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead>Comments</TableHead>
+                      <TableHead>Model</TableHead>
+                      <TableHead>Serial Number</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {incomingSummary.map((row, i) => (
+                      <TableRow key={i}>
+                        <TableCell>{row["NEW HIRE"]}</TableCell>
+                        <TableCell>{row["START DATE"]}</TableCell>
+                        <TableCell>{row["COMMENTS"]}</TableCell>
+                        <TableCell>{row["MODEL"]}</TableCell>
+                        <TableCell>{row["SERIAL NUMBER"]}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="reviews" className="space-y-6">
+          {reviewRows.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Review Long Comments & Issues</CardTitle>
+                <span className="text-xs text-muted-foreground">Categorize, flag, or mark as fixed</span>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Custodian/Unit</TableHead>
+                      <TableHead>Model</TableHead>
+                      <TableHead>Brand</TableHead>
+                      <TableHead>Comment/Issue</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {reviewRows.map((row, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>{row["CUSTODIAN"] || row["Custodian"] || row["TAG"] || row["TAG"]}</TableCell>
+                        <TableCell>{row["MODEL"] || row["Model"]}</TableCell>
+                        <TableCell>{row["BRAND"] || row["Brand"]}</TableCell>
+                        <TableCell>{row.comment}</TableCell>
+                        <TableCell>
+                          <button className="text-xs px-2 py-1 bg-primary text-white rounded mr-1" onClick={() => handleReviewAction(idx, "Categorize")}>Categorize</button>
+                          <button className="text-xs px-2 py-1 bg-green-600 text-white rounded mr-1" onClick={() => handleReviewAction(idx, "Flag as Fixed")}>Flag Fixed</button>
+                          <button className="text-xs px-2 py-1 bg-yellow-500 text-white rounded" onClick={() => handleReviewAction(idx, "Needs Follow-up")}>Needs Follow-up</button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      <ChartFilterDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        title="Apply filter?"
+        description="Choose how you want to view the filtered results."
+        selectionLabel={pendingFilter ? `${pendingFilter.type}: ${pendingFilter.value}` : ""}
+        count={pendingFilter?.count || 0}
+        onApplyHere={() => {
+          if (!pendingFilter) return;
+          if (pendingFilter.type === "brand") setSelectedBrand(pendingFilter.value);
+          if (pendingFilter.type === "model") setSelectedModel(pendingFilter.value);
+          if (pendingFilter.type === "age") setSelectedAgeBracket(pendingFilter.value);
+          if (pendingFilter.type === "issue") setSelectedIssue(pendingFilter.value);
+          setDialogOpen(false);
+        }}
+        onGoToInventory={() => {
+          if (!pendingFilter) return;
+          if (pendingFilter.type === "brand") setSelectedBrand(pendingFilter.value);
+          if (pendingFilter.type === "model") setSelectedModel(pendingFilter.value);
+          if (pendingFilter.type === "age") setSelectedAgeBracket(pendingFilter.value);
+          if (pendingFilter.type === "issue") setSelectedIssue(pendingFilter.value);
+          setActiveTab("inventory");
+          setDialogOpen(false);
+        }}
+        onClear={() => {
+          setSelectedBrand("");
+          setSelectedModel("");
+          setSelectedAgeBracket("");
+          setSelectedIssue("");
+          setPendingFilter(null);
+          setDialogOpen(false);
+        }}
+      />
     </div>
   );
 }
