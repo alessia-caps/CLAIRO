@@ -73,12 +73,12 @@ function groupIssue(issue: string) {
 }
 
 function parseSheetData(data: any[][], headerKeywords: string[]) {
-  const headerIdx = data.findIndex(
-    (row) =>
-      row[0] &&
-      headerKeywords.some((keyword) =>
-        row[0].toString().trim().toUpperCase().includes(keyword),
-      ),
+  const headerIdx = data.findIndex((row) =>
+    Array.isArray(row) && row.some((cell) => {
+      if (!cell) return false;
+      const val = cell.toString().trim().toUpperCase();
+      return headerKeywords.some((keyword) => val.includes(keyword));
+    }),
   );
   if (headerIdx === -1) return [];
   const headers = data[headerIdx].map((h: any) =>
@@ -225,7 +225,7 @@ export default function LaptopInventory() {
               sheetDataArr as any[][],
               ["INVOICE DATE"],
             );
-          } else if (sheetName.toLowerCase().includes("laptops with issues")) {
+          } else if (sheetName.toLowerCase().includes("issue")) {
             newSheetData["Laptops With Issues"] = parseSheetData(
               sheetDataArr as any[][],
               ["INVOICE DATE"],
@@ -1017,7 +1017,18 @@ export default function LaptopInventory() {
         </TabsContent>
 
         <TabsContent value="issues" className="space-y-6">
-          {issuesRaw.length > 0 && (
+          {issuesRaw.length === 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>No issues data found</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Upload your Excel and ensure the Issues sheet name includes the word "Issue" and has an "INVOICE DATE" header.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
             <>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
                 <Card>
