@@ -32,6 +32,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useMemo, useRef } from "react";
 import * as XLSX from "xlsx";
@@ -119,6 +120,30 @@ export default function LaptopInventory() {
     value: string;
     count: number;
   } | null>(null);
+
+  const hasAnyFilter = Boolean(
+    search ||
+      brandFilter ||
+      modelFilter ||
+      statusFilter ||
+      selectedIssue ||
+      selectedBrand ||
+      selectedModel ||
+      selectedAgeBracket ||
+      selectedCard
+  );
+
+  function clearAllFilters() {
+    setSearch("");
+    setBrandFilter("");
+    setModelFilter("");
+    setStatusFilter("");
+    setSelectedIssue("");
+    setSelectedBrand("");
+    setSelectedModel("");
+    setSelectedAgeBracket("");
+    setSelectedCard("");
+  }
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -267,14 +292,25 @@ export default function LaptopInventory() {
       }
     });
 
-    const brandDist = Object.entries(brandCount).map(([name, value], i) => ({
-      name,
-      value,
-      color: COLORS[i % COLORS.length],
-    }));
+    const brandEntries = Object.entries(brandCount).sort((a, b) => b[1] - a[1]);
+    const topBrandN = 10;
+    const topBrands = brandEntries.slice(0, topBrandN);
+    const otherBrandsTotal = brandEntries
+      .slice(topBrandN)
+      .reduce((sum, [, v]) => sum + v, 0);
+    const brandDist = [
+      ...topBrands.map(([name, value], i) => ({
+        name,
+        value,
+        color: COLORS[i % COLORS.length],
+      })),
+      ...(otherBrandsTotal > 0
+        ? [{ name: "Other", value: otherBrandsTotal, color: "#CBD5E1" }]
+        : []),
+    ];
     const modelDist = Object.entries(modelCount)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
+      .slice(0, 10)
       .map(([name, value], i) => ({
         name,
         value,
@@ -608,7 +644,8 @@ export default function LaptopInventory() {
                         cy="50%"
                         innerRadius={40}
                         outerRadius={90}
-                        label
+                        label={analytics.brandDist.length <= 10}
+                        labelLine={false}
                         onClick={(data: any) => {
                           const count =
                             analytics.brandDist.find(
@@ -631,7 +668,7 @@ export default function LaptopInventory() {
                         ))}
                       </Pie>
                       <Tooltip />
-                      <Legend />
+                      <Legend verticalAlign="bottom" height={36} />
                     </RePieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -653,13 +690,14 @@ export default function LaptopInventory() {
                     <BarChart
                       data={analytics.modelDist}
                       layout="vertical"
-                      margin={{ left: 16 }}
+                      margin={{ left: 16, right: 8, top: 8, bottom: 8 }}
                     >
                       <XAxis type="number" hide />
-                      <YAxis type="category" dataKey="name" width={100} />
+                      <YAxis type="category" dataKey="name" width={140} />
                       <Tooltip />
                       <Bar
                         dataKey="value"
+                        barSize={18}
                         cursor="pointer"
                         onClick={(data: any) => {
                           const count =
@@ -775,6 +813,9 @@ export default function LaptopInventory() {
                   <option value="Maintenance">Maintenance</option>
                   <option value="Replacement">Replacement</option>
                 </select>
+                <Button variant="ghost" size="sm" onClick={clearAllFilters} disabled={!hasAnyFilter}>
+                  Clear filters
+                </Button>
               </div>
             </CardHeader>
             <CardContent>
@@ -829,12 +870,13 @@ export default function LaptopInventory() {
               </CardHeader>
               <CardContent style={{ height: 320 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={issueBreakdown}>
-                    <XAxis dataKey="name" />
+                  <BarChart data={issueBreakdown} margin={{ left: 8, right: 8, top: 8, bottom: 24 }}>
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} interval={0} angle={-15} textAnchor="end" height={40} />
                     <YAxis allowDecimals={false} />
                     <Tooltip />
                     <Bar
                       dataKey="value"
+                      barSize={24}
                       cursor="pointer"
                       onClick={(data: any) => {
                         const count =
