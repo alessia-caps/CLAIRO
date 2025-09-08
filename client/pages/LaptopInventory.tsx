@@ -159,6 +159,52 @@ export default function LaptopInventory() {
     setSelectedIssueKeyword("");
   }
 
+  const hasAnyIssueFilter = Boolean(
+    issuesSearch || issuesCategoryFilter || issuesTypeFilter || issuesBrandFilter || issuesResolvedFilter,
+  );
+
+  function clearIssueFilters() {
+    setIssuesSearch("");
+    setIssuesCategoryFilter("");
+    setIssuesTypeFilter("");
+    setIssuesBrandFilter("");
+    setIssuesResolvedFilter("");
+  }
+
+  const filteredIssues = useMemo(() => {
+    let rows = issuesRaw.slice();
+    if (issuesSearch) {
+      const q = issuesSearch.toLowerCase();
+      rows = rows.filter((r) =>
+        [
+          r["CUSTODIAN"], r["Custodian"], r["MODEL"], r["Model"], r["BRAND"], r["Brand"], r["SERIAL NUM"], r["Serial Num"],
+          r["REPORTED ISSUE (BNEXT)"], r["Reported Issue (BNEXT)"], r["TYPE"], r["Type"], r["TAG"], r["Tag"],
+        ]
+          .map((v) => (v ? v.toString().toLowerCase() : ""))
+          .some((t) => t.includes(q)),
+      );
+    }
+    if (issuesCategoryFilter) {
+      rows = rows.filter((r) =>
+        groupIssue((r["REPORTED ISSUE (BNEXT)"] || r["Reported Issue (BNEXT)"] || "").toString()) === issuesCategoryFilter,
+      );
+    }
+    if (issuesTypeFilter) {
+      rows = rows.filter((r) => (r["TYPE"] || r["Type"] || "").toString() === issuesTypeFilter);
+    }
+    if (issuesBrandFilter) {
+      rows = rows.filter((r) => (r["BRAND"] || r["Brand"] || "").toString() === issuesBrandFilter);
+    }
+    if (issuesResolvedFilter) {
+      rows = rows.filter((r) => {
+        const svc = (r["DATE NEXUS SERVICE"] || r["Date Nexus Service"] || "").toString();
+        const isResolved = Boolean(svc);
+        return issuesResolvedFilter === "Resolved" ? isResolved : !isResolved;
+      });
+    }
+    return rows;
+  }, [issuesRaw, issuesSearch, issuesCategoryFilter, issuesTypeFilter, issuesBrandFilter, issuesResolvedFilter]);
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
