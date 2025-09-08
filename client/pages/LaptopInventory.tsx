@@ -1305,18 +1305,12 @@ export default function LaptopInventory() {
         }}
         onGoToInventory={() => {
           if (!pendingFilter) return;
-          if (pendingFilter.type === "brand")
-            setSelectedBrand(pendingFilter.value);
-          if (pendingFilter.type === "model")
-            setSelectedModel(pendingFilter.value);
-          if (pendingFilter.type === "age")
-            setSelectedAgeBracket(pendingFilter.value);
-          if (pendingFilter.type === "issue")
-            setSelectedIssue(pendingFilter.value);
-          if (pendingFilter.type === "issueMonth")
-            setSelectedIssueMonth(pendingFilter.value);
-          if (pendingFilter.type === "issueKeyword")
-            setSelectedIssueKeyword(pendingFilter.value);
+          if (pendingFilter.type === "brand") setSelectedBrand(pendingFilter.value);
+          if (pendingFilter.type === "model") setSelectedModel(pendingFilter.value);
+          if (pendingFilter.type === "age") setSelectedAgeBracket(pendingFilter.value);
+          if (pendingFilter.type === "issue") setSelectedIssue(pendingFilter.value);
+          if (pendingFilter.type === "issueMonth") setSelectedIssueMonth(pendingFilter.value);
+          if (pendingFilter.type === "issueKeyword") setSelectedIssueKeyword(pendingFilter.value);
           setActiveTab("inventory");
           setDialogOpen(false);
         }}
