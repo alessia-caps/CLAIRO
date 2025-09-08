@@ -535,6 +535,34 @@ export default function LaptopInventory() {
         issueSerials.includes(row["SERIAL NUM"] || row["Serial Num"]),
       );
     }
+    if (selectedIssueMonth) {
+      const serials = issuesRaw
+        .filter((row) => {
+          const s = (row["DATE REPORTED ISSUE (BNEXT)"] || row["Date Reported Issue (BNEXT)"] || row["DATE REPORTED"] || row["Date Reported"] || "").toString();
+          const parts = s.split("-");
+          if (parts.length === 3) {
+            const [dd, mon, yy] = parts;
+            const year = yy.length === 2 ? "20" + yy : yy;
+            const d = new Date(`${mon} ${dd}, ${year}`);
+            const m = isNaN(d.getTime()) ? "" : `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2, "0")}`;
+            return m === selectedIssueMonth;
+          }
+          const d2 = new Date(s);
+          const m2 = isNaN(d2.getTime()) ? "" : `${d2.getFullYear()}-${(d2.getMonth()+1).toString().padStart(2, "0")}`;
+          return m2 === selectedIssueMonth;
+        })
+        .map((row) => row["SERIAL NUM"] || row["Serial Num"]);
+      rows = rows.filter((row) => serials.includes(row["SERIAL NUM"] || row["Serial Num"]));
+    }
+    if (selectedIssueKeyword) {
+      const serials = issuesRaw
+        .filter((row) => {
+          const desc = (row["REPORTED ISSUE (BNEXT)"] || row["Reported Issue (BNEXT)"] || "").toString().toLowerCase();
+          return desc.includes(selectedIssueKeyword.toLowerCase());
+        })
+        .map((row) => row["SERIAL NUM"] || row["Serial Num"]);
+      rows = rows.filter((row) => serials.includes(row["SERIAL NUM"] || row["Serial Num"]));
+    }
     if (selectedBrand) {
       rows = rows.filter(
         (row) => (row["BRAND"] || row["Brand"]) === selectedBrand,
