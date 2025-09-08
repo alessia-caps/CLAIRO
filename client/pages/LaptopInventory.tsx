@@ -73,12 +73,14 @@ function groupIssue(issue: string) {
 }
 
 function parseSheetData(data: any[][], headerKeywords: string[]) {
-  const headerIdx = data.findIndex((row) =>
-    Array.isArray(row) && row.some((cell) => {
-      if (!cell) return false;
-      const val = cell.toString().trim().toUpperCase();
-      return headerKeywords.some((keyword) => val.includes(keyword));
-    }),
+  const headerIdx = data.findIndex(
+    (row) =>
+      Array.isArray(row) &&
+      row.some((cell) => {
+        if (!cell) return false;
+        const val = cell.toString().trim().toUpperCase();
+        return headerKeywords.some((keyword) => val.includes(keyword));
+      }),
   );
   if (headerIdx === -1) return [];
   const headers = data[headerIdx].map((h: any) =>
@@ -126,7 +128,14 @@ export default function LaptopInventory() {
   const [issuesResolvedFilter, setIssuesResolvedFilter] = useState("");
 
   const [pendingFilter, setPendingFilter] = useState<{
-    type: "brand" | "model" | "age" | "issue" | "issueMonth" | "issueKeyword" | "issueType";
+    type:
+      | "brand"
+      | "model"
+      | "age"
+      | "issue"
+      | "issueMonth"
+      | "issueKeyword"
+      | "issueType";
     value: string;
     count: number;
   } | null>(null);
@@ -142,7 +151,7 @@ export default function LaptopInventory() {
       selectedAgeBracket ||
       selectedCard ||
       selectedIssueMonth ||
-      selectedIssueKeyword
+      selectedIssueKeyword,
   );
 
   function clearAllFilters() {
@@ -160,7 +169,11 @@ export default function LaptopInventory() {
   }
 
   const hasAnyIssueFilter = Boolean(
-    issuesSearch || issuesCategoryFilter || issuesTypeFilter || issuesBrandFilter || issuesResolvedFilter,
+    issuesSearch ||
+      issuesCategoryFilter ||
+      issuesTypeFilter ||
+      issuesBrandFilter ||
+      issuesResolvedFilter,
   );
 
   function clearIssueFilters() {
@@ -179,33 +192,68 @@ export default function LaptopInventory() {
       const q = issuesSearch.toLowerCase();
       rows = rows.filter((r) =>
         [
-          r["CUSTODIAN"], r["Custodian"], r["MODEL"], r["Model"], r["BRAND"], r["Brand"], r["SERIAL NUM"], r["Serial Num"],
-          r["REPORTED ISSUE (BNEXT)"], r["Reported Issue (BNEXT)"], r["TYPE"], r["Type"], r["TAG"], r["Tag"],
+          r["CUSTODIAN"],
+          r["Custodian"],
+          r["MODEL"],
+          r["Model"],
+          r["BRAND"],
+          r["Brand"],
+          r["SERIAL NUM"],
+          r["Serial Num"],
+          r["REPORTED ISSUE (BNEXT)"],
+          r["Reported Issue (BNEXT)"],
+          r["TYPE"],
+          r["Type"],
+          r["TAG"],
+          r["Tag"],
         ]
           .map((v) => (v ? v.toString().toLowerCase() : ""))
           .some((t) => t.includes(q)),
       );
     }
     if (issuesCategoryFilter) {
-      rows = rows.filter((r) =>
-        groupIssue((r["REPORTED ISSUE (BNEXT)"] || r["Reported Issue (BNEXT)"] || "").toString()) === issuesCategoryFilter,
+      rows = rows.filter(
+        (r) =>
+          groupIssue(
+            (
+              r["REPORTED ISSUE (BNEXT)"] ||
+              r["Reported Issue (BNEXT)"] ||
+              ""
+            ).toString(),
+          ) === issuesCategoryFilter,
       );
     }
     if (issuesTypeFilter) {
-      rows = rows.filter((r) => (r["TYPE"] || r["Type"] || "").toString() === issuesTypeFilter);
+      rows = rows.filter(
+        (r) => (r["TYPE"] || r["Type"] || "").toString() === issuesTypeFilter,
+      );
     }
     if (issuesBrandFilter) {
-      rows = rows.filter((r) => (r["BRAND"] || r["Brand"] || "").toString() === issuesBrandFilter);
+      rows = rows.filter(
+        (r) =>
+          (r["BRAND"] || r["Brand"] || "").toString() === issuesBrandFilter,
+      );
     }
     if (issuesResolvedFilter) {
       rows = rows.filter((r) => {
-        const svc = (r["DATE NEXUS SERVICE"] || r["Date Nexus Service"] || "").toString();
+        const svc = (
+          r["DATE NEXUS SERVICE"] ||
+          r["Date Nexus Service"] ||
+          ""
+        ).toString();
         const isResolved = Boolean(svc);
         return issuesResolvedFilter === "Resolved" ? isResolved : !isResolved;
       });
     }
     return rows;
-  }, [issuesRaw, issuesSearch, issuesCategoryFilter, issuesTypeFilter, issuesBrandFilter, issuesResolvedFilter]);
+  }, [
+    issuesRaw,
+    issuesSearch,
+    issuesCategoryFilter,
+    issuesTypeFilter,
+    issuesBrandFilter,
+    issuesResolvedFilter,
+  ]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -420,7 +468,11 @@ export default function LaptopInventory() {
     const serialCounts: Record<string, number> = {};
     const tatDaysArr: number[] = [];
     let unresolved = 0;
-    const byAgeCount: Record<string, number> = { "<2 years": 0, "2-5 years": 0, ">5 years": 0 };
+    const byAgeCount: Record<string, number> = {
+      "<2 years": 0,
+      "2-5 years": 0,
+      ">5 years": 0,
+    };
 
     const categoryCounts: Record<string, number> = {};
     const typeCounts: Record<string, number> = {};
@@ -447,11 +499,30 @@ export default function LaptopInventory() {
     }
 
     issuesRaw.forEach((row) => {
-      const desc = (row["REPORTED ISSUE (BNEXT)"] || row["Reported Issue (BNEXT)"] || "").toString();
+      const desc = (
+        row["REPORTED ISSUE (BNEXT)"] ||
+        row["Reported Issue (BNEXT)"] ||
+        ""
+      ).toString();
       const serial = (row["SERIAL NUM"] || row["Serial Num"] || "").toString();
-      const reportedStr = (row["DATE REPORTED ISSUE (BNEXT)"] || row["Date Reported Issue (BNEXT)"] || row["DATE REPORTED"] || row["Date Reported"] || "").toString();
-      const serviceStr = (row["DATE NEXUS SERVICE"] || row["Date Nexus Service"] || "").toString();
-      const ageNum = parseFloat(((row["LAPTOP AGE"] || row["Laptop Age"] || "").toString()).replace(/[^\d.]/g, "")) || 0;
+      const reportedStr = (
+        row["DATE REPORTED ISSUE (BNEXT)"] ||
+        row["Date Reported Issue (BNEXT)"] ||
+        row["DATE REPORTED"] ||
+        row["Date Reported"] ||
+        ""
+      ).toString();
+      const serviceStr = (
+        row["DATE NEXUS SERVICE"] ||
+        row["Date Nexus Service"] ||
+        ""
+      ).toString();
+      const ageNum =
+        parseFloat(
+          (row["LAPTOP AGE"] || row["Laptop Age"] || "")
+            .toString()
+            .replace(/[^\d.]/g, ""),
+        ) || 0;
 
       const reported = parseDate(reportedStr);
       if (reported) {
@@ -463,7 +534,12 @@ export default function LaptopInventory() {
 
       const service = parseDate(serviceStr);
       if (reported && service) {
-        const diffDays = Math.max(0, Math.round((service.getTime() - reported.getTime()) / (1000 * 60 * 60 * 24)));
+        const diffDays = Math.max(
+          0,
+          Math.round(
+            (service.getTime() - reported.getTime()) / (1000 * 60 * 60 * 24),
+          ),
+        );
         tatDaysArr.push(diffDays);
       } else if (reported && !serviceStr) {
         unresolved++;
@@ -481,25 +557,46 @@ export default function LaptopInventory() {
       if (brand) brandCounts[brand] = (brandCounts[brand] || 0) + 1;
     });
 
-    const byAge = Object.entries(byAgeCount).map(([name, value]) => ({ name, value }));
+    const byAge = Object.entries(byAgeCount).map(([name, value]) => ({
+      name,
+      value,
+    }));
 
-    const categoryDist = Object.entries(categoryCounts).map(([name, value], i) => ({ name, value, color: COLORS[i % COLORS.length] }));
+    const categoryDist = Object.entries(categoryCounts).map(
+      ([name, value], i) => ({ name, value, color: COLORS[i % COLORS.length] }),
+    );
 
-    const typeDist = Object.entries(typeCounts).map(([name, value], i) => ({ name, value, color: COLORS[i % COLORS.length] }));
+    const typeDist = Object.entries(typeCounts).map(([name, value], i) => ({
+      name,
+      value,
+      color: COLORS[i % COLORS.length],
+    }));
 
-    const brandEntries = Object.entries(brandCounts).sort((a, b) => b[1] - a[1]);
+    const brandEntries = Object.entries(brandCounts).sort(
+      (a, b) => b[1] - a[1],
+    );
     const topN = 10;
     const top = brandEntries.slice(0, topN);
     const otherTotal = brandEntries.slice(topN).reduce((s, [, v]) => s + v, 0);
     const brandDist = [
-      ...top.map(([name, value], i) => ({ name, value, color: COLORS[i % COLORS.length] })),
-      ...(otherTotal > 0 ? [{ name: "Other", value: otherTotal, color: "#CBD5E1" }] : []),
+      ...top.map(([name, value], i) => ({
+        name,
+        value,
+        color: COLORS[i % COLORS.length],
+      })),
+      ...(otherTotal > 0
+        ? [{ name: "Other", value: otherTotal, color: "#CBD5E1" }]
+        : []),
     ];
 
-    const avg = tatDaysArr.length ? Math.round(tatDaysArr.reduce((a, b) => a + b, 0) / tatDaysArr.length) : 0;
+    const avg = tatDaysArr.length
+      ? Math.round(tatDaysArr.reduce((a, b) => a + b, 0) / tatDaysArr.length)
+      : 0;
     const sorted = [...tatDaysArr].sort((a, b) => a - b);
     const median = sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0;
-    const p90 = sorted.length ? sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.9) - 1)] : 0;
+    const p90 = sorted.length
+      ? sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.9) - 1)]
+      : 0;
 
     return {
       totalIssues: issuesRaw.length,
@@ -575,30 +672,50 @@ export default function LaptopInventory() {
     if (selectedIssueMonth) {
       const serials = issuesRaw
         .filter((row) => {
-          const s = (row["DATE REPORTED ISSUE (BNEXT)"] || row["Date Reported Issue (BNEXT)"] || row["DATE REPORTED"] || row["Date Reported"] || "").toString();
+          const s = (
+            row["DATE REPORTED ISSUE (BNEXT)"] ||
+            row["Date Reported Issue (BNEXT)"] ||
+            row["DATE REPORTED"] ||
+            row["Date Reported"] ||
+            ""
+          ).toString();
           const parts = s.split("-");
           if (parts.length === 3) {
             const [dd, mon, yy] = parts;
             const year = yy.length === 2 ? "20" + yy : yy;
             const d = new Date(`${mon} ${dd}, ${year}`);
-            const m = isNaN(d.getTime()) ? "" : `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2, "0")}`;
+            const m = isNaN(d.getTime())
+              ? ""
+              : `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
             return m === selectedIssueMonth;
           }
           const d2 = new Date(s);
-          const m2 = isNaN(d2.getTime()) ? "" : `${d2.getFullYear()}-${(d2.getMonth()+1).toString().padStart(2, "0")}`;
+          const m2 = isNaN(d2.getTime())
+            ? ""
+            : `${d2.getFullYear()}-${(d2.getMonth() + 1).toString().padStart(2, "0")}`;
           return m2 === selectedIssueMonth;
         })
         .map((row) => row["SERIAL NUM"] || row["Serial Num"]);
-      rows = rows.filter((row) => serials.includes(row["SERIAL NUM"] || row["Serial Num"]));
+      rows = rows.filter((row) =>
+        serials.includes(row["SERIAL NUM"] || row["Serial Num"]),
+      );
     }
     if (selectedIssueKeyword) {
       const serials = issuesRaw
         .filter((row) => {
-          const desc = (row["REPORTED ISSUE (BNEXT)"] || row["Reported Issue (BNEXT)"] || "").toString().toLowerCase();
+          const desc = (
+            row["REPORTED ISSUE (BNEXT)"] ||
+            row["Reported Issue (BNEXT)"] ||
+            ""
+          )
+            .toString()
+            .toLowerCase();
           return desc.includes(selectedIssueKeyword.toLowerCase());
         })
         .map((row) => row["SERIAL NUM"] || row["Serial Num"]);
-      rows = rows.filter((row) => serials.includes(row["SERIAL NUM"] || row["Serial Num"]));
+      rows = rows.filter((row) =>
+        serials.includes(row["SERIAL NUM"] || row["Serial Num"]),
+      );
     }
     if (selectedBrand) {
       rows = rows.filter(
@@ -646,7 +763,6 @@ export default function LaptopInventory() {
   ]);
 
   const incomingSummary = sheetData["Incoming"] || [];
-
 
   return (
     <div className="space-y-6">
@@ -970,7 +1086,12 @@ export default function LaptopInventory() {
                   <option value="Maintenance">Maintenance</option>
                   <option value="Replacement">Replacement</option>
                 </select>
-                <Button variant="ghost" size="sm" onClick={clearAllFilters} disabled={!hasAnyFilter}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearAllFilters}
+                  disabled={!hasAnyFilter}
+                >
                   Clear filters
                 </Button>
               </div>
@@ -1024,7 +1145,8 @@ export default function LaptopInventory() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Upload your Excel and ensure the Issues sheet name includes the word "Issue" and has an "INVOICE DATE" header.
+                  Upload your Excel and ensure the Issues sheet name includes
+                  the word "Issue" and has an "INVOICE DATE" header.
                 </p>
               </CardContent>
             </Card>
@@ -1033,29 +1155,47 @@ export default function LaptopInventory() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Issues</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Total Issues
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{issuesAnalytics.totalIssues}</div>
-                    <p className="text-xs text-muted-foreground">All reported</p>
+                    <div className="text-3xl font-bold">
+                      {issuesAnalytics.totalIssues}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      All reported
+                    </p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Units With Issues</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Units With Issues
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{issuesAnalytics.unitsWithIssues}</div>
-                    <p className="text-xs text-muted-foreground">Unique serials</p>
+                    <div className="text-3xl font-bold">
+                      {issuesAnalytics.unitsWithIssues}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Unique serials
+                    </p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Unresolved</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      Unresolved
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{issuesAnalytics.unresolvedIssues}</div>
-                    <p className="text-xs text-muted-foreground">No service date</p>
+                    <div className="text-3xl font-bold">
+                      {issuesAnalytics.unresolvedIssues}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      No service date
+                    </p>
                   </CardContent>
                 </Card>
               </div>
@@ -1064,21 +1204,48 @@ export default function LaptopInventory() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle>Issue Categories</CardTitle>
-                    <span className="text-xs text-muted-foreground">Click to filter</span>
+                    <span className="text-xs text-muted-foreground">
+                      Click to filter
+                    </span>
                   </CardHeader>
                   <CardContent style={{ height: 280 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={issuesAnalytics.categoryDist} margin={{ left: 8, right: 8, top: 8, bottom: 24 }}>
-                        <XAxis dataKey="name" tick={{ fontSize: 12 }} interval={0} angle={-15} textAnchor="end" height={40} />
+                      <BarChart
+                        data={issuesAnalytics.categoryDist}
+                        margin={{ left: 8, right: 8, top: 8, bottom: 24 }}
+                      >
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 12 }}
+                          interval={0}
+                          angle={-15}
+                          textAnchor="end"
+                          height={40}
+                        />
                         <YAxis allowDecimals={false} />
                         <Tooltip />
-                        <Bar dataKey="value" barSize={22} cursor="pointer" onClick={(data: any) => {
-                          const count = issuesAnalytics.categoryDist.find((m) => m.name === data.name)?.value || 0;
-                          setPendingFilter({ type: "issue", value: data.name, count });
-                          setDialogOpen(true);
-                        }}>
+                        <Bar
+                          dataKey="value"
+                          barSize={22}
+                          cursor="pointer"
+                          onClick={(data: any) => {
+                            const count =
+                              issuesAnalytics.categoryDist.find(
+                                (m) => m.name === data.name,
+                              )?.value || 0;
+                            setPendingFilter({
+                              type: "issue",
+                              value: data.name,
+                              count,
+                            });
+                            setDialogOpen(true);
+                          }}
+                        >
                           {issuesAnalytics.categoryDist.map((entry, index) => (
-                            <Cell key={`cell-cat-${index}`} fill={entry.color} />
+                            <Cell
+                              key={`cell-cat-${index}`}
+                              fill={entry.color}
+                            />
                           ))}
                         </Bar>
                       </BarChart>
@@ -1089,21 +1256,41 @@ export default function LaptopInventory() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle>Issues by Unit Status</CardTitle>
-                    <span className="text-xs text-muted-foreground">Click to filter</span>
+                    <span className="text-xs text-muted-foreground">
+                      Click to filter
+                    </span>
                   </CardHeader>
                   <CardContent style={{ height: 280 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={issuesAnalytics.typeDist} margin={{ left: 8, right: 8, top: 8, bottom: 8 }}>
+                      <BarChart
+                        data={issuesAnalytics.typeDist}
+                        margin={{ left: 8, right: 8, top: 8, bottom: 8 }}
+                      >
                         <XAxis dataKey="name" />
                         <YAxis allowDecimals={false} />
                         <Tooltip />
-                        <Bar dataKey="value" barSize={22} cursor="pointer" onClick={(data: any) => {
-                          const count = issuesAnalytics.typeDist.find((m) => m.name === data.name)?.value || 0;
-                          setPendingFilter({ type: "issueType", value: data.name, count });
-                          setDialogOpen(true);
-                        }}>
+                        <Bar
+                          dataKey="value"
+                          barSize={22}
+                          cursor="pointer"
+                          onClick={(data: any) => {
+                            const count =
+                              issuesAnalytics.typeDist.find(
+                                (m) => m.name === data.name,
+                              )?.value || 0;
+                            setPendingFilter({
+                              type: "issueType",
+                              value: data.name,
+                              count,
+                            });
+                            setDialogOpen(true);
+                          }}
+                        >
                           {issuesAnalytics.typeDist.map((entry, index) => (
-                            <Cell key={`cell-type-${index}`} fill={entry.color} />
+                            <Cell
+                              key={`cell-type-${index}`}
+                              fill={entry.color}
+                            />
                           ))}
                         </Bar>
                       </BarChart>
@@ -1114,21 +1301,42 @@ export default function LaptopInventory() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle>Issues by Brand</CardTitle>
-                    <span className="text-xs text-muted-foreground">Top 10 + Other</span>
+                    <span className="text-xs text-muted-foreground">
+                      Top 10 + Other
+                    </span>
                   </CardHeader>
                   <CardContent style={{ height: 280 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={issuesAnalytics.brandDist} layout="vertical" margin={{ left: 16, right: 8, top: 8, bottom: 8 }}>
+                      <BarChart
+                        data={issuesAnalytics.brandDist}
+                        layout="vertical"
+                        margin={{ left: 16, right: 8, top: 8, bottom: 8 }}
+                      >
                         <XAxis type="number" hide />
                         <YAxis type="category" dataKey="name" width={160} />
                         <Tooltip />
-                        <Bar dataKey="value" barSize={18} cursor="pointer" onClick={(data: any) => {
-                          const count = issuesAnalytics.brandDist.find((m) => m.name === data.name)?.value || 0;
-                          setPendingFilter({ type: "brand", value: data.name, count });
-                          setDialogOpen(true);
-                        }}>
+                        <Bar
+                          dataKey="value"
+                          barSize={18}
+                          cursor="pointer"
+                          onClick={(data: any) => {
+                            const count =
+                              issuesAnalytics.brandDist.find(
+                                (m) => m.name === data.name,
+                              )?.value || 0;
+                            setPendingFilter({
+                              type: "brand",
+                              value: data.name,
+                              count,
+                            });
+                            setDialogOpen(true);
+                          }}
+                        >
                           {issuesAnalytics.brandDist.map((entry, index) => (
-                            <Cell key={`cell-brand-${index}`} fill={entry.color} />
+                            <Cell
+                              key={`cell-brand-${index}`}
+                              fill={entry.color}
+                            />
                           ))}
                         </Bar>
                       </BarChart>
@@ -1157,31 +1365,81 @@ export default function LaptopInventory() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle>Issues Table</CardTitle>
                   <div className="flex gap-2 items-center">
-                    <Input placeholder="Search issues..." value={issuesSearch} onChange={(e) => setIssuesSearch(e.target.value)} className="h-8 w-48" />
-                    <select className="border rounded px-2 py-1 text-xs" value={issuesCategoryFilter} onChange={(e) => setIssuesCategoryFilter(e.target.value)}>
+                    <Input
+                      placeholder="Search issues..."
+                      value={issuesSearch}
+                      onChange={(e) => setIssuesSearch(e.target.value)}
+                      className="h-8 w-48"
+                    />
+                    <select
+                      className="border rounded px-2 py-1 text-xs"
+                      value={issuesCategoryFilter}
+                      onChange={(e) => setIssuesCategoryFilter(e.target.value)}
+                    >
                       <option value="">Category</option>
                       {issuesAnalytics.categoryDist.map((c) => (
-                        <option key={c.name} value={c.name}>{c.name}</option>
+                        <option key={c.name} value={c.name}>
+                          {c.name}
+                        </option>
                       ))}
                     </select>
-                    <select className="border rounded px-2 py-1 text-xs" value={issuesTypeFilter} onChange={(e) => setIssuesTypeFilter(e.target.value)}>
+                    <select
+                      className="border rounded px-2 py-1 text-xs"
+                      value={issuesTypeFilter}
+                      onChange={(e) => setIssuesTypeFilter(e.target.value)}
+                    >
                       <option value="">Unit Status</option>
-                      {Array.from(new Set(issuesRaw.map((r) => (r["TYPE"] || r["Type"] || "").toString()).filter(Boolean))).map((t) => (
-                        <option key={t} value={t}>{t}</option>
+                      {Array.from(
+                        new Set(
+                          issuesRaw
+                            .map((r) =>
+                              (r["TYPE"] || r["Type"] || "").toString(),
+                            )
+                            .filter(Boolean),
+                        ),
+                      ).map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
                       ))}
                     </select>
-                    <select className="border rounded px-2 py-1 text-xs" value={issuesBrandFilter} onChange={(e) => setIssuesBrandFilter(e.target.value)}>
+                    <select
+                      className="border rounded px-2 py-1 text-xs"
+                      value={issuesBrandFilter}
+                      onChange={(e) => setIssuesBrandFilter(e.target.value)}
+                    >
                       <option value="">Brand</option>
-                      {Array.from(new Set(issuesRaw.map((r) => (r["BRAND"] || r["Brand"] || "").toString()).filter(Boolean))).map((b) => (
-                        <option key={b} value={b}>{b}</option>
+                      {Array.from(
+                        new Set(
+                          issuesRaw
+                            .map((r) =>
+                              (r["BRAND"] || r["Brand"] || "").toString(),
+                            )
+                            .filter(Boolean),
+                        ),
+                      ).map((b) => (
+                        <option key={b} value={b}>
+                          {b}
+                        </option>
                       ))}
                     </select>
-                    <select className="border rounded px-2 py-1 text-xs" value={issuesResolvedFilter} onChange={(e) => setIssuesResolvedFilter(e.target.value)}>
+                    <select
+                      className="border rounded px-2 py-1 text-xs"
+                      value={issuesResolvedFilter}
+                      onChange={(e) => setIssuesResolvedFilter(e.target.value)}
+                    >
                       <option value="">Resolution</option>
                       <option value="Unresolved">Unresolved</option>
                       <option value="Resolved">Resolved</option>
                     </select>
-                    <Button variant="ghost" size="sm" onClick={clearIssueFilters} disabled={!hasAnyIssueFilter}>Clear filters</Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearIssueFilters}
+                      disabled={!hasAnyIssueFilter}
+                    >
+                      Clear filters
+                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -1206,16 +1464,37 @@ export default function LaptopInventory() {
                         {filteredIssues.map((row, i) => (
                           <TableRow key={i}>
                             <TableCell>{row["INVOICE DATE"]}</TableCell>
-                            <TableCell>{row["LAPTOP AGE"] || row["Laptop Age"]}</TableCell>
+                            <TableCell>
+                              {row["LAPTOP AGE"] || row["Laptop Age"]}
+                            </TableCell>
                             <TableCell>{row["TYPE"] || row["Type"]}</TableCell>
                             <TableCell>{row["TAG"] || row["Tag"]}</TableCell>
-                            <TableCell>{row["CUSTODIAN"] || row["Custodian"]}</TableCell>
-                            <TableCell>{row["MODEL"] || row["Model"]}</TableCell>
-                            <TableCell>{row["SERIAL NUM"] || row["Serial Num"]}</TableCell>
-                            <TableCell>{row["BRAND"] || row["Brand"]}</TableCell>
-                            <TableCell>{row["DATE REPORTED ISSUE (BNEXT)"] || row["Date Reported Issue (BNEXT)"] || row["DATE REPORTED"] || row["Date Reported"]}</TableCell>
-                            <TableCell>{row["REPORTED ISSUE (BNEXT)"] || row["Reported Issue (BNEXT)"]}</TableCell>
-                            <TableCell>{row["DATE NEXUS SERVICE"] || row["Date Nexus Service"]}</TableCell>
+                            <TableCell>
+                              {row["CUSTODIAN"] || row["Custodian"]}
+                            </TableCell>
+                            <TableCell>
+                              {row["MODEL"] || row["Model"]}
+                            </TableCell>
+                            <TableCell>
+                              {row["SERIAL NUM"] || row["Serial Num"]}
+                            </TableCell>
+                            <TableCell>
+                              {row["BRAND"] || row["Brand"]}
+                            </TableCell>
+                            <TableCell>
+                              {row["DATE REPORTED ISSUE (BNEXT)"] ||
+                                row["Date Reported Issue (BNEXT)"] ||
+                                row["DATE REPORTED"] ||
+                                row["Date Reported"]}
+                            </TableCell>
+                            <TableCell>
+                              {row["REPORTED ISSUE (BNEXT)"] ||
+                                row["Reported Issue (BNEXT)"]}
+                            </TableCell>
+                            <TableCell>
+                              {row["DATE NEXUS SERVICE"] ||
+                                row["Date Nexus Service"]}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -1285,7 +1564,6 @@ export default function LaptopInventory() {
             </Card>
           )}
         </TabsContent>
-
       </Tabs>
 
       <ChartFilterDialog
@@ -1303,25 +1581,36 @@ export default function LaptopInventory() {
             setSelectedBrand(pendingFilter.value);
             setIssuesBrandFilter(pendingFilter.value);
           }
-          if (pendingFilter.type === "model") setSelectedModel(pendingFilter.value);
-          if (pendingFilter.type === "age") setSelectedAgeBracket(pendingFilter.value);
+          if (pendingFilter.type === "model")
+            setSelectedModel(pendingFilter.value);
+          if (pendingFilter.type === "age")
+            setSelectedAgeBracket(pendingFilter.value);
           if (pendingFilter.type === "issue") {
             setSelectedIssue(pendingFilter.value);
             setIssuesCategoryFilter(pendingFilter.value);
           }
-          if (pendingFilter.type === "issueMonth") setSelectedIssueMonth(pendingFilter.value);
-          if (pendingFilter.type === "issueKeyword") setSelectedIssueKeyword(pendingFilter.value);
-          if (pendingFilter.type === "issueType") setIssuesTypeFilter(pendingFilter.value);
+          if (pendingFilter.type === "issueMonth")
+            setSelectedIssueMonth(pendingFilter.value);
+          if (pendingFilter.type === "issueKeyword")
+            setSelectedIssueKeyword(pendingFilter.value);
+          if (pendingFilter.type === "issueType")
+            setIssuesTypeFilter(pendingFilter.value);
           setDialogOpen(false);
         }}
         onGoToInventory={() => {
           if (!pendingFilter) return;
-          if (pendingFilter.type === "brand") setSelectedBrand(pendingFilter.value);
-          if (pendingFilter.type === "model") setSelectedModel(pendingFilter.value);
-          if (pendingFilter.type === "age") setSelectedAgeBracket(pendingFilter.value);
-          if (pendingFilter.type === "issue") setSelectedIssue(pendingFilter.value);
-          if (pendingFilter.type === "issueMonth") setSelectedIssueMonth(pendingFilter.value);
-          if (pendingFilter.type === "issueKeyword") setSelectedIssueKeyword(pendingFilter.value);
+          if (pendingFilter.type === "brand")
+            setSelectedBrand(pendingFilter.value);
+          if (pendingFilter.type === "model")
+            setSelectedModel(pendingFilter.value);
+          if (pendingFilter.type === "age")
+            setSelectedAgeBracket(pendingFilter.value);
+          if (pendingFilter.type === "issue")
+            setSelectedIssue(pendingFilter.value);
+          if (pendingFilter.type === "issueMonth")
+            setSelectedIssueMonth(pendingFilter.value);
+          if (pendingFilter.type === "issueKeyword")
+            setSelectedIssueKeyword(pendingFilter.value);
           setActiveTab("inventory");
           setDialogOpen(false);
         }}
