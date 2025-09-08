@@ -631,7 +631,6 @@ export default function LaptopInventory() {
           <TabsTrigger value="inventory">Inventory</TabsTrigger>
           <TabsTrigger value="issues">Issues</TabsTrigger>
           <TabsTrigger value="accessories">Accessories</TabsTrigger>
-          <TabsTrigger value="reviews">Reviews</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
