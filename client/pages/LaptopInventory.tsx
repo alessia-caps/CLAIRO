@@ -113,10 +113,12 @@ export default function LaptopInventory() {
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedAgeBracket, setSelectedAgeBracket] = useState("");
   const [selectedCard, setSelectedCard] = useState("");
+  const [selectedIssueMonth, setSelectedIssueMonth] = useState("");
+  const [selectedIssueKeyword, setSelectedIssueKeyword] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingFilter, setPendingFilter] = useState<{
-    type: "brand" | "model" | "age" | "issue";
+    type: "brand" | "model" | "age" | "issue" | "issueMonth" | "issueKeyword";
     value: string;
     count: number;
   } | null>(null);
@@ -130,7 +132,9 @@ export default function LaptopInventory() {
       selectedBrand ||
       selectedModel ||
       selectedAgeBracket ||
-      selectedCard
+      selectedCard ||
+      selectedIssueMonth ||
+      selectedIssueKeyword
   );
 
   function clearAllFilters() {
@@ -143,6 +147,8 @@ export default function LaptopInventory() {
     setSelectedModel("");
     setSelectedAgeBracket("");
     setSelectedCard("");
+    setSelectedIssueMonth("");
+    setSelectedIssueKeyword("");
   }
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
