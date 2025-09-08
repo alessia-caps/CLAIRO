@@ -600,6 +600,8 @@ export default function LaptopInventory() {
     selectedModel,
     selectedAgeBracket,
     selectedCard,
+    selectedIssueMonth,
+    selectedIssueKeyword,
     allLaptops,
     issuesRaw,
     analytics.owned,
