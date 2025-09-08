@@ -1243,6 +1243,8 @@ export default function LaptopInventory() {
           setSelectedModel("");
           setSelectedAgeBracket("");
           setSelectedIssue("");
+          setSelectedIssueMonth("");
+          setSelectedIssueKeyword("");
           setPendingFilter(null);
           setDialogOpen(false);
         }}
