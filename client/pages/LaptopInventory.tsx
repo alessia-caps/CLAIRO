@@ -360,21 +360,122 @@ export default function LaptopInventory() {
   const mouseHeadsetSummary = sheetData["Mouse and Headset"] || [];
 
   const issuesRaw = sheetData["Laptops With Issues"] || [];
-  const issueBreakdown = useMemo(() => {
-    const issueCount: Record<string, number> = {};
-    issuesRaw.forEach((row) => {
-      const issue =
-        row["REPORTED ISSUE (BNEXT)"] || row["Reported Issue (BNEXT)"] || "";
-      if (issue) {
-        const group = groupIssue(issue);
-        issueCount[group] = (issueCount[group] || 0) + 1;
+
+  const issuesAnalytics = useMemo(() => {
+    const monthCounts: Record<string, number> = {};
+    const serialCounts: Record<string, number> = {};
+    const tatDaysArr: number[] = [];
+    let unresolved = 0;
+    const byAgeCount: Record<string, number> = { "<2 years": 0, "2-5 years": 0, ">5 years": 0 };
+    const keywordCounts: Record<string, number> = {};
+
+    const STOPWORDS = new Set([
+      "the","and","for","with","not","but","are","was","were","have","has","had","from","that","this","will","cant","cannot","won't","could","couldn't","issue","issues","error","errors","defective","unit","laptop","pc","computer","start","startup","boot","windows","os","device","keyboard","touchpad","battery","repair","checked","redeployed","reinstalled","reinstallation","restore","can't","unable","to","of","in","on","at","by","a","an","is","it","be","as","or","if","we","you","they"
+    ]);
+
+    function parseDate(str: string): Date | null {
+      if (!str) return null;
+      const s = str.toString().trim();
+      const parts = s.split("-");
+      if (parts.length === 3) {
+        const [dd, mon, yy] = parts;
+        const year = yy.length === 2 ? "20" + yy : yy;
+        const d = new Date(`${mon} ${dd}, ${year}`);
+        if (!isNaN(d.getTime())) return d;
       }
+      const d2 = new Date(s);
+      return isNaN(d2.getTime()) ? null : d2;
+    }
+
+    function monthKey(d: Date) {
+      const y = d.getFullYear();
+      const m = (d.getMonth() + 1).toString().padStart(2, "0");
+      return `${y}-${m}`;
+    }
+
+    issuesRaw.forEach((row) => {
+      const desc = (row["REPORTED ISSUE (BNEXT)"] || row["Reported Issue (BNEXT)"] || "").toString();
+      const serial = (row["SERIAL NUM"] || row["Serial Num"] || "").toString();
+      const reportedStr = (row["DATE REPORTED ISSUE (BNEXT)"] || row["Date Reported Issue (BNEXT)"] || row["DATE REPORTED"] || row["Date Reported"] || "").toString();
+      const serviceStr = (row["DATE NEXUS SERVICE"] || row["Date Nexus Service"] || "").toString();
+      const ageNum = parseFloat(((row["LAPTOP AGE"] || row["Laptop Age"] || "").toString()).replace(/[^\d.]/g, "")) || 0;
+
+      const reported = parseDate(reportedStr);
+      if (reported) {
+        const mk = monthKey(reported);
+        monthCounts[mk] = (monthCounts[mk] || 0) + 1;
+      }
+
+      if (serial) serialCounts[serial] = (serialCounts[serial] || 0) + 1;
+
+      const service = parseDate(serviceStr);
+      if (reported && service) {
+        const diffDays = Math.max(0, Math.round((service.getTime() - reported.getTime()) / (1000 * 60 * 60 * 24)));
+        tatDaysArr.push(diffDays);
+      } else if (reported && !serviceStr) {
+        unresolved++;
+      }
+
+      if (ageNum < 2) byAgeCount["<2 years"]++;
+      else if (ageNum < 5) byAgeCount["2-5 years"]++;
+      else byAgeCount[">5 years"]++;
+
+      const tokens = desc
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter((t) => t.length > 3 && !STOPWORDS.has(t));
+      tokens.forEach((t) => (keywordCounts[t] = (keywordCounts[t] || 0) + 1));
     });
-    return Object.entries(issueCount).map(([name, value], i) => ({
-      name,
-      value,
-      color: COLORS[i % COLORS.length],
-    }));
+
+    const monthly = Object.entries(monthCounts)
+      .map(([month, value]) => ({ month, value }))
+      .sort((a, b) => (a.month < b.month ? -1 : 1));
+
+    const repeat = Object.entries(serialCounts)
+      .map(([serial, count]) => ({ serial, count }))
+      .filter((r) => r.count > 1)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    const tatBucketsDef = [
+      { name: "<7d", min: 0, max: 7 },
+      { name: "7-14d", min: 7, max: 14 },
+      { name: "15-30d", min: 14, max: 30 },
+      { name: "31-60d", min: 30, max: 60 },
+      { name: ">60d", min: 60, max: Infinity },
+    ];
+    const tatBuckets = tatBucketsDef.map((b) => ({ name: b.name, value: 0 }));
+    tatDaysArr.forEach((d) => {
+      const idx = tatBucketsDef.findIndex((b) => d >= b.min && d < b.max);
+      if (idx >= 0) tatBuckets[idx].value++;
+    });
+
+    const avg = tatDaysArr.length ? Math.round(tatDaysArr.reduce((a, b) => a + b, 0) / tatDaysArr.length) : 0;
+    const sorted = [...tatDaysArr].sort((a, b) => a - b);
+    const median = sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0;
+    const p90 = sorted.length ? sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.9) - 1)] : 0;
+
+    const byAge = Object.entries(byAgeCount).map(([name, value]) => ({ name, value }));
+
+    const keywords = Object.entries(keywordCounts)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10);
+
+    return {
+      totalIssues: issuesRaw.length,
+      unitsWithIssues: Object.keys(serialCounts).length,
+      unresolvedIssues: unresolved,
+      avgTAT: avg,
+      medianTAT: median,
+      p90TAT: p90,
+      monthly,
+      repeat,
+      tatBuckets,
+      byAge,
+      keywords,
+    };
   }, [issuesRaw]);
 
   const brands = useMemo(
