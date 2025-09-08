@@ -1231,6 +1231,10 @@ export default function LaptopInventory() {
             setSelectedAgeBracket(pendingFilter.value);
           if (pendingFilter.type === "issue")
             setSelectedIssue(pendingFilter.value);
+          if (pendingFilter.type === "issueMonth")
+            setSelectedIssueMonth(pendingFilter.value);
+          if (pendingFilter.type === "issueKeyword")
+            setSelectedIssueKeyword(pendingFilter.value);
           setActiveTab("inventory");
           setDialogOpen(false);
         }}
