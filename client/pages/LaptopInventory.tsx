@@ -117,8 +117,16 @@ export default function LaptopInventory() {
   const [selectedIssueKeyword, setSelectedIssueKeyword] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Issues tab local filters
+  const [issuesSearch, setIssuesSearch] = useState("");
+  const [issuesCategoryFilter, setIssuesCategoryFilter] = useState("");
+  const [issuesTypeFilter, setIssuesTypeFilter] = useState("");
+  const [issuesBrandFilter, setIssuesBrandFilter] = useState("");
+  const [issuesResolvedFilter, setIssuesResolvedFilter] = useState("");
+
   const [pendingFilter, setPendingFilter] = useState<{
-    type: "brand" | "model" | "age" | "issue" | "issueMonth" | "issueKeyword";
+    type: "brand" | "model" | "age" | "issue" | "issueMonth" | "issueKeyword" | "issueType";
     value: string;
     count: number;
   } | null>(null);
