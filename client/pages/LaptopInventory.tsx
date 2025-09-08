@@ -367,11 +367,10 @@ export default function LaptopInventory() {
     const tatDaysArr: number[] = [];
     let unresolved = 0;
     const byAgeCount: Record<string, number> = { "<2 years": 0, "2-5 years": 0, ">5 years": 0 };
-    const keywordCounts: Record<string, number> = {};
 
-    const STOPWORDS = new Set([
-      "the","and","for","with","not","but","are","was","were","have","has","had","from","that","this","will","cant","cannot","won't","could","couldn't","issue","issues","error","errors","defective","unit","laptop","pc","computer","start","startup","boot","windows","os","device","keyboard","touchpad","battery","repair","checked","redeployed","reinstalled","reinstallation","restore","can't","unable","to","of","in","on","at","by","a","an","is","it","be","as","or","if","we","you","they"
-    ]);
+    const categoryCounts: Record<string, number> = {};
+    const typeCounts: Record<string, number> = {};
+    const brandCounts: Record<string, number> = {};
 
     function parseDate(str: string): Date | null {
       if (!str) return null;
@@ -420,48 +419,33 @@ export default function LaptopInventory() {
       else if (ageNum < 5) byAgeCount["2-5 years"]++;
       else byAgeCount[">5 years"]++;
 
-      const tokens = desc
-        .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, " ")
-        .split(/\s+/)
-        .filter((t) => t.length > 3 && !STOPWORDS.has(t));
-      tokens.forEach((t) => (keywordCounts[t] = (keywordCounts[t] || 0) + 1));
+      const cat = groupIssue(desc);
+      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+      const type = (row["TYPE"] || row["Type"] || "").toString();
+      if (type) typeCounts[type] = (typeCounts[type] || 0) + 1;
+      const brand = (row["BRAND"] || row["Brand"] || "").toString();
+      if (brand) brandCounts[brand] = (brandCounts[brand] || 0) + 1;
     });
 
-    const monthly = Object.entries(monthCounts)
-      .map(([month, value]) => ({ month, value }))
-      .sort((a, b) => (a.month < b.month ? -1 : 1));
+    const byAge = Object.entries(byAgeCount).map(([name, value]) => ({ name, value }));
 
-    const repeat = Object.entries(serialCounts)
-      .map(([serial, count]) => ({ serial, count }))
-      .filter((r) => r.count > 1)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
+    const categoryDist = Object.entries(categoryCounts).map(([name, value], i) => ({ name, value, color: COLORS[i % COLORS.length] }));
 
-    const tatBucketsDef = [
-      { name: "<7d", min: 0, max: 7 },
-      { name: "7-14d", min: 7, max: 14 },
-      { name: "15-30d", min: 14, max: 30 },
-      { name: "31-60d", min: 30, max: 60 },
-      { name: ">60d", min: 60, max: Infinity },
+    const typeDist = Object.entries(typeCounts).map(([name, value], i) => ({ name, value, color: COLORS[i % COLORS.length] }));
+
+    const brandEntries = Object.entries(brandCounts).sort((a, b) => b[1] - a[1]);
+    const topN = 10;
+    const top = brandEntries.slice(0, topN);
+    const otherTotal = brandEntries.slice(topN).reduce((s, [, v]) => s + v, 0);
+    const brandDist = [
+      ...top.map(([name, value], i) => ({ name, value, color: COLORS[i % COLORS.length] })),
+      ...(otherTotal > 0 ? [{ name: "Other", value: otherTotal, color: "#CBD5E1" }] : []),
     ];
-    const tatBuckets = tatBucketsDef.map((b) => ({ name: b.name, value: 0 }));
-    tatDaysArr.forEach((d) => {
-      const idx = tatBucketsDef.findIndex((b) => d >= b.min && d < b.max);
-      if (idx >= 0) tatBuckets[idx].value++;
-    });
 
     const avg = tatDaysArr.length ? Math.round(tatDaysArr.reduce((a, b) => a + b, 0) / tatDaysArr.length) : 0;
     const sorted = [...tatDaysArr].sort((a, b) => a - b);
     const median = sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0;
     const p90 = sorted.length ? sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.9) - 1)] : 0;
-
-    const byAge = Object.entries(byAgeCount).map(([name, value]) => ({ name, value }));
-
-    const keywords = Object.entries(keywordCounts)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 10);
 
     return {
       totalIssues: issuesRaw.length,
@@ -470,11 +454,10 @@ export default function LaptopInventory() {
       avgTAT: avg,
       medianTAT: median,
       p90TAT: p90,
-      monthly,
-      repeat,
-      tatBuckets,
       byAge,
-      keywords,
+      categoryDist,
+      typeDist,
+      brandDist,
     };
   }, [issuesRaw]);
 
