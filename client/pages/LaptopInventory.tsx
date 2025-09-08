@@ -415,8 +415,6 @@ export default function LaptopInventory() {
 
   const mouseHeadsetSummary = sheetData["Mouse and Headset"] || [];
 
-  const issuesRaw = sheetData["Laptops With Issues"] || [];
-
   const issuesAnalytics = useMemo(() => {
     const monthCounts: Record<string, number> = {};
     const serialCounts: Record<string, number> = {};
