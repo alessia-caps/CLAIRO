@@ -580,22 +580,6 @@ export default function LaptopInventory() {
 
   const incomingSummary = sheetData["Incoming"] || [];
 
-  const reviewRows = useMemo(() => {
-    const rows: any[] = [];
-    allLaptops.forEach((row) => {
-      const comment = row["COMMENTS"] || row["NOTES / COMMENTS"] || "";
-      if (comment && comment.length > 40) rows.push({ ...row, comment });
-    });
-    issuesRaw.forEach((row) => {
-      const issue = row["REPORTED ISSUE (BNEXT)"] || "";
-      if (issue && issue.length > 40) rows.push({ ...row, comment: issue });
-    });
-    return rows;
-  }, [allLaptops, issuesRaw]);
-
-  function handleReviewAction(idx: number, action: string) {
-    alert(`Row ${idx + 1}: ${action}`);
-  }
 
   return (
     <div className="space-y-6">
