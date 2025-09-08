@@ -171,6 +171,8 @@ export default function LaptopInventory() {
     setIssuesResolvedFilter("");
   }
 
+  const issuesRaw = sheetData["Laptops With Issues"] || [];
+
   const filteredIssues = useMemo(() => {
     let rows = issuesRaw.slice();
     if (issuesSearch) {
