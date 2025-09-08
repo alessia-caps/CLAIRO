@@ -993,52 +993,29 @@ export default function LaptopInventory() {
                     <p className="text-xs text-muted-foreground">No service date</p>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Avg TAT</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">{issuesAnalytics.avgTAT}d</div>
-                    <p className="text-xs text-muted-foreground">Avg days to service</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Median TAT</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">{issuesAnalytics.medianTAT}d</div>
-                    <p className="text-xs text-muted-foreground">Median days</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">P90 TAT</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">{issuesAnalytics.p90TAT}d</div>
-                    <p className="text-xs text-muted-foreground">90th percentile</p>
-                  </CardContent>
-                </Card>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle>Issues Over Time</CardTitle>
-                    <span className="text-xs text-muted-foreground">Click a month to filter</span>
+                    <CardTitle>Issue Categories</CardTitle>
+                    <span className="text-xs text-muted-foreground">Click to filter</span>
                   </CardHeader>
                   <CardContent style={{ height: 280 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={issuesAnalytics.monthly} margin={{ left: 8, right: 8, top: 8, bottom: 24 }}>
-                        <XAxis dataKey="month" tick={{ fontSize: 12 }} interval={0} angle={-15} textAnchor="end" height={40} />
+                      <BarChart data={issuesAnalytics.categoryDist} margin={{ left: 8, right: 8, top: 8, bottom: 24 }}>
+                        <XAxis dataKey="name" tick={{ fontSize: 12 }} interval={0} angle={-15} textAnchor="end" height={40} />
                         <YAxis allowDecimals={false} />
                         <Tooltip />
                         <Bar dataKey="value" barSize={22} cursor="pointer" onClick={(data: any) => {
-                          const count = issuesAnalytics.monthly.find((m) => m.month === data.month)?.value || 0;
-                          setPendingFilter({ type: "issueMonth", value: data.month, count });
+                          const count = issuesAnalytics.categoryDist.find((m) => m.name === data.name)?.value || 0;
+                          setPendingFilter({ type: "issue", value: data.name, count });
                           setDialogOpen(true);
-                        }} />
+                        }}>
+                          {issuesAnalytics.categoryDist.map((entry, index) => (
+                            <Cell key={`cell-cat-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -1046,15 +1023,49 @@ export default function LaptopInventory() {
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle>Turnaround Time</CardTitle>
+                    <CardTitle>Issues by Unit Status</CardTitle>
+                    <span className="text-xs text-muted-foreground">Click to filter</span>
                   </CardHeader>
                   <CardContent style={{ height: 280 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={issuesAnalytics.tatBuckets} margin={{ left: 8, right: 8, top: 8, bottom: 8 }}>
+                      <BarChart data={issuesAnalytics.typeDist} margin={{ left: 8, right: 8, top: 8, bottom: 8 }}>
                         <XAxis dataKey="name" />
                         <YAxis allowDecimals={false} />
                         <Tooltip />
-                        <Bar dataKey="value" barSize={22} />
+                        <Bar dataKey="value" barSize={22} cursor="pointer" onClick={(data: any) => {
+                          const count = issuesAnalytics.typeDist.find((m) => m.name === data.name)?.value || 0;
+                          setPendingFilter({ type: "issueType", value: data.name, count });
+                          setDialogOpen(true);
+                        }}>
+                          {issuesAnalytics.typeDist.map((entry, index) => (
+                            <Cell key={`cell-type-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle>Issues by Brand</CardTitle>
+                    <span className="text-xs text-muted-foreground">Top 10 + Other</span>
+                  </CardHeader>
+                  <CardContent style={{ height: 280 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={issuesAnalytics.brandDist} layout="vertical" margin={{ left: 16, right: 8, top: 8, bottom: 8 }}>
+                        <XAxis type="number" hide />
+                        <YAxis type="category" dataKey="name" width={160} />
+                        <Tooltip />
+                        <Bar dataKey="value" barSize={18} cursor="pointer" onClick={(data: any) => {
+                          const count = issuesAnalytics.brandDist.find((m) => m.name === data.name)?.value || 0;
+                          setPendingFilter({ type: "brand", value: data.name, count });
+                          setDialogOpen(true);
+                        }}>
+                          {issuesAnalytics.brandDist.map((entry, index) => (
+                            <Cell key={`cell-brand-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -1075,45 +1086,78 @@ export default function LaptopInventory() {
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle>Repeat Offenders (Serial)</CardTitle>
-                    <span className="text-xs text-muted-foreground">Top 10</span>
-                  </CardHeader>
-                  <CardContent style={{ height: 280 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={issuesAnalytics.repeat} layout="vertical" margin={{ left: 16, right: 8, top: 8, bottom: 8 }}>
-                        <XAxis type="number" hide />
-                        <YAxis type="category" dataKey="serial" width={160} />
-                        <Tooltip />
-                        <Bar dataKey="count" barSize={18} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle>Top Issue Keywords</CardTitle>
-                    <span className="text-xs text-muted-foreground">Click to filter</span>
-                  </CardHeader>
-                  <CardContent style={{ height: 280 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={issuesAnalytics.keywords} layout="vertical" margin={{ left: 16, right: 8, top: 8, bottom: 8 }}>
-                        <XAxis type="number" hide />
-                        <YAxis type="category" dataKey="name" width={160} />
-                        <Tooltip />
-                        <Bar dataKey="value" barSize={18} cursor="pointer" onClick={(data: any) => {
-                          const count = issuesAnalytics.keywords.find((k) => k.name === data.name)?.value || 0;
-                          setPendingFilter({ type: "issueKeyword", value: data.name, count });
-                          setDialogOpen(true);
-                        }} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
               </div>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle>Issues Table</CardTitle>
+                  <div className="flex gap-2 items-center">
+                    <Input placeholder="Search issues..." value={issuesSearch} onChange={(e) => setIssuesSearch(e.target.value)} className="h-8 w-48" />
+                    <select className="border rounded px-2 py-1 text-xs" value={issuesCategoryFilter} onChange={(e) => setIssuesCategoryFilter(e.target.value)}>
+                      <option value="">Category</option>
+                      {issuesAnalytics.categoryDist.map((c) => (
+                        <option key={c.name} value={c.name}>{c.name}</option>
+                      ))}
+                    </select>
+                    <select className="border rounded px-2 py-1 text-xs" value={issuesTypeFilter} onChange={(e) => setIssuesTypeFilter(e.target.value)}>
+                      <option value="">Unit Status</option>
+                      {Array.from(new Set(issuesRaw.map((r) => (r["TYPE"] || r["Type"] || "").toString()).filter(Boolean))).map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                    <select className="border rounded px-2 py-1 text-xs" value={issuesBrandFilter} onChange={(e) => setIssuesBrandFilter(e.target.value)}>
+                      <option value="">Brand</option>
+                      {Array.from(new Set(issuesRaw.map((r) => (r["BRAND"] || r["Brand"] || "").toString()).filter(Boolean))).map((b) => (
+                        <option key={b} value={b}>{b}</option>
+                      ))}
+                    </select>
+                    <select className="border rounded px-2 py-1 text-xs" value={issuesResolvedFilter} onChange={(e) => setIssuesResolvedFilter(e.target.value)}>
+                      <option value="">Resolution</option>
+                      <option value="Unresolved">Unresolved</option>
+                      <option value="Resolved">Resolved</option>
+                    </select>
+                    <Button variant="ghost" size="sm" onClick={clearIssueFilters} disabled={!hasAnyIssueFilter}>Clear filters</Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-auto max-h-[480px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Invoice Date</TableHead>
+                          <TableHead>Laptop Age</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Tag</TableHead>
+                          <TableHead>Custodian</TableHead>
+                          <TableHead>Model</TableHead>
+                          <TableHead>Serial</TableHead>
+                          <TableHead>Brand</TableHead>
+                          <TableHead>Date Reported</TableHead>
+                          <TableHead>Issue (BNEXT)</TableHead>
+                          <TableHead>Service Date</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredIssues.map((row, i) => (
+                          <TableRow key={i}>
+                            <TableCell>{row["INVOICE DATE"]}</TableCell>
+                            <TableCell>{row["LAPTOP AGE"] || row["Laptop Age"]}</TableCell>
+                            <TableCell>{row["TYPE"] || row["Type"]}</TableCell>
+                            <TableCell>{row["TAG"] || row["Tag"]}</TableCell>
+                            <TableCell>{row["CUSTODIAN"] || row["Custodian"]}</TableCell>
+                            <TableCell>{row["MODEL"] || row["Model"]}</TableCell>
+                            <TableCell>{row["SERIAL NUM"] || row["Serial Num"]}</TableCell>
+                            <TableCell>{row["BRAND"] || row["Brand"]}</TableCell>
+                            <TableCell>{row["DATE REPORTED ISSUE (BNEXT)"] || row["Date Reported Issue (BNEXT)"] || row["DATE REPORTED"] || row["Date Reported"]}</TableCell>
+                            <TableCell>{row["REPORTED ISSUE (BNEXT)"] || row["Reported Issue (BNEXT)"]}</TableCell>
+                            <TableCell>{row["DATE NEXUS SERVICE"] || row["Date Nexus Service"]}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
             </>
           )}
         </TabsContent>
