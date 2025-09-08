@@ -967,44 +967,158 @@ export default function LaptopInventory() {
         </TabsContent>
 
         <TabsContent value="issues" className="space-y-6">
-          {issueBreakdown.length > 0 && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle>Laptops With Issues Breakdown</CardTitle>
-                <span className="text-xs text-muted-foreground">
-                  Click a bar to filter
-                </span>
-              </CardHeader>
-              <CardContent style={{ height: 320 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={issueBreakdown} margin={{ left: 8, right: 8, top: 8, bottom: 24 }}>
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} interval={0} angle={-15} textAnchor="end" height={40} />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Bar
-                      dataKey="value"
-                      barSize={24}
-                      cursor="pointer"
-                      onClick={(data: any) => {
-                        const count =
-                          issueBreakdown.find((i) => i.name === data.name)
-                            ?.value || 0;
-                        setPendingFilter({
-                          type: "issue",
-                          value: data.name,
-                          count,
-                        });
-                        setDialogOpen(true);
-                      }}
-                    >
-                      {issueBreakdown.map((entry, index) => (
-                        <Cell key={`cell-issue-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+          {issuesRaw.length > 0 && (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Issues</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{issuesAnalytics.totalIssues}</div>
+                    <p className="text-xs text-muted-foreground">All reported</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Units With Issues</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{issuesAnalytics.unitsWithIssues}</div>
+                    <p className="text-xs text-muted-foreground">Unique serials</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Unresolved</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{issuesAnalytics.unresolvedIssues}</div>
+                    <p className="text-xs text-muted-foreground">No service date</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Avg TAT</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{issuesAnalytics.avgTAT}d</div>
+                    <p className="text-xs text-muted-foreground">Avg days to service</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Median TAT</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{issuesAnalytics.medianTAT}d</div>
+                    <p className="text-xs text-muted-foreground">Median days</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">P90 TAT</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold">{issuesAnalytics.p90TAT}d</div>
+                    <p className="text-xs text-muted-foreground">90th percentile</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle>Issues Over Time</CardTitle>
+                    <span className="text-xs text-muted-foreground">Click a month to filter</span>
+                  </CardHeader>
+                  <CardContent style={{ height: 280 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={issuesAnalytics.monthly} margin={{ left: 8, right: 8, top: 8, bottom: 24 }}>
+                        <XAxis dataKey="month" tick={{ fontSize: 12 }} interval={0} angle={-15} textAnchor="end" height={40} />
+                        <YAxis allowDecimals={false} />
+                        <Tooltip />
+                        <Bar dataKey="value" barSize={22} cursor="pointer" onClick={(data: any) => {
+                          const count = issuesAnalytics.monthly.find((m) => m.month === data.month)?.value || 0;
+                          setPendingFilter({ type: "issueMonth", value: data.month, count });
+                          setDialogOpen(true);
+                        }} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle>Turnaround Time</CardTitle>
+                  </CardHeader>
+                  <CardContent style={{ height: 280 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={issuesAnalytics.tatBuckets} margin={{ left: 8, right: 8, top: 8, bottom: 8 }}>
+                        <XAxis dataKey="name" />
+                        <YAxis allowDecimals={false} />
+                        <Tooltip />
+                        <Bar dataKey="value" barSize={22} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle>Issues by Age</CardTitle>
+                  </CardHeader>
+                  <CardContent style={{ height: 280 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={issuesAnalytics.byAge}>
+                        <XAxis dataKey="name" />
+                        <YAxis allowDecimals={false} />
+                        <Tooltip />
+                        <Bar dataKey="value" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle>Repeat Offenders (Serial)</CardTitle>
+                    <span className="text-xs text-muted-foreground">Top 10</span>
+                  </CardHeader>
+                  <CardContent style={{ height: 280 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={issuesAnalytics.repeat} layout="vertical" margin={{ left: 16, right: 8, top: 8, bottom: 8 }}>
+                        <XAxis type="number" hide />
+                        <YAxis type="category" dataKey="serial" width={160} />
+                        <Tooltip />
+                        <Bar dataKey="count" barSize={18} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle>Top Issue Keywords</CardTitle>
+                    <span className="text-xs text-muted-foreground">Click to filter</span>
+                  </CardHeader>
+                  <CardContent style={{ height: 280 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={issuesAnalytics.keywords} layout="vertical" margin={{ left: 16, right: 8, top: 8, bottom: 8 }}>
+                        <XAxis type="number" hide />
+                        <YAxis type="category" dataKey="name" width={160} />
+                        <Tooltip />
+                        <Bar dataKey="value" barSize={18} cursor="pointer" onClick={(data: any) => {
+                          const count = issuesAnalytics.keywords.find((k) => k.name === data.name)?.value || 0;
+                          setPendingFilter({ type: "issueKeyword", value: data.name, count });
+                          setDialogOpen(true);
+                        }} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            </>
           )}
         </TabsContent>
 
