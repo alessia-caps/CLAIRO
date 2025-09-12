@@ -33,10 +33,18 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useMemo, useRef } from "react";
 import * as XLSX from "xlsx";
 import { ChartFilterDialog } from "@/components/analytics/ChartFilterDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const COLORS = [
   "#8884d8",
@@ -95,9 +103,44 @@ function parseSheetData(data: any[][], headerKeywords: string[]) {
     )
     .map((row) => {
       const obj: Record<string, string> = {};
-      headers.forEach(
-        (h, i) => (obj[h] = row[i] ? row[i].toString().trim() : ""),
-      );
+      headers.forEach((h, i) => {
+        let cell = row[i];
+        // Convert Excel date serials or Date objects for any header that looks like a date
+        if (cell !== undefined && cell !== null && /DATE/i.test(h)) {
+          // If it's a number, treat as Excel serial (days since 1899-12-30)
+          if (typeof cell === "number") {
+            const epoch = new Date(Date.UTC(1899, 11, 30));
+            const d = new Date(epoch.getTime() + cell * 24 * 60 * 60 * 1000);
+            // Format as DD-MMM-YY (e.g., 30-Jul-18)
+            const day = d.getUTCDate().toString().padStart(2, "0");
+            const month = d.toLocaleString("en-US", { month: "short", timeZone: "UTC" });
+            const year = d.getUTCFullYear().toString().slice(-2);
+            cell = `${day}-${month}-${year}`;
+          } else if (cell instanceof Date) {
+            const d = cell as Date;
+            const day = d.getDate().toString().padStart(2, "0");
+            const month = d.toLocaleString("en-US", { month: "short" });
+            const year = d.getFullYear().toString().slice(-2);
+            cell = `${day}-${month}-${year}`;
+          } else if (typeof cell === "string") {
+            // try to parse common date strings, but leave as-is if parse fails
+            const parsed = new Date(cell);
+            if (!isNaN(parsed.getTime())) {
+              const day = parsed.getDate().toString().padStart(2, "0");
+              const month = parsed.toLocaleString("en-US", { month: "short" });
+              const year = parsed.getFullYear().toString().slice(-2);
+              cell = `${day}-${month}-${year}`;
+            } else {
+              cell = cell.toString().trim();
+            }
+          } else {
+            cell = cell ? cell.toString().trim() : "";
+          }
+        } else {
+          cell = cell ? cell.toString().trim() : "";
+        }
+        obj[h] = cell;
+      });
       return obj;
     });
 }
@@ -115,6 +158,9 @@ export default function LaptopInventory() {
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedAgeBracket, setSelectedAgeBracket] = useState("");
   const [selectedCard, setSelectedCard] = useState("");
+  // previous owners shown in details only to keep table compact; no filter
+  const [detailsRow, setDetailsRow] = useState<any | null>(null);
+  const [showColumnsHelp, setShowColumnsHelp] = useState(false);
   const [selectedIssueMonth, setSelectedIssueMonth] = useState("");
   const [selectedIssueKeyword, setSelectedIssueKeyword] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
@@ -310,8 +356,93 @@ export default function LaptopInventory() {
     return laptops;
   }, [sheetData]);
 
+  // Normalize rows: prefer TAG column for status, clean custodian and surface a CONDITION field
+  const normalizedLaptops = useMemo(() => {
+    const rows = allLaptops || [];
+    return rows.map((row: any) => {
+      const copy = { ...(row || {}) } as Record<string, any>;
+
+      // Raw candidates
+      const tagRaw = (copy["TAG"] || copy["Tag"] || copy["TAG "] || "").toString();
+      const custRaw = (copy["CUSTODIAN"] || copy["Custodian"] || "").toString();
+  const prevOwner = (copy["PREVIOUS OWNER"] || copy["Previous Owner"] || copy["PREVIOUS OWNER "] || "").toString();
+
+      // Clean custodian: if value clearly describes unit state, move it to CONDITION and clear custodian
+      const custLower = custRaw.toLowerCase();
+      let condition = "";
+      let cleanedCustodian = custRaw && custRaw.trim() ? custRaw.trim() : "";
+
+      const stateKeywords = ["no custodian", "dead unit", "defective", "no laptop bag", "defective unit", "too old unit", "defective"];
+      if (custLower && stateKeywords.some((k) => custLower.includes(k))) {
+        condition = custRaw.trim();
+        cleanedCustodian = "";
+      }
+
+  // Do not place previous owner into custodian. Keep PREVIOUS_OWNER separate.
+
+  // Determine status/category from TAG primarily (fall back to REPLACE/Replace)
+      const replaceRaw = (copy["REPLACE"] || copy["Replace"] || "").toString();
+      const statusSource = (tagRaw || replaceRaw).toString().toLowerCase();
+      let status = "Unknown";
+      if (statusSource.includes("deploy") || statusSource.includes("deployed") || statusSource.includes("change ownership") || statusSource.includes("for ownership") || cleanedCustodian) {
+        // If TAG indicates deployed or we have a real custodian -> Assigned
+        if (statusSource.includes("spare unit") || statusSource.includes("spare") === true && !statusSource.includes("deployed")) {
+          status = "Available";
+        } else if (
+          statusSource.includes("eol") ||
+          statusSource.includes("beyond repair") ||
+          statusSource.includes("under repair")
+        ) {
+          status = "Maintenance";
+        } else if (statusSource.includes("sold")) {
+          status = "Sold";
+        } else if (statusSource.includes("replace") || replaceRaw.toLowerCase().includes("replace")) {
+          status = "Replacement";
+        } else {
+          status = "Assigned";
+        }
+      } else if (statusSource.includes("spare") || statusSource.includes("spare unit")) {
+        status = "Available";
+      } else if (statusSource.includes("eol") || statusSource.includes("beyond repair") || statusSource.includes("under repair")) {
+        status = "Maintenance";
+      } else if (statusSource.includes("sold")) {
+        status = "Sold";
+      }
+
+      // If TAG itself contains descriptive state (e.g., DEAD UNIT), prefer that as CONDITION
+      const tagLower = tagRaw.toLowerCase();
+      if (!condition && tagLower && stateKeywords.some((k) => tagLower.includes(k))) {
+        condition = tagRaw.trim();
+      }
+
+      // If maintenance history exists, fold it into condition so it appears under Condition
+      const maint = (copy["MAINTENANCE HISTORY"] || copy["Maintenance History"] || "").toString();
+      if (maint && maint.trim() && maint.trim() !== "0") {
+        condition = condition ? `${condition}; ${maint.trim()}` : maint.trim();
+      }
+
+  // Mark previous owner and spare unit
+  copy["PREVIOUS_OWNER"] = prevOwner && prevOwner.trim() ? prevOwner.trim() : "";
+  const isSpare = Boolean(tagRaw.toLowerCase().includes("spare") || statusSource.includes("spare"));
+  // incorporate spare into status: mark explicitly as Spare
+  if (isSpare) {
+    status = "Spare";
+    copy["SPARE_NOTE"] = tagRaw;
+  }
+
+      // Expose normalized fields but also update REPLACE and CUSTODIAN so existing code still works
+      copy["REPLACE"] = status;
+      copy["REPLACE_NORMALIZED"] = status;
+      copy["TAG"] = tagRaw;
+      copy["CUSTODIAN"] = cleanedCustodian || copy["CUSTODIAN"] || copy["Custodian"] || "";
+  copy["CONDITION"] = condition;
+
+      return copy;
+    });
+  }, [allLaptops]);
+
   const analytics = useMemo(() => {
-    if (!allLaptops.length)
+    if (!normalizedLaptops.length)
       return {
         total: 0,
         assigned: 0,
@@ -337,14 +468,14 @@ export default function LaptopInventory() {
     const owned: any[] = [];
     const newUnits: any[] = [];
 
-    allLaptops.forEach((row) => {
+  normalizedLaptops.forEach((row) => {
       total++;
       const custodian = (
         row["CUSTODIAN"] ||
         row["Custodian"] ||
         ""
       ).toLowerCase();
-      const status = (row["REPLACE"] || row["Replace"] || "").toLowerCase();
+  const status = (row["REPLACE_NORMALIZED"] || row["REPLACE"] || row["Replace"] || "").toLowerCase();
       const type = (row["TYPE"] || row["Type"] || "").toLowerCase();
       const brand = row["BRAND"] || row["Brand"] || "Unknown";
       const model = row["MODEL"] || row["Model"] || "Unknown";
@@ -434,9 +565,9 @@ export default function LaptopInventory() {
     ];
     const ageDist = ageBrackets.map((bracket) => ({
       name: bracket.label,
-      value: allLaptops.filter((row) => {
+      value: normalizedLaptops.filter((row) => {
         const age = parseFloat(
-          (row["LAPTOP AGE"] || row["Laptop Age"] || "").replace(
+          (row["LAPTOP AGE"] || row["Laptop Age"] || "").toString().replace(
             /[^\d.]/g,
             "",
           ) || "0",
@@ -615,21 +746,21 @@ export default function LaptopInventory() {
   const brands = useMemo(
     () =>
       Array.from(
-        new Set(allLaptops.map((row) => row["BRAND"] || row["Brand"])),
+        new Set(normalizedLaptops.map((row) => row["BRAND"] || row["Brand"])),
       ).filter(Boolean),
-    [allLaptops],
+    [normalizedLaptops],
   );
   const models = useMemo(
     () =>
       Array.from(
-        new Set(allLaptops.map((row) => row["MODEL"] || row["Model"])),
+        new Set(normalizedLaptops.map((row) => row["MODEL"] || row["Model"])),
       ).filter(Boolean),
-    [allLaptops],
+    [normalizedLaptops],
   );
   const ageBrackets = ["<2 years", "2-5 years", ">5 years"];
 
   const filteredData = useMemo(() => {
-    let rows = allLaptops;
+    let rows = normalizedLaptops;
     if (search) {
       rows = rows.filter((row) =>
         Object.values(row).some(
@@ -651,7 +782,7 @@ export default function LaptopInventory() {
     }
     if (statusFilter) {
       rows = rows.filter(
-        (row) => (row["REPLACE"] || row["Replace"]) === statusFilter,
+        (row) => (row["REPLACE_NORMALIZED"] || row["REPLACE"] || row["Replace"]) === statusFilter,
       );
     }
     if (selectedIssue) {
@@ -727,6 +858,8 @@ export default function LaptopInventory() {
         (row) => (row["MODEL"] || row["Model"]) === selectedModel,
       );
     }
+  // Spare is now part of normalized status (Available). No separate spare filter.
+  // previous owner filter removed to reduce table width; previous owners are visible in details view
     if (selectedAgeBracket) {
       rows = rows.filter((row) => {
         const age = parseFloat(
@@ -765,7 +898,7 @@ export default function LaptopInventory() {
   const incomingSummary = sheetData["Incoming"] || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full px-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
@@ -800,7 +933,7 @@ export default function LaptopInventory() {
           <TabsTrigger value="accessories">Accessories</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
+  <TabsContent value="overview" className="space-y-6 w-full">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
             <Card
               onClick={() => setSelectedCard("")}
@@ -1015,9 +1148,7 @@ export default function LaptopInventory() {
                       endAngle={-270}
                     >
                       <RadialBar
-                        minAngle={6}
                         background
-                        clockWise
                         dataKey="value"
                         onClick={(data: any) => {
                           const count =
@@ -1045,7 +1176,7 @@ export default function LaptopInventory() {
           </div>
         </TabsContent>
 
-        <TabsContent value="inventory" className="space-y-6">
+  <TabsContent value="inventory" className="space-y-6 w-full">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle>Inventory Table</CardTitle>
@@ -1085,7 +1216,14 @@ export default function LaptopInventory() {
                   <option value="Available">Available</option>
                   <option value="Maintenance">Maintenance</option>
                   <option value="Replacement">Replacement</option>
+                  <option value="Sold">Sold</option>
+                  <option value="Unknown">Unknown</option>
                 </select>
+                {/* Spare handled via Status (Available). Removed separate Spare filter to declutter UI. */}
+                {/* Previous Owner filter removed to keep table compact; view details for previous owner info */}
+                <Button size="sm" variant="ghost" onClick={() => setShowColumnsHelp((s) => !s)}>
+                    Columns help
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -1098,46 +1236,155 @@ export default function LaptopInventory() {
             </CardHeader>
             <CardContent>
               <Input
-                placeholder="Search laptops..."
+                placeholder="Search laptops (brand, model, serial, custodian, status)..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="mb-4"
+                className="mb-2 w-full"
               />
-              <div className="overflow-auto max-h-[480px]">
-                <Table>
+                {/* Column help opens a modal via the header button */}
+
+              <div className="overflow-y-auto w-full max-h-[480px]">
+                <Table className="w-full table-auto">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Custodian</TableHead>
-                      <TableHead>Model</TableHead>
                       <TableHead>Brand</TableHead>
+                      <TableHead>Model</TableHead>
+                      <TableHead>Serial</TableHead>
+                      <TableHead>Asset Code</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Condition</TableHead>
                       <TableHead>Age</TableHead>
+                      <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredData.map((row, i) => (
-                      <TableRow key={i}>
-                        <TableCell>
-                          {row["CUSTODIAN"] || row["Custodian"]}
-                        </TableCell>
-                        <TableCell>{row["MODEL"] || row["Model"]}</TableCell>
-                        <TableCell>{row["BRAND"] || row["Brand"]}</TableCell>
-                        <TableCell>
-                          {row["REPLACE"] || row["Replace"]}
-                        </TableCell>
-                        <TableCell>
-                          {row["LAPTOP AGE"] || row["Laptop Age"]}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {filteredData.map((row, i) => {
+                      const status = (row["REPLACE_NORMALIZED"] || row["REPLACE"] || row["Replace"] || "Unknown").toString();
+                      const condition = (row["CONDITION"] || "").toString();
+                      return (
+                        <TableRow
+                          key={i}
+                          tabIndex={0}
+                          role="button"
+                          className="cursor-pointer"
+                          onClick={() => setDetailsRow(row)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setDetailsRow(row);
+                            }
+                          }}
+                        >
+                          <TableCell className="max-w-xs break-words">{row["CUSTODIAN"] || row["Custodian"]}</TableCell>
+                          <TableCell className="max-w-xs break-words">{row["BRAND"] || row["Brand"]}</TableCell>
+                          <TableCell className="max-w-xs break-words">{row["MODEL"] || row["Model"]}</TableCell>
+                          <TableCell className="max-w-xs break-words">{row["SERIAL NUM"] || row["Serial Num"] || ""}</TableCell>
+                          <TableCell className="max-w-xs break-words">{row["ASSET CODE"] || row["Asset Code"] || row["ASSET CODE "] || ""}</TableCell>
+                          <TableCell>
+                            <Badge variant={status === "Spare" ? "secondary" : status === "Maintenance" ? "destructive" : "default"}>
+                              {status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-xs break-words">
+                            {condition ? (
+                              <Badge variant={condition.toLowerCase().includes("dead") || condition.toLowerCase().includes("defective") ? "destructive" : "secondary"}>
+                                {condition}
+                              </Badge>
+                            ) : ""}
+                          </TableCell>
+                          <TableCell className="max-w-xs break-words">{row["LAPTOP AGE"] || row["Laptop Age"]}</TableCell>
+                          <TableCell className="text-right">
+                            <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setDetailsRow(row); }}>
+                              View
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
+              {detailsRow && (
+                <Dialog open={Boolean(detailsRow)} onOpenChange={(open) => { if (!open) setDetailsRow(null); }}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Unit details</DialogTitle>
+                      <DialogDescription>Condensed view — click Close or outside to dismiss</DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <div className="font-medium">Brand</div>
+                        <div className="text-sm">{detailsRow["BRAND"] || detailsRow["Brand"] || ""}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium">Model</div>
+                        <div className="text-sm">{detailsRow["MODEL"] || detailsRow["Model"] || ""}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium">Serial</div>
+                        <div className="text-sm">{detailsRow["SERIAL NUM"] || detailsRow["Serial Num"] || ""}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium">Asset Code</div>
+                        <div className="text-sm">{detailsRow["ASSET CODE"] || detailsRow["Asset Code"] || detailsRow["ASSET CODE "] || ""}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium">Status</div>
+                        <div className="text-sm">{detailsRow["REPLACE_NORMALIZED"] || detailsRow["REPLACE"] || detailsRow["Replace"] || "Unknown"}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium">Condition</div>
+                        <div className="text-sm">{detailsRow["CONDITION"] || ""}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium">Custodian</div>
+                        <div className="text-sm">{detailsRow["CUSTODIAN"] || detailsRow["Custodian"] || ""}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium">Previous Owner</div>
+                        <div className="text-sm">{detailsRow["PREVIOUS_OWNER"] || detailsRow["PREVIOUS OWNER"] || ""}</div>
+                      </div>
+                      <div>
+                        <div className="font-medium">Age</div>
+                        <div className="text-sm">{detailsRow["LAPTOP AGE"] || detailsRow["Laptop Age"] || ""}</div>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+              {/* Column help dialog */}
+              <Dialog open={showColumnsHelp} onOpenChange={setShowColumnsHelp}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Column help</DialogTitle>
+                    <DialogDescription>Quick guide to the table columns and normalized fields.</DialogDescription>
+                  </DialogHeader>
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <div className="font-medium">Status</div>
+                      <div className="text-xs text-muted-foreground">Normalized from TAG or REPLACE. Values: Assigned, Spare, Maintenance, Replacement, Sold, Unknown.</div>
+                    </div>
+                    <div>
+                      <div className="font-medium">Condition</div>
+                      <div className="text-xs text-muted-foreground">Extracted from custodian, tag or maintenance notes. Defective/dead units highlighted.</div>
+                    </div>
+                    <div>
+                      <div className="font-medium">Custodian</div>
+                      <div className="text-xs text-muted-foreground">Person currently assigned (blank if the unit is spare or marked defective).</div>
+                    </div>
+                    <div>
+                      <div className="font-medium">Details</div>
+                      <div className="text-xs text-muted-foreground">Click a row to open a popup with serial, previous owner, asset code, age and full tags.</div>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="issues" className="space-y-6">
+  <TabsContent value="issues" className="space-y-6 w-full">
           {issuesRaw.length === 0 ? (
             <Card>
               <CardHeader>
@@ -1152,7 +1399,7 @@ export default function LaptopInventory() {
             </Card>
           ) : (
             <>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 2xl:grid-cols-3">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
@@ -1183,24 +1430,10 @@ export default function LaptopInventory() {
                     </p>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Unresolved
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">
-                      {issuesAnalytics.unresolvedIssues}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      No service date
-                    </p>
-                  </CardContent>
-                </Card>
+                {/* Unresolved card removed per request */}
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-3 lg:grid-cols-3">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle>Issue Categories</CardTitle>
@@ -1256,93 +1489,39 @@ export default function LaptopInventory() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle>Issues by Unit Status</CardTitle>
-                    <span className="text-xs text-muted-foreground">
-                      Click to filter
-                    </span>
+                    <span className="text-xs text-muted-foreground">Click to filter</span>
                   </CardHeader>
                   <CardContent style={{ height: 280 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={issuesAnalytics.typeDist}
-                        margin={{ left: 8, right: 8, top: 8, bottom: 8 }}
-                      >
-                        <XAxis dataKey="name" />
-                        <YAxis allowDecimals={false} />
-                        <Tooltip />
-                        <Bar
+                      <RePieChart>
+                        <Pie
+                          data={issuesAnalytics.typeDist}
                           dataKey="value"
-                          barSize={22}
-                          cursor="pointer"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={40}
+                          outerRadius={90}
+                          label={issuesAnalytics.typeDist.length <= 10}
+                          labelLine={false}
                           onClick={(data: any) => {
-                            const count =
-                              issuesAnalytics.typeDist.find(
-                                (m) => m.name === data.name,
-                              )?.value || 0;
-                            setPendingFilter({
-                              type: "issueType",
-                              value: data.name,
-                              count,
-                            });
+                            const count = issuesAnalytics.typeDist.find((m) => m.name === data.name)?.value || 0;
+                            setPendingFilter({ type: "issueType", value: data.name, count });
                             setDialogOpen(true);
                           }}
                         >
                           {issuesAnalytics.typeDist.map((entry, index) => (
-                            <Cell
-                              key={`cell-type-${index}`}
-                              fill={entry.color}
-                            />
+                            <Cell key={`cell-issue-type-${index}`} fill={entry.color} cursor="pointer" />
                           ))}
-                        </Bar>
-                      </BarChart>
+                        </Pie>
+                        <Tooltip />
+                        <Legend verticalAlign="bottom" height={36} />
+                      </RePieChart>
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle>Issues by Brand</CardTitle>
-                    <span className="text-xs text-muted-foreground">
-                      Top 10 + Other
-                    </span>
-                  </CardHeader>
-                  <CardContent style={{ height: 280 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={issuesAnalytics.brandDist}
-                        layout="vertical"
-                        margin={{ left: 16, right: 8, top: 8, bottom: 8 }}
-                      >
-                        <XAxis type="number" hide />
-                        <YAxis type="category" dataKey="name" width={160} />
-                        <Tooltip />
-                        <Bar
-                          dataKey="value"
-                          barSize={18}
-                          cursor="pointer"
-                          onClick={(data: any) => {
-                            const count =
-                              issuesAnalytics.brandDist.find(
-                                (m) => m.name === data.name,
-                              )?.value || 0;
-                            setPendingFilter({
-                              type: "brand",
-                              value: data.name,
-                              count,
-                            });
-                            setDialogOpen(true);
-                          }}
-                        >
-                          {issuesAnalytics.brandDist.map((entry, index) => (
-                            <Cell
-                              key={`cell-brand-${index}`}
-                              fill={entry.color}
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
+                {/* Issues by Brand card removed per user request */}
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -1455,46 +1634,21 @@ export default function LaptopInventory() {
                           <TableHead>Model</TableHead>
                           <TableHead>Serial</TableHead>
                           <TableHead>Brand</TableHead>
-                          <TableHead>Date Reported</TableHead>
                           <TableHead>Issue (BNEXT)</TableHead>
-                          <TableHead>Service Date</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredIssues.map((row, i) => (
-                          <TableRow key={i}>
-                            <TableCell>{row["INVOICE DATE"]}</TableCell>
-                            <TableCell>
-                              {row["LAPTOP AGE"] || row["Laptop Age"]}
-                            </TableCell>
-                            <TableCell>{row["TYPE"] || row["Type"]}</TableCell>
-                            <TableCell>{row["TAG"] || row["Tag"]}</TableCell>
-                            <TableCell>
-                              {row["CUSTODIAN"] || row["Custodian"]}
-                            </TableCell>
-                            <TableCell>
-                              {row["MODEL"] || row["Model"]}
-                            </TableCell>
-                            <TableCell>
-                              {row["SERIAL NUM"] || row["Serial Num"]}
-                            </TableCell>
-                            <TableCell>
-                              {row["BRAND"] || row["Brand"]}
-                            </TableCell>
-                            <TableCell>
-                              {row["DATE REPORTED ISSUE (BNEXT)"] ||
-                                row["Date Reported Issue (BNEXT)"] ||
-                                row["DATE REPORTED"] ||
-                                row["Date Reported"]}
-                            </TableCell>
-                            <TableCell>
-                              {row["REPORTED ISSUE (BNEXT)"] ||
-                                row["Reported Issue (BNEXT)"]}
-                            </TableCell>
-                            <TableCell>
-                              {row["DATE NEXUS SERVICE"] ||
-                                row["Date Nexus Service"]}
-                            </TableCell>
+                          <TableRow key={i} className="cursor-pointer">
+                            <TableCell className="max-w-xs break-words">{row["INVOICE DATE"]}</TableCell>
+                            <TableCell className="max-w-xs break-words">{row["LAPTOP AGE"] || row["Laptop Age"]}</TableCell>
+                            <TableCell className="max-w-xs break-words">{row["TYPE"] || row["Type"]}</TableCell>
+                            <TableCell className="max-w-xs break-words">{row["TAG"] || row["Tag"]}</TableCell>
+                            <TableCell className="max-w-xs break-words">{row["CUSTODIAN"] || row["Custodian"]}</TableCell>
+                            <TableCell className="max-w-xs break-words">{row["MODEL"] || row["Model"]}</TableCell>
+                            <TableCell className="max-w-xs break-words">{row["SERIAL NUM"] || row["Serial Num"]}</TableCell>
+                            <TableCell className="max-w-xs break-words">{row["BRAND"] || row["Brand"]}</TableCell>
+                            <TableCell className="max-w-xs break-words">{row["REPORTED ISSUE (BNEXT)"] || row["Reported Issue (BNEXT)"]}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -1506,7 +1660,7 @@ export default function LaptopInventory() {
           )}
         </TabsContent>
 
-        <TabsContent value="accessories" className="space-y-6">
+  <TabsContent value="accessories" className="space-y-6 w-full">
           {mouseHeadsetSummary.length > 0 && (
             <Card>
               <CardHeader>
