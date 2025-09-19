@@ -29,10 +29,28 @@ function addMonths(d: Date, months: number): Date {
 function isBondActive(rec: CertificationRecord): boolean {
   const today = new Date();
   if (!rec.companyPaid) return false;
-  if (rec.bondStart && rec.bondEnd) return rec.bondStart <= today && today <= rec.bondEnd;
-  if (rec.issueDate && rec.bondMonths > 0) return today <= addMonths(rec.issueDate, rec.bondMonths);
-  if (rec.bondEnd) return today <= rec.bondEnd;
-  return false;
+  const end = rec.bondEnd ?? (rec.issueDate && rec.bondMonths ? addMonths(rec.issueDate, rec.bondMonths) : null);
+  if (!end) return false;
+  return today <= end;
+}
+
+function bondStatus(rec: CertificationRecord): "None" | "Active" | "Completed" | "Forfeit Required" {
+  if (!rec.companyPaid) return "None";
+  const today = new Date();
+  const end = rec.bondEnd ?? (rec.issueDate && rec.bondMonths ? addMonths(rec.issueDate, rec.bondMonths) : null);
+  if (!end) return "None";
+  if (today > end) return "Completed";
+  if ((rec as any).employmentStatus && String((rec as any).employmentStatus).toLowerCase().includes("resigned")) return "Forfeit Required";
+  return "Active";
+}
+
+function daysUntil(d: Date | null | undefined): number | null {
+  if (!d) return null;
+  const start = new Date();
+  const end = new Date(d);
+  start.setHours(0,0,0,0);
+  end.setHours(0,0,0,0);
+  return Math.ceil((end.getTime() - start.getTime()) / 86400000);
 }
 
 export default function CertificationTraining() {
@@ -44,6 +62,7 @@ export default function CertificationTraining() {
   const [type, setType] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
   const [bond, setBond] = useState<string>("all");
+  const [employment, setEmployment] = useState<string>("all");
 
   const metrics = useMemo(() => {
     const totalActive = rows.filter(isActive).length;
@@ -65,6 +84,7 @@ export default function CertificationTraining() {
       depts: ["all", ...unique(rows.map((r) => r.department || "Unknown"))],
       providers: ["all", ...unique(rows.map((r) => r.provider || ""))],
       types: ["all", ...unique(rows.map((r) => r.type || ""))],
+      employments: ["all", ...unique(rows.map((r) => ("employmentStatus" in r ? String((r as any).employmentStatus) : "Active")))],
     };
   }, [rows]);
 
@@ -78,6 +98,10 @@ export default function CertificationTraining() {
       if (status === "expired" && isActive(r)) return false;
       if (bond === "active" && !isBondActive(r)) return false;
       if (bond === "inactive" && isBondActive(r)) return false;
+      if (employment !== "all") {
+        const s = ("employmentStatus" in r ? String((r as any).employmentStatus) : "Active");
+        if (s !== employment) return false;
+      }
       if (ql) {
         const s = `${r.employee} ${r.department} ${r.certification} ${r.provider} ${r.type}`.toLowerCase();
         if (!s.includes(ql)) return false;
@@ -156,7 +180,7 @@ export default function CertificationTraining() {
           <div className="flex items-center justify-between">
             <CardTitle>Certification Records</CardTitle>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
             <div className="md:col-span-2">
               <Input placeholder="Search name, certification, provider..." value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
@@ -210,6 +234,16 @@ export default function CertificationTraining() {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Select value={employment} onValueChange={setEmployment}>
+                <SelectTrigger><SelectValue placeholder="Employment" /></SelectTrigger>
+                <SelectContent>
+                  {filters.employments.map((e) => (
+                    <SelectItem key={e} value={e}>{e === "all" ? "All Employment" : e}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -229,7 +263,10 @@ export default function CertificationTraining() {
                   <TableHead>Issue</TableHead>
                   <TableHead>Expiry</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Bond</TableHead>
+                  <TableHead>Employment</TableHead>
+                  <TableHead>Bond Status</TableHead>
+                  <TableHead>Days to Exp.</TableHead>
+                  <TableHead>Days to Bond</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -250,11 +287,22 @@ export default function CertificationTraining() {
                         <Badge variant={active ? "default" : "destructive"}>{active ? "Active" : "Expired"}</Badge>
                       </TableCell>
                       <TableCell>
-                        {bonded ? (
-                          <Badge variant="secondary">Active Bond</Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">None</span>
-                        )}
+                        <Badge variant={("employmentStatus" in r && String((r as any).employmentStatus).toLowerCase().includes("resigned")) ? "destructive" : "secondary"}>
+                          {"employmentStatus" in r ? String((r as any).employmentStatus) : "Active"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {(() => {
+                          const bs = bondStatus(r);
+                          const v = bs === "Forfeit Required" ? "destructive" : bs === "Active" ? "secondary" : bs === "Completed" ? "default" : "outline";
+                          return <Badge variant={v as any}>{bs}</Badge>;
+                        })()}
+                      </TableCell>
+                      <TableCell>
+                        {(() => { const d = daysUntil(r.expiryDate); return d === null ? "" : d; })()}
+                      </TableCell>
+                      <TableCell>
+                        {(() => { const end = r.bondEnd ?? (r.issueDate && r.bondMonths ? addMonths(r.issueDate, r.bondMonths) : null); const d = daysUntil(end as any); return d === null ? "" : d; })()}
                       </TableCell>
                     </TableRow>
                   );
