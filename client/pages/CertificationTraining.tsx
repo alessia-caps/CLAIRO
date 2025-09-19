@@ -220,6 +220,7 @@ export default function CertificationTraining() {
               <TableCaption>{filtered.length} of {rows.length} records</TableCaption>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Emp #</TableHead>
                   <TableHead>Employee</TableHead>
                   <TableHead>Department</TableHead>
                   <TableHead>Certification</TableHead>
@@ -237,6 +238,7 @@ export default function CertificationTraining() {
                   const bonded = isBondActive(r);
                   return (
                     <TableRow key={`${r.employee}-${r.certification}-${i}`}>
+                      <TableCell className="text-xs text-muted-foreground">{r.employeeNo || ""}</TableCell>
                       <TableCell className="font-medium">{r.employee}</TableCell>
                       <TableCell>{r.department || "Unknown"}</TableCell>
                       <TableCell>{r.certification}</TableCell>
