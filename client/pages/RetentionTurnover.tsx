@@ -24,7 +24,7 @@ export default function RetentionTurnover() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">87.5%</div>
+            <div className="text-2xl font-bold text-foreground">87.5%</div>
             <p className="text-xs text-muted-foreground">
               +2.1% from last quarter
             </p>
@@ -37,7 +37,7 @@ export default function RetentionTurnover() {
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12.5%</div>
+            <div className="text-2xl font-bold text-foreground">12.5%</div>
             <p className="text-xs text-muted-foreground">
               -1.8% from last quarter
             </p>
@@ -52,7 +52,7 @@ export default function RetentionTurnover() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,247</div>
+            <div className="text-2xl font-bold text-foreground">1,247</div>
             <p className="text-xs text-muted-foreground">Active employees</p>
           </CardContent>
         </Card>

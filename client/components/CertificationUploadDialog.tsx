@@ -121,7 +121,8 @@ export function CertificationUploadDialog({
         wb.SheetNames.forEach((name) => {
           const ws = wb.Sheets[name];
           const r = XLSX.utils.sheet_to_json(ws, { defval: "" });
-          r.forEach((row: any) => combined.push({ ...row, __sheetName: name }));
+          const sheetLabel = String(name ?? "").trim() || "Unknown";
+          r.forEach((row: any) => combined.push({ ...row, __sheetName: sheetLabel }));
         });
         rows = combined;
       }
@@ -156,124 +157,121 @@ export function CertificationUploadDialog({
   }
 
   function mapRows(rows: any[]): CertificationRecord[] {
-    // Build header map: normalizedHeader -> originalHeader
-    const headers = Object.keys(rows[0] || {});
-    const normToOrig = new Map<string, string>();
-    headers.forEach((h) => {
-      if (h !== "__sheetName") normToOrig.set(normalizeHeader(h), h);
-    });
-
-    // Preferred header keys for each field
-    const pick = (cands: string[]): string | undefined => {
-      for (const c of cands) {
-        if (normToOrig.has(c)) return normToOrig.get(c)!;
-      }
-      // try partial contains
-      const found = Array.from(normToOrig.keys()).find((k) =>
-        cands.some((c) => k.includes(c)),
-      );
-      return found ? normToOrig.get(found) : undefined;
-    };
-
-    const hEmpNo = pick([
-      "employeeno",
-      "employeenumber",
-      "empno",
-      "employeeid",
-      "idnumber",
-    ]);
-    const hEmployee = pick(["employeename", "employee", "name", "staffname"]);
-    const hDept = pick([
-      "department",
-      "dept",
-      "gbu",
-      "bugbu",
-      "businessunit",
-      "team",
-    ]);
-    const hCert = pick([
-      "certification",
-      "certificate",
-      "credential",
-      "course",
-      "title",
-    ]);
-    const hProvider = pick([
-      "provider",
-      "vendor",
-      "issuer",
-      "authority",
-      "platform",
-    ]);
-    const hType = pick([
-      "type",
-      "category",
-      "track",
-      "level",
-      "specialization",
-    ]);
-    const hIssue = pick([
-      "issuedate",
-      "dateissued",
-      "obtained",
-      "dateofissue",
-      "startdate",
-      "datetaken",
-    ]);
-    const hExpiry = pick([
-      "expirydate",
-      "expirationdate",
-      "validuntil",
-      "expiry",
-      "enddate",
-      "expirationdate",
-    ]);
-    const hStatus = pick(["status", "state", "active", "result", "progress"]);
-    const hCompanyPaid = pick([
-      "companypaid",
-      "sponsored",
-      "companysponsored",
-      "bond",
-      "company",
-      "paid",
-    ]);
-    const hBondMonths = pick([
-      "bondmonths",
-      "bonddurationmonths",
-      "bondperiod",
-      "months",
-      "durationmonths",
-    ]);
-    const hBondStart = pick([
-      "bondstart",
-      "bondstartdate",
-      "bondfrom",
-      "contractstart",
-    ]);
-    const hBondEnd = pick([
-      "bondend",
-      "bondenddate",
-      "bonduntil",
-      "contractend",
-      "bondexpiration",
-    ]);
-    const hRemarks = pick(["remarks", "notes", "comment"]);
-    const hCertId = pick([
-      "certificationidnumber",
-      "certid",
-      "certificationid",
-      "idnumber",
-    ]);
-
     return rows
       .map((r, idx) => {
+        // build header map per-row (to support different sheets with different headers)
+        const headers = Object.keys(r || {});
+        const normToOrig = new Map<string, string>();
+        headers.forEach((h) => {
+          if (h !== "__sheetName") normToOrig.set(normalizeHeader(String(h)), h);
+        });
+        const pickRow = (cands: string[]): string | undefined => {
+          for (const c of cands) {
+            if (normToOrig.has(c)) return normToOrig.get(c)!;
+          }
+          const found = Array.from(normToOrig.keys()).find((k) => cands.some((c) => k.includes(c)));
+          return found ? normToOrig.get(found) : undefined;
+        };
+
         const sheetName = String((r as any).__sheetName || "");
-        const employeeNo = String(r[hEmpNo || "Employee No."] ?? "").trim();
+        const hEmpNo = pickRow([
+          "employeeno",
+          "employeenumber",
+          "empno",
+          "employeeid",
+          "staffno",
+          "staffid",
+        ]);
+        const hEmployee = pickRow(["employeename", "employee", "name", "staffname"]);
+        const hDept = pickRow([
+          "department",
+          "dept",
+          "gbu",
+          "bugbu",
+          "businessunit",
+          "team",
+        ]);
+        const hCert = pickRow([
+          "certification",
+          "certificate",
+          "credential",
+          "course",
+          "title",
+        ]);
+        const hProvider = pickRow([
+          "provider",
+          "vendor",
+          "issuer",
+          "authority",
+          "platform",
+          "providername",
+        ]);
+        const hType = pickRow([
+          "type",
+          "category",
+          "track",
+          "level",
+          "specialization",
+        ]);
+        const hIssue = pickRow([
+          "issuedate",
+          "dateissued",
+          "obtained",
+          "dateofissue",
+          "startdate",
+          "datetaken",
+        ]);
+        const hExpiry = pickRow([
+          "expirydate",
+          "expirationdate",
+          "validuntil",
+          "expiry",
+          "enddate",
+          "expirationdate",
+        ]);
+        const hStatus = pickRow(["status", "state", "active", "result", "progress"]);
+        const hCompanyPaid = pickRow([
+          "companypaid",
+          "sponsored",
+          "companysponsored",
+          "bond",
+          "company",
+          "paid",
+        ]);
+        const hBondMonths = pickRow([
+          "bondmonths",
+          "bonddurationmonths",
+          "bondperiod",
+          "months",
+          "durationmonths",
+        ]);
+        const hBondStart = pickRow([
+          "bondstart",
+          "bondstartdate",
+          "bondfrom",
+          "contractstart",
+        ]);
+        const hBondEnd = pickRow([
+          "bondend",
+          "bondenddate",
+          "bonduntil",
+          "contractend",
+          "bondexpiration",
+        ]);
+        const hRemarks = pickRow(["remarks", "notes", "comment"]);
+        const hCertId = pickRow([
+          "certificationidnumber",
+          "certid",
+          "certificationid",
+          "certidnumber",
+          "idnumber",
+        ]);
+
+  const employeeNo = String(r[hEmpNo || "Employee No."] ?? "").trim();
         const employee = String(r[hEmployee || "Name"] ?? "").trim();
-        const department =
-          String(r[hDept || "GBU"] ?? "Unknown").trim() || "Unknown";
+        const department = String(r[hDept || "GBU"] ?? "Unknown").trim() || "Unknown";
         const certification = String(r[hCert || "Certification"] ?? "").trim();
-        let provider = String(r[hProvider || "Provider"] ?? "").trim();
+  let provider = String(r[hProvider || "Provider"] ?? "").trim();
         if (!provider && sheetName) provider = sheetName.trim();
         const type = String(r[hType || "Type"] ?? "").trim();
         const issueDate = parseMaybeDate(r[hIssue || "Date Taken"]);
@@ -281,39 +279,33 @@ export function CertificationUploadDialog({
         const remarks = String(r[hRemarks || "Remarks"] ?? "");
         const statusRaw = String(r[hStatus || "Status"] ?? "").trim();
         const status =
-          statusRaw ||
-          (expiryDate && expiryDate >= new Date()
-            ? "Active"
-            : expiryDate
-              ? "Expired"
-              : "");
+          statusRaw || (expiryDate && expiryDate >= new Date() ? "Active" : expiryDate ? "Expired" : "");
         const companyPaid =
-          truthyFlag(r[hCompanyPaid || "Company Paid"]) ||
-          !!parseMaybeDate(r[hBondEnd || "Bond Expiration"]) ||
-          /company|sponsor|bond/i.test(remarks);
-        const bondMonthsExplicit =
-          parseInt(String(r[hBondMonths || "Bond Months"] ?? "0"), 10) || 0;
-        const bondMonths =
-          bondMonthsExplicit || parseBondMonthsFromText(remarks);
-        const bondStart =
-          parseMaybeDate(r[hBondStart || "Bond Start"]) || issueDate;
+          truthyFlag(r[hCompanyPaid || "Company Paid"]) || !!parseMaybeDate(r[hBondEnd || "Bond Expiration"]) || /company|sponsor|bond/i.test(remarks);
+        const bondMonthsExplicit = parseInt(String(r[hBondMonths || "Bond Months"] ?? "0"), 10) || 0;
+        const bondMonths = bondMonthsExplicit || parseBondMonthsFromText(remarks);
+        const bondStart = parseMaybeDate(r[hBondStart || "Bond Start"]) || issueDate;
         const bondEnd =
           parseMaybeDate(r[hBondEnd || "Bond Expiration"]) ||
           (bondStart && bondMonths
-            ? new Date(
-                new Date(bondStart).setMonth(
-                  new Date(bondStart).getMonth() + bondMonths,
-                ),
-              )
+            ? new Date(new Date(bondStart).setMonth(new Date(bondStart).getMonth() + bondMonths))
             : null);
-        const certificationId = String(
-          r[hCertId || "Certification ID Number"] ?? "",
-        ).trim();
-        const employmentStatus = sheetName.match(/resigned/i)
-          ? "Resigned"
-          : sheetName.match(/trial/i)
-            ? "Trial"
-            : "Active";
+        let certificationId = String(r[hCertId || "Certification ID Number"] ?? "").trim();
+        // Heuristic: sometimes Cert ID and Provider get swapped in some sheets. If provider looks like an ID
+        // (mostly digits, dashes, short) and certificationId looks like words, swap them.
+        const looksLikeId = (v: string) => /^[0-9\-\s]{2,20}$/.test(v);
+        const looksLikeWords = (v: string) => /[a-zA-Z]/.test(v) && v.trim().length > 1;
+        const rawProviderVal = String(r[hProvider || "Provider"] ?? "").trim();
+        if (!certificationId && rawProviderVal && /\d/.test(rawProviderVal) && !/[a-zA-Z]/.test(certificationId)) {
+          certificationId = rawProviderVal;
+          provider = sheetName || provider;
+        } else if (certificationId && provider && looksLikeId(provider) && looksLikeWords(certificationId)) {
+          // swap
+          const tmp = provider;
+          provider = certificationId;
+          certificationId = tmp;
+        }
+        const employmentStatus = sheetName.match(/resigned/i) ? "Resigned" : sheetName.match(/trial/i) ? "Trial" : "Active";
 
         return {
           employeeNo,
@@ -334,7 +326,7 @@ export function CertificationUploadDialog({
           employmentStatus,
         } as CertificationRecord;
       })
-      .filter((r) => r.employee && r.certification);
+      .filter((r) => r.employee || r.employeeNo || r.certification);
   }
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -381,12 +373,12 @@ export function CertificationUploadDialog({
             onClick={() => document.getElementById("cert-upload")?.click()}
           >
             <div className="space-y-2">
-              <Upload className="h-8 w-8 mx-auto text-slate-400" />
+              <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">
                   Drop your Excel/CSV file here
                 </p>
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-muted-foreground">
                   Supports .xlsx, .xls, .csv
                 </p>
               </div>

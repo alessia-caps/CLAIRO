@@ -27,16 +27,6 @@ const menuItems = [
     path: "/",
   },
   {
-    title: "Retention and Turnover",
-    icon: Users,
-    path: "/retention-turnover",
-  },
-  {
-    title: "Monthly OT and Leave Claims",
-    icon: Clock,
-    path: "/ot-leave-claims",
-  },
-  {
     title: "Laptop Inventory",
     icon: Laptop,
     path: "/laptop-inventory",
@@ -45,6 +35,16 @@ const menuItems = [
     title: "Certification and Training",
     icon: GraduationCap,
     path: "/certification-training",
+  },
+  {
+    title: "Retention and Turnover",
+    icon: Users,
+    path: "/retention-turnover",
+  },
+  {
+    title: "Monthly OT and Leave Claims",
+    icon: Clock,
+    path: "/ot-leave-claims",
   },
 ];
 
@@ -61,7 +61,7 @@ export function Layout({ children }: LayoutProps) {
       <Sidebar>
         <SidebarHeader>
           <div className="flex items-center gap-2 p-2">
-            <Activity className="h-6 w-6" />
+            <img src="/favicon.ico" alt="CLAIRO" className="h-6 w-6" />
             <span className="text-xl font-bold">CLAIRO</span>
           </div>
         </SidebarHeader>

@@ -24,7 +24,7 @@ export default function OTLeaveClaims() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2,847</div>
+            <div className="text-2xl font-bold text-foreground">2,847</div>
             <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>
         </Card>
@@ -35,7 +35,7 @@ export default function OTLeaveClaims() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">186</div>
+            <div className="text-2xl font-bold text-foreground">186</div>
             <p className="text-xs text-muted-foreground">Pending approval</p>
           </CardContent>
         </Card>
@@ -48,7 +48,7 @@ export default function OTLeaveClaims() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$42,350</div>
+            <div className="text-2xl font-bold text-foreground">$42,350</div>
             <p className="text-xs text-muted-foreground">Total this month</p>
           </CardContent>
         </Card>

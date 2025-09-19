@@ -224,7 +224,7 @@ export function WeeklyAnalysisComponent({ weeklyData }: WeeklyAnalysisProps) {
             </Card>
 
             {/* Best Shares Week */}
-            <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
+            <Card className="bg-card border-border">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-green-700 flex items-center">
                   <Share className="h-4 w-4 mr-1" />

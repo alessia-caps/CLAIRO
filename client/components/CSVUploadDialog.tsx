@@ -139,10 +139,10 @@ export function CSVUploadDialog({
             onClick={() => document.getElementById("excel-upload")?.click()}
           >
             <div className="space-y-2">
-              <Upload className="h-8 w-8 mx-auto text-slate-400" />
+              <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">Drop your Excel file here</p>
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-muted-foreground">
                   Supports .xlsx and .csv files
                 </p>
               </div>

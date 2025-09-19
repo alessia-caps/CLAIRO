@@ -249,9 +249,9 @@ export default function Index() {
       </div>
       {/* Data Source Indicator */}
       {dataSource === "uploaded" && (
-        <Alert className="mb-6 bg-green-50 border-green-200">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-700">
+        <Alert className="mb-6 bg-card border-border">
+          <CheckCircle className="h-4 w-4 text-primary" />
+          <AlertDescription className="text-foreground">
             <strong>Live Data:</strong> Dashboard updated with your uploaded CSV
             data ({uploadedEmployees.length} employees processed)
           </AlertDescription>
@@ -260,71 +260,71 @@ export default function Index() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700 flex items-center">
-              <Users className="h-4 w-4 mr-1" />
+            <CardTitle className="text-sm font-medium text-primary flex items-center">
+              <Users className="h-4 w-4 mr-1 text-primary" />
               Total Participants
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-900">
+            <div className="text-2xl font-bold text-foreground">
               {engagementData.totalParticipants}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-green-700 flex items-center">
-              <TrendingUp className="h-4 w-4 mr-1" />
+            <CardTitle className="text-sm font-medium text-primary flex items-center">
+              <TrendingUp className="h-4 w-4 mr-1 text-primary" />
               Avg Daily Points
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-900">
+            <div className="text-2xl font-bold text-foreground">
               {engagementData.avgDailyPoints}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-purple-700 flex items-center">
-              <Trophy className="h-4 w-4 mr-1" />
+            <CardTitle className="text-sm font-medium text-primary flex items-center">
+              <Trophy className="h-4 w-4 mr-1 text-primary" />
               Top Department
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold text-purple-900">
+            <div className="text-lg font-bold text-foreground">
               {engagementData.topDepartment}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-orange-700 flex items-center">
-              <Star className="h-4 w-4 mr-1" />
+            <CardTitle className="text-sm font-medium text-primary flex items-center">
+              <Star className="h-4 w-4 mr-1 text-primary" />
               Top Scorer
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold text-orange-900">
+            <div className="text-lg font-bold text-foreground">
               {engagementData.highestScorer}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-pink-50 to-pink-100 border-pink-200">
+        <Card className="bg-card border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-pink-700 flex items-center">
-              <Target className="h-4 w-4 mr-1" />
+            <CardTitle className="text-sm font-medium text-primary flex items-center">
+              <Target className="h-4 w-4 mr-1 text-primary" />
               Highly Engaged %
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-pink-900">
+            <div className="text-2xl font-bold text-foreground">
               {engagementData.engagementDistribution.highlyEngaged}%
             </div>
           </CardContent>
@@ -343,9 +343,9 @@ export default function Index() {
           </CardHeader>
           <CardContent>
             {departmentData.length === 0 ? (
-              <div className="py-12 text-center text-slate-500">
+              <div className="py-12 text-center text-muted-foreground">
                 <div className="flex flex-col items-center space-y-3">
-                  <BarChart3 className="h-12 w-12 text-slate-300" />
+                  <BarChart3 className="h-12 w-12 text-muted-foreground" />
                   <div>
                     <p className="font-medium">No department data available</p>
                     <p className="text-sm">
@@ -360,9 +360,9 @@ export default function Index() {
                   <div key={dept.name} className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="font-medium">{dept.name}</span>
-                      <span className="text-slate-600">{dept.totalPoints}</span>
+                      <span className="text-muted-foreground">{dept.totalPoints}</span>
                     </div>
-                    <div className="w-full bg-slate-200 rounded-full h-3">
+                    <div className="w-full bg-muted rounded-full h-3">
                       <div
                         className="h-3 rounded-full transition-all duration-300"
                         style={{
@@ -388,9 +388,9 @@ export default function Index() {
           </CardHeader>
           <CardContent>
             {uploadedEmployees.length === 0 ? (
-              <div className="py-12 text-center text-slate-500">
+              <div className="py-12 text-center text-muted-foreground">
                 <div className="flex flex-col items-center space-y-3">
-                  <PieChart className="h-12 w-12 text-slate-300" />
+                  <PieChart className="h-12 w-12 text-muted-foreground" />
                   <div>
                     <p className="font-medium">No engagement data available</p>
                     <p className="text-sm">
@@ -404,55 +404,57 @@ export default function Index() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
+                    <div className="text-2xl font-bold text-primary">
                       {engagementData.engagementDistribution.highlyEngaged}%
                     </div>
-                    <div className="text-sm text-slate-600">Highly Engaged</div>
+                    <div className="text-sm text-muted-foreground">Highly Engaged</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-2xl font-bold text-accent">
                       {engagementData.engagementDistribution.engaged}%
                     </div>
-                    <div className="text-sm text-slate-600">Engaged</div>
+                    <div className="text-sm text-muted-foreground">Engaged</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-600">
+                    <div className="text-2xl font-bold text-warning">
                       {engagementData.engagementDistribution.needsImprovement}%
                     </div>
-                    <div className="text-sm text-slate-600">
-                      Needs Improvement
-                    </div>
+                    <div className="text-sm text-muted-foreground">Needs Improvement</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-red-600">
+                    <div className="text-2xl font-bold text-destructive">
                       {engagementData.engagementDistribution.atRisk}%
                     </div>
-                    <div className="text-sm text-slate-600">At-Risk</div>
+                    <div className="text-sm text-muted-foreground">At-Risk</div>
                   </div>
                 </div>
-                <div className="flex h-4 rounded-full overflow-hidden">
+                <div className="flex h-4 rounded-full overflow-hidden bg-muted">
                   <div
-                    className="bg-green-500"
+                    className="h-4"
                     style={{
                       width: `${engagementData.engagementDistribution.highlyEngaged}%`,
+                      background: `hsl(var(--primary))`,
                     }}
                   />
                   <div
-                    className="bg-blue-500"
+                    className="h-4"
                     style={{
                       width: `${engagementData.engagementDistribution.engaged}%`,
+                      background: `hsl(var(--accent))`,
                     }}
                   />
                   <div
-                    className="bg-orange-500"
+                    className="h-4"
                     style={{
                       width: `${engagementData.engagementDistribution.needsImprovement}%`,
+                      background: `hsl(var(--warning))`,
                     }}
                   />
                   <div
-                    className="bg-red-500"
+                    className="h-4"
                     style={{
                       width: `${engagementData.engagementDistribution.atRisk}%`,
+                      background: `hsl(var(--destructive))`,
                     }}
                   />
                 </div>
@@ -515,9 +517,9 @@ export default function Index() {
               </CardHeader>
               <CardContent>
                 {departmentData.length === 0 ? (
-                  <div className="py-8 text-center text-slate-500">
+                  <div className="py-8 text-center text-muted-foreground">
                     <div className="flex flex-col items-center space-y-3">
-                      <Upload className="h-8 w-8 text-slate-300" />
+                      <Upload className="h-8 w-8 text-muted-foreground" />
                       <div>
                         <p className="font-medium">
                           No department data available
@@ -533,7 +535,7 @@ export default function Index() {
                     {departmentData.slice(0, 5).map((dept, index) => (
                       <div
                         key={dept.name}
-                        className="flex items-center justify-between p-3 rounded-lg bg-slate-50"
+                        className="flex items-center justify-between p-3 rounded-lg bg-card"
                       >
                         <div className="flex items-center space-x-3">
                           <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
@@ -541,7 +543,7 @@ export default function Index() {
                           </div>
                           <div>
                             <div className="font-medium">{dept.name}</div>
-                            <div className="text-sm text-slate-600">
+                            <div className="text-sm text-muted-foreground">
                               {dept.totalPoints} total points
                             </div>
                           </div>
@@ -564,7 +566,7 @@ export default function Index() {
                   Top Performers This Week
                 </CardTitle>
                 <div className="flex-1 relative mt-3">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search employees..."
                     value={searchTerm}
@@ -575,9 +577,9 @@ export default function Index() {
               </CardHeader>
               <CardContent>
                 {filteredEmployees.length === 0 ? (
-                  <div className="py-8 text-center text-slate-500">
+                  <div className="py-8 text-center text-muted-foreground">
                     <div className="flex flex-col items-center space-y-3">
-                      <Upload className="h-8 w-8 text-slate-300" />
+                      <Upload className="h-8 w-8 text-muted-foreground" />
                       <div>
                         <p className="font-medium">
                           No employee data available
@@ -593,7 +595,7 @@ export default function Index() {
                     {filteredEmployees.slice(0, 5).map((employee) => (
                       <div
                         key={employee.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-slate-50"
+                        className="flex items-center justify-between p-3 rounded-lg bg-card"
                       >
                         <div className="flex items-center space-x-3">
                           <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
@@ -601,8 +603,8 @@ export default function Index() {
                           </div>
                           <div>
                             <div className="font-medium">{employee.name}</div>
-                            <div className="text-sm text-slate-600">
-                              {employee.department} • {employee.weeklyPoints}{" "}
+                            <div className="text-sm text-muted-foreground">
+                              {employee.department} • {employee.weeklyPoints} {" "}
                               pts
                             </div>
                           </div>
@@ -673,9 +675,9 @@ export default function Index() {
               </CardHeader>
               <CardContent>
                 {departmentData.length === 0 ? (
-                  <div className="py-12 text-center text-slate-500">
+                  <div className="py-12 text-center text-muted-foreground">
                     <div className="flex flex-col items-center space-y-3">
-                      <Trophy className="h-12 w-12 text-slate-300" />
+                      <Trophy className="h-12 w-12 text-muted-foreground" />
                       <div>
                         <p className="font-medium">
                           No quarterly data available
@@ -692,7 +694,7 @@ export default function Index() {
                     {departmentData.map((dept, index) => (
                       <div
                         key={dept.name}
-                        className="p-4 rounded-lg border bg-gradient-to-br from-slate-50 to-slate-100 hover:shadow-md transition-shadow"
+                        className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-2">
@@ -730,7 +732,7 @@ export default function Index() {
                               )}
                             </span>
                           </div>
-                          <div className="w-full bg-slate-200 rounded-full h-2 mt-3">
+                          <div className="w-full bg-muted rounded-full h-2 mt-3">
                             <div
                               className="h-2 rounded-full transition-all duration-300"
                               style={{
@@ -766,9 +768,9 @@ export default function Index() {
               </CardHeader>
               <CardContent>
                 {filteredEmployees.length === 0 ? (
-                  <div className="py-12 text-center text-slate-500">
+                  <div className="py-12 text-center text-muted-foreground">
                     <div className="flex flex-col items-center space-y-3">
-                      <Star className="h-12 w-12 text-slate-300" />
+                      <Star className="h-12 w-12 text-muted-foreground" />
                       <div>
                         <p className="font-medium">
                           No employee data available
@@ -806,7 +808,7 @@ export default function Index() {
                         {filteredEmployees.slice(0, 10).map((employee) => (
                           <tr
                             key={employee.id}
-                            className="border-b hover:bg-slate-50"
+                            className="border-b hover:bg-card"
                           >
                             <td className="py-3 px-4">
                               <div className="flex items-center space-x-2">
@@ -875,7 +877,7 @@ export default function Index() {
       </Tabs>
 
       {/* AI Summary Panel - Moved to Bottom */}
-      <Card className="mt-6 bg-gradient-to-r from-violet-50 to-purple-50 border-violet-200">
+  <Card className="mt-6 bg-card border-border">
         <CardHeader>
           <CardTitle className="flex items-center text-violet-700">
             <Brain className="h-5 w-5 mr-2" />

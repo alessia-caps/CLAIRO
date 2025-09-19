@@ -909,7 +909,7 @@ export default function LaptopInventory() {
           </p>
         </div>
         <button
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary/80"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/80"
           onClick={() => fileInputRef.current?.click()}
           disabled={isLoading}
         >
@@ -946,7 +946,7 @@ export default function LaptopInventory() {
                 <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{analytics.total}</div>
+                <div className="text-3xl font-bold text-foreground">{analytics.total}</div>
                 <p className="text-xs text-muted-foreground">In inventory</p>
               </CardContent>
             </Card>
@@ -961,7 +961,7 @@ export default function LaptopInventory() {
                 <Laptop className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">
+                <div className="text-3xl font-bold text-foreground">
                   {analytics.owned.length}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -978,7 +978,7 @@ export default function LaptopInventory() {
                 <CheckCircle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">
+                <div className="text-3xl font-bold text-foreground">
                   {analytics.newUnits.length}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -992,7 +992,7 @@ export default function LaptopInventory() {
                 <CheckCircle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{analytics.available}</div>
+                <div className="text-3xl font-bold text-foreground">{analytics.available}</div>
                 <p className="text-xs text-muted-foreground">
                   Ready for assignment
                 </p>
@@ -1006,7 +1006,7 @@ export default function LaptopInventory() {
                 <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">
+                <div className="text-3xl font-bold text-foreground">
                   {analytics.maintenance}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -1022,7 +1022,7 @@ export default function LaptopInventory() {
                 <RefreshCw className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">
+                <div className="text-3xl font-bold text-foreground">
                   {analytics.replacement}
                 </div>
                 <p className="text-xs text-muted-foreground">
