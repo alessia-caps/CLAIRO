@@ -47,7 +47,7 @@ export default function CertificationTraining() {
 
   const metrics = useMemo(() => {
     const totalActive = rows.filter(isActive).length;
-    const empWithActive = new Set(rows.filter(isActive).map((r) => r.employee)).size;
+    const empWithActive = new Set(rows.filter(isActive).map((r) => (r.employeeNo && r.employeeNo.trim()) || r.employee)).size;
 
     const sapAll = rows.filter((r) => (r.provider || "").toLowerCase().includes("sap"));
     const sapActive = sapAll.filter(isActive).length;
