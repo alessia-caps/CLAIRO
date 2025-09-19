@@ -29,6 +29,7 @@ export interface CertificationRecord {
   bondEnd: Date | null;
   remarks?: string;
   certificationId?: string;
+  employmentStatus?: string;
 }
 
 interface CertificationUploadDialogProps {
@@ -196,6 +197,7 @@ export function CertificationUploadDialog({ onDataUploaded, trigger }: Certifica
       const bondStart = parseMaybeDate(r[hBondStart || "Bond Start"]) || issueDate;
       const bondEnd = parseMaybeDate(r[hBondEnd || "Bond Expiration"]) || (bondStart && bondMonths ? new Date(new Date(bondStart).setMonth(new Date(bondStart).getMonth() + bondMonths)) : null);
       const certificationId = String(r[hCertId || "Certification ID Number"] ?? "").trim();
+      const employmentStatus = sheetName.match(/resigned/i) ? "Resigned" : sheetName.match(/trial/i) ? "Trial" : "Active";
 
       return {
         employeeNo,
@@ -213,6 +215,7 @@ export function CertificationUploadDialog({ onDataUploaded, trigger }: Certifica
         bondEnd,
         remarks,
         certificationId,
+        employmentStatus,
       } as CertificationRecord;
     }).filter((r) => r.employee && r.certification);
   }
