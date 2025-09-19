@@ -1,12 +1,35 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CertificationUploadDialog, type CertificationRecord } from "@/components/CertificationUploadDialog";
-import { GraduationCap, Award, ShieldCheck, Landmark, Filter } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  CertificationUploadDialog,
+  type CertificationRecord,
+} from "@/components/CertificationUploadDialog";
+import {
+  GraduationCap,
+  Award,
+  ShieldCheck,
+  Landmark,
+  Filter,
+} from "lucide-react";
 
 function isActive(rec: CertificationRecord): boolean {
   const now = new Date();
@@ -16,7 +39,8 @@ function isActive(rec: CertificationRecord): boolean {
     if (s.includes("expired")) return false;
     if (s.includes("in progress") || s.includes("training")) return false;
   }
-  if (rec.expiryDate) return rec.expiryDate.getTime() >= now.setHours(0, 0, 0, 0);
+  if (rec.expiryDate)
+    return rec.expiryDate.getTime() >= now.setHours(0, 0, 0, 0);
   return false;
 }
 
@@ -29,18 +53,34 @@ function addMonths(d: Date, months: number): Date {
 function isBondActive(rec: CertificationRecord): boolean {
   const today = new Date();
   if (!rec.companyPaid) return false;
-  const end = rec.bondEnd ?? (rec.issueDate && rec.bondMonths ? addMonths(rec.issueDate, rec.bondMonths) : null);
+  const end =
+    rec.bondEnd ??
+    (rec.issueDate && rec.bondMonths
+      ? addMonths(rec.issueDate, rec.bondMonths)
+      : null);
   if (!end) return false;
   return today <= end;
 }
 
-function bondStatus(rec: CertificationRecord): "None" | "Active" | "Completed" | "Forfeit Required" {
+function bondStatus(
+  rec: CertificationRecord,
+): "None" | "Active" | "Completed" | "Forfeit Required" {
   if (!rec.companyPaid) return "None";
   const today = new Date();
-  const end = rec.bondEnd ?? (rec.issueDate && rec.bondMonths ? addMonths(rec.issueDate, rec.bondMonths) : null);
+  const end =
+    rec.bondEnd ??
+    (rec.issueDate && rec.bondMonths
+      ? addMonths(rec.issueDate, rec.bondMonths)
+      : null);
   if (!end) return "None";
   if (today > end) return "Completed";
-  if ((rec as any).employmentStatus && String((rec as any).employmentStatus).toLowerCase().includes("resigned")) return "Forfeit Required";
+  if (
+    (rec as any).employmentStatus &&
+    String((rec as any).employmentStatus)
+      .toLowerCase()
+      .includes("resigned")
+  )
+    return "Forfeit Required";
   return "Active";
 }
 
@@ -48,8 +88,8 @@ function daysUntil(d: Date | null | undefined): number | null {
   if (!d) return null;
   const start = new Date();
   const end = new Date(d);
-  start.setHours(0,0,0,0);
-  end.setHours(0,0,0,0);
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
   return Math.ceil((end.getTime() - start.getTime()) / 86400000);
 }
 
@@ -66,25 +106,43 @@ export default function CertificationTraining() {
 
   const metrics = useMemo(() => {
     const totalActive = rows.filter(isActive).length;
-    const empWithActive = new Set(rows.filter(isActive).map((r) => (r.employeeNo && r.employeeNo.trim()) || r.employee)).size;
+    const empWithActive = new Set(
+      rows
+        .filter(isActive)
+        .map((r) => (r.employeeNo && r.employeeNo.trim()) || r.employee),
+    ).size;
 
-    const sapAll = rows.filter((r) => (r.provider || "").toLowerCase().includes("sap"));
+    const sapAll = rows.filter((r) =>
+      (r.provider || "").toLowerCase().includes("sap"),
+    );
     const sapActive = sapAll.filter(isActive).length;
-    const sapCompliance = sapAll.length ? Math.round((sapActive / sapAll.length) * 100) : 0;
+    const sapCompliance = sapAll.length
+      ? Math.round((sapActive / sapAll.length) * 100)
+      : 0;
 
     const activeBonds = rows.filter(isBondActive).length;
 
     return { totalActive, empWithActive, sapCompliance, activeBonds };
   }, [rows]);
 
-  const unique = (arr: string[]) => Array.from(new Set(arr.filter(Boolean))).sort();
+  const unique = (arr: string[]) =>
+    Array.from(new Set(arr.filter(Boolean))).sort();
 
   const filters = useMemo(() => {
     return {
       depts: ["all", ...unique(rows.map((r) => r.department || "Unknown"))],
       providers: ["all", ...unique(rows.map((r) => r.provider || ""))],
       types: ["all", ...unique(rows.map((r) => r.type || ""))],
-      employments: ["all", ...unique(rows.map((r) => ("employmentStatus" in r ? String((r as any).employmentStatus) : "Active")))],
+      employments: [
+        "all",
+        ...unique(
+          rows.map((r) =>
+            "employmentStatus" in r
+              ? String((r as any).employmentStatus)
+              : "Active",
+          ),
+        ),
+      ],
     };
   }, [rows]);
 
@@ -99,11 +157,15 @@ export default function CertificationTraining() {
       if (bond === "active" && !isBondActive(r)) return false;
       if (bond === "inactive" && isBondActive(r)) return false;
       if (employment !== "all") {
-        const s = ("employmentStatus" in r ? String((r as any).employmentStatus) : "Active");
+        const s =
+          "employmentStatus" in r
+            ? String((r as any).employmentStatus)
+            : "Active";
         if (s !== employment) return false;
       }
       if (ql) {
-        const s = `${r.employee} ${r.department} ${r.certification} ${r.provider} ${r.type}`.toLowerCase();
+        const s =
+          `${r.employee} ${r.department} ${r.certification} ${r.provider} ${r.type}`.toLowerCase();
         if (!s.includes(ql)) return false;
       }
       return true;
@@ -118,13 +180,20 @@ export default function CertificationTraining() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Certification and Training</h1>
-          <p className="text-muted-foreground">Track employee certifications, training progress, and skill development</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Certification and Training
+          </h1>
+          <p className="text-muted-foreground">
+            Track employee certifications, training progress, and skill
+            development
+          </p>
         </div>
         <div className="flex gap-2">
           <CertificationUploadDialog onDataUploaded={handleUploaded} />
           {rows.length > 0 && (
-            <Button variant="outline" onClick={() => setRows([])}>Clear</Button>
+            <Button variant="outline" onClick={() => setRows([])}>
+              Clear
+            </Button>
           )}
         </div>
       </div>
@@ -132,34 +201,46 @@ export default function CertificationTraining() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Certifications</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Active Certifications
+            </CardTitle>
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{metrics.totalActive}</div>
-            <p className="text-xs text-muted-foreground">Across all employees</p>
+            <p className="text-xs text-muted-foreground">
+              Across all employees
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Employees with Certification</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Employees with Certification
+            </CardTitle>
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{metrics.empWithActive}</div>
-            <p className="text-xs text-muted-foreground">Unique employees with an active cert</p>
+            <p className="text-xs text-muted-foreground">
+              Unique employees with an active cert
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">SAP Compliance</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              SAP Compliance
+            </CardTitle>
             <ShieldCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{metrics.sapCompliance}%</div>
-            <p className="text-xs text-muted-foreground">Active SAP certs / total SAP certs</p>
+            <p className="text-xs text-muted-foreground">
+              Active SAP certs / total SAP certs
+            </p>
           </CardContent>
         </Card>
 
@@ -170,7 +251,9 @@ export default function CertificationTraining() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{metrics.activeBonds}</div>
-            <p className="text-xs text-muted-foreground">Company-paid certifications currently bonded</p>
+            <p className="text-xs text-muted-foreground">
+              Company-paid certifications currently bonded
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -182,41 +265,59 @@ export default function CertificationTraining() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
             <div className="md:col-span-2">
-              <Input placeholder="Search name, certification, provider..." value={q} onChange={(e) => setQ(e.target.value)} />
+              <Input
+                placeholder="Search name, certification, provider..."
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
             </div>
             <div>
               <Select value={dept} onValueChange={setDept}>
-                <SelectTrigger><SelectValue placeholder="Department" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Department" />
+                </SelectTrigger>
                 <SelectContent>
                   {filters.depts.map((d) => (
-                    <SelectItem key={d} value={d}>{d === "all" ? "All Departments" : d}</SelectItem>
+                    <SelectItem key={d} value={d}>
+                      {d === "all" ? "All Departments" : d}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Select value={provider} onValueChange={setProvider}>
-                <SelectTrigger><SelectValue placeholder="Provider" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Provider" />
+                </SelectTrigger>
                 <SelectContent>
                   {filters.providers.map((p) => (
-                    <SelectItem key={p} value={p}>{p === "all" ? "All Providers" : p}</SelectItem>
+                    <SelectItem key={p} value={p}>
+                      {p === "all" ? "All Providers" : p}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Select value={type} onValueChange={setType}>
-                <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
                 <SelectContent>
                   {filters.types.map((t) => (
-                    <SelectItem key={t} value={t}>{t === "all" ? "All Types" : t}</SelectItem>
+                    <SelectItem key={t} value={t}>
+                      {t === "all" ? "All Types" : t}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
@@ -226,7 +327,9 @@ export default function CertificationTraining() {
             </div>
             <div>
               <Select value={bond} onValueChange={setBond}>
-                <SelectTrigger><SelectValue placeholder="Bond" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Bond" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Bonds</SelectItem>
                   <SelectItem value="active">Active Bond</SelectItem>
@@ -236,10 +339,14 @@ export default function CertificationTraining() {
             </div>
             <div>
               <Select value={employment} onValueChange={setEmployment}>
-                <SelectTrigger><SelectValue placeholder="Employment" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Employment" />
+                </SelectTrigger>
                 <SelectContent>
                   {filters.employments.map((e) => (
-                    <SelectItem key={e} value={e}>{e === "all" ? "All Employment" : e}</SelectItem>
+                    <SelectItem key={e} value={e}>
+                      {e === "all" ? "All Employment" : e}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -248,10 +355,15 @@ export default function CertificationTraining() {
         </CardHeader>
         <CardContent>
           {rows.length === 0 ? (
-            <div className="text-sm text-muted-foreground flex items-center gap-2"><Filter className="h-4 w-4"/>Upload a file to see records and metrics.</div>
+            <div className="text-sm text-muted-foreground flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              Upload a file to see records and metrics.
+            </div>
           ) : (
             <Table>
-              <TableCaption>{filtered.length} of {rows.length} records</TableCaption>
+              <TableCaption>
+                {filtered.length} of {rows.length} records
+              </TableCaption>
               <TableHeader>
                 <TableRow>
                   <TableHead>Emp #</TableHead>
@@ -275,34 +387,77 @@ export default function CertificationTraining() {
                   const bonded = isBondActive(r);
                   return (
                     <TableRow key={`${r.employee}-${r.certification}-${i}`}>
-                      <TableCell className="text-xs text-muted-foreground">{r.employeeNo || ""}</TableCell>
-                      <TableCell className="font-medium">{r.employee}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {r.employeeNo || ""}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {r.employee}
+                      </TableCell>
                       <TableCell>{r.department || "Unknown"}</TableCell>
                       <TableCell>{r.certification}</TableCell>
                       <TableCell>{r.provider}</TableCell>
                       <TableCell>{r.type}</TableCell>
-                      <TableCell>{r.issueDate ? new Date(r.issueDate).toLocaleDateString() : ""}</TableCell>
-                      <TableCell>{r.expiryDate ? new Date(r.expiryDate).toLocaleDateString() : ""}</TableCell>
                       <TableCell>
-                        <Badge variant={active ? "default" : "destructive"}>{active ? "Active" : "Expired"}</Badge>
+                        {r.issueDate
+                          ? new Date(r.issueDate).toLocaleDateString()
+                          : ""}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={("employmentStatus" in r && String((r as any).employmentStatus).toLowerCase().includes("resigned")) ? "destructive" : "secondary"}>
-                          {"employmentStatus" in r ? String((r as any).employmentStatus) : "Active"}
+                        {r.expiryDate
+                          ? new Date(r.expiryDate).toLocaleDateString()
+                          : ""}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={active ? "default" : "destructive"}>
+                          {active ? "Active" : "Expired"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            "employmentStatus" in r &&
+                            String((r as any).employmentStatus)
+                              .toLowerCase()
+                              .includes("resigned")
+                              ? "destructive"
+                              : "secondary"
+                          }
+                        >
+                          {"employmentStatus" in r
+                            ? String((r as any).employmentStatus)
+                            : "Active"}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         {(() => {
                           const bs = bondStatus(r);
-                          const v = bs === "Forfeit Required" ? "destructive" : bs === "Active" ? "secondary" : bs === "Completed" ? "default" : "outline";
+                          const v =
+                            bs === "Forfeit Required"
+                              ? "destructive"
+                              : bs === "Active"
+                                ? "secondary"
+                                : bs === "Completed"
+                                  ? "default"
+                                  : "outline";
                           return <Badge variant={v as any}>{bs}</Badge>;
                         })()}
                       </TableCell>
                       <TableCell>
-                        {(() => { const d = daysUntil(r.expiryDate); return d === null ? "" : d; })()}
+                        {(() => {
+                          const d = daysUntil(r.expiryDate);
+                          return d === null ? "" : d;
+                        })()}
                       </TableCell>
                       <TableCell>
-                        {(() => { const end = r.bondEnd ?? (r.issueDate && r.bondMonths ? addMonths(r.issueDate, r.bondMonths) : null); const d = daysUntil(end as any); return d === null ? "" : d; })()}
+                        {(() => {
+                          const end =
+                            r.bondEnd ??
+                            (r.issueDate && r.bondMonths
+                              ? addMonths(r.issueDate, r.bondMonths)
+                              : null);
+                          const d = daysUntil(end as any);
+                          return d === null ? "" : d;
+                        })()}
                       </TableCell>
                     </TableRow>
                   );

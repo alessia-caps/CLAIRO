@@ -47,7 +47,7 @@ function parseMaybeDate(v: any): Date | null {
     const excelEpoch = new Date(1900, 0, 1);
     const d = new Date(excelEpoch.getTime() + (v - 1) * 86400000);
     return isNaN(d.getTime()) ? null : d;
-    }
+  }
   const s = String(v).trim();
   const d = new Date(s);
   if (!isNaN(d.getTime()) && d.getFullYear() > 1900) return d;
@@ -65,9 +65,13 @@ function parseMaybeDate(v: any): Date | null {
 
 function truthyFlag(v: any): boolean {
   if (typeof v === "boolean") return v;
-  const s = String(v ?? "").toLowerCase().trim();
+  const s = String(v ?? "")
+    .toLowerCase()
+    .trim();
   if (!s) return false;
-  return ["yes", "true", "y", "1", "paid", "company", "sponsored", "bond"].some((k) => s.includes(k));
+  return ["yes", "true", "y", "1", "paid", "company", "sponsored", "bond"].some(
+    (k) => s.includes(k),
+  );
 }
 
 function parseBondMonthsFromText(v: any): number {
@@ -77,7 +81,10 @@ function parseBondMonthsFromText(v: any): number {
   return 0;
 }
 
-export function CertificationUploadDialog({ onDataUploaded, trigger }: CertificationUploadDialogProps) {
+export function CertificationUploadDialog({
+  onDataUploaded,
+  trigger,
+}: CertificationUploadDialogProps) {
   const [open, setOpen] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -132,7 +139,12 @@ export function CertificationUploadDialog({ onDataUploaded, trigger }: Certifica
   function parseCSV(text: string): any[] {
     const lines = text.split(/\r?\n/).filter(Boolean);
     if (lines.length < 2) return [];
-    const headers = lines[0].split(",").map((h) => h.replace(/^\uFEFF/, "").trim().replace(/"/g, ""));
+    const headers = lines[0].split(",").map((h) =>
+      h
+        .replace(/^\uFEFF/, "")
+        .trim()
+        .replace(/"/g, ""),
+    );
     return lines.slice(1).map((ln) => {
       const vals = ln.split(",").map((v) => v.trim().replace(/"/g, ""));
       const obj: any = {};
@@ -157,67 +169,172 @@ export function CertificationUploadDialog({ onDataUploaded, trigger }: Certifica
         if (normToOrig.has(c)) return normToOrig.get(c)!;
       }
       // try partial contains
-      const found = Array.from(normToOrig.keys()).find((k) => cands.some((c) => k.includes(c)));
+      const found = Array.from(normToOrig.keys()).find((k) =>
+        cands.some((c) => k.includes(c)),
+      );
       return found ? normToOrig.get(found) : undefined;
     };
 
-    const hEmpNo = pick(["employeeno", "employeenumber", "empno", "employeeid", "idnumber"]);
+    const hEmpNo = pick([
+      "employeeno",
+      "employeenumber",
+      "empno",
+      "employeeid",
+      "idnumber",
+    ]);
     const hEmployee = pick(["employeename", "employee", "name", "staffname"]);
-    const hDept = pick(["department", "dept", "gbu", "bugbu", "businessunit", "team"]);
-    const hCert = pick(["certification", "certificate", "credential", "course", "title"]);
-    const hProvider = pick(["provider", "vendor", "issuer", "authority", "platform"]);
-    const hType = pick(["type", "category", "track", "level", "specialization"]);
-    const hIssue = pick(["issuedate", "dateissued", "obtained", "dateofissue", "startdate", "datetaken"]);
-    const hExpiry = pick(["expirydate", "expirationdate", "validuntil", "expiry", "enddate", "expirationdate"]);
+    const hDept = pick([
+      "department",
+      "dept",
+      "gbu",
+      "bugbu",
+      "businessunit",
+      "team",
+    ]);
+    const hCert = pick([
+      "certification",
+      "certificate",
+      "credential",
+      "course",
+      "title",
+    ]);
+    const hProvider = pick([
+      "provider",
+      "vendor",
+      "issuer",
+      "authority",
+      "platform",
+    ]);
+    const hType = pick([
+      "type",
+      "category",
+      "track",
+      "level",
+      "specialization",
+    ]);
+    const hIssue = pick([
+      "issuedate",
+      "dateissued",
+      "obtained",
+      "dateofissue",
+      "startdate",
+      "datetaken",
+    ]);
+    const hExpiry = pick([
+      "expirydate",
+      "expirationdate",
+      "validuntil",
+      "expiry",
+      "enddate",
+      "expirationdate",
+    ]);
     const hStatus = pick(["status", "state", "active", "result", "progress"]);
-    const hCompanyPaid = pick(["companypaid", "sponsored", "companysponsored", "bond", "company", "paid"]);
-    const hBondMonths = pick(["bondmonths", "bonddurationmonths", "bondperiod", "months", "durationmonths"]);
-    const hBondStart = pick(["bondstart", "bondstartdate", "bondfrom", "contractstart"]);
-    const hBondEnd = pick(["bondend", "bondenddate", "bonduntil", "contractend", "bondexpiration"]);
+    const hCompanyPaid = pick([
+      "companypaid",
+      "sponsored",
+      "companysponsored",
+      "bond",
+      "company",
+      "paid",
+    ]);
+    const hBondMonths = pick([
+      "bondmonths",
+      "bonddurationmonths",
+      "bondperiod",
+      "months",
+      "durationmonths",
+    ]);
+    const hBondStart = pick([
+      "bondstart",
+      "bondstartdate",
+      "bondfrom",
+      "contractstart",
+    ]);
+    const hBondEnd = pick([
+      "bondend",
+      "bondenddate",
+      "bonduntil",
+      "contractend",
+      "bondexpiration",
+    ]);
     const hRemarks = pick(["remarks", "notes", "comment"]);
-    const hCertId = pick(["certificationidnumber", "certid", "certificationid", "idnumber"]);
+    const hCertId = pick([
+      "certificationidnumber",
+      "certid",
+      "certificationid",
+      "idnumber",
+    ]);
 
-    return rows.map((r, idx) => {
-      const sheetName = String((r as any).__sheetName || "");
-      const employeeNo = String(r[hEmpNo || "Employee No."] ?? "").trim();
-      const employee = String(r[hEmployee || "Name" ] ?? "").trim();
-      const department = String(r[hDept || "GBU"] ?? "Unknown").trim() || "Unknown";
-      const certification = String(r[hCert || "Certification"] ?? "").trim();
-      let provider = String(r[hProvider || "Provider"] ?? "").trim();
-      if (!provider && sheetName) provider = sheetName.trim();
-      const type = String(r[hType || "Type"] ?? "").trim();
-      const issueDate = parseMaybeDate(r[hIssue || "Date Taken"]);
-      const expiryDate = parseMaybeDate(r[hExpiry || "Expiration Date"]);
-      const remarks = String(r[hRemarks || "Remarks"] ?? "");
-      const statusRaw = String(r[hStatus || "Status"] ?? "").trim();
-      const status = statusRaw || (expiryDate && expiryDate >= new Date() ? "Active" : expiryDate ? "Expired" : "");
-      const companyPaid = truthyFlag(r[hCompanyPaid || "Company Paid"]) || !!parseMaybeDate(r[hBondEnd || "Bond Expiration"]) || /company|sponsor|bond/i.test(remarks);
-      const bondMonthsExplicit = parseInt(String(r[hBondMonths || "Bond Months"] ?? "0"), 10) || 0;
-      const bondMonths = bondMonthsExplicit || parseBondMonthsFromText(remarks);
-      const bondStart = parseMaybeDate(r[hBondStart || "Bond Start"]) || issueDate;
-      const bondEnd = parseMaybeDate(r[hBondEnd || "Bond Expiration"]) || (bondStart && bondMonths ? new Date(new Date(bondStart).setMonth(new Date(bondStart).getMonth() + bondMonths)) : null);
-      const certificationId = String(r[hCertId || "Certification ID Number"] ?? "").trim();
-      const employmentStatus = sheetName.match(/resigned/i) ? "Resigned" : sheetName.match(/trial/i) ? "Trial" : "Active";
+    return rows
+      .map((r, idx) => {
+        const sheetName = String((r as any).__sheetName || "");
+        const employeeNo = String(r[hEmpNo || "Employee No."] ?? "").trim();
+        const employee = String(r[hEmployee || "Name"] ?? "").trim();
+        const department =
+          String(r[hDept || "GBU"] ?? "Unknown").trim() || "Unknown";
+        const certification = String(r[hCert || "Certification"] ?? "").trim();
+        let provider = String(r[hProvider || "Provider"] ?? "").trim();
+        if (!provider && sheetName) provider = sheetName.trim();
+        const type = String(r[hType || "Type"] ?? "").trim();
+        const issueDate = parseMaybeDate(r[hIssue || "Date Taken"]);
+        const expiryDate = parseMaybeDate(r[hExpiry || "Expiration Date"]);
+        const remarks = String(r[hRemarks || "Remarks"] ?? "");
+        const statusRaw = String(r[hStatus || "Status"] ?? "").trim();
+        const status =
+          statusRaw ||
+          (expiryDate && expiryDate >= new Date()
+            ? "Active"
+            : expiryDate
+              ? "Expired"
+              : "");
+        const companyPaid =
+          truthyFlag(r[hCompanyPaid || "Company Paid"]) ||
+          !!parseMaybeDate(r[hBondEnd || "Bond Expiration"]) ||
+          /company|sponsor|bond/i.test(remarks);
+        const bondMonthsExplicit =
+          parseInt(String(r[hBondMonths || "Bond Months"] ?? "0"), 10) || 0;
+        const bondMonths =
+          bondMonthsExplicit || parseBondMonthsFromText(remarks);
+        const bondStart =
+          parseMaybeDate(r[hBondStart || "Bond Start"]) || issueDate;
+        const bondEnd =
+          parseMaybeDate(r[hBondEnd || "Bond Expiration"]) ||
+          (bondStart && bondMonths
+            ? new Date(
+                new Date(bondStart).setMonth(
+                  new Date(bondStart).getMonth() + bondMonths,
+                ),
+              )
+            : null);
+        const certificationId = String(
+          r[hCertId || "Certification ID Number"] ?? "",
+        ).trim();
+        const employmentStatus = sheetName.match(/resigned/i)
+          ? "Resigned"
+          : sheetName.match(/trial/i)
+            ? "Trial"
+            : "Active";
 
-      return {
-        employeeNo,
-        employee,
-        department,
-        certification,
-        provider,
-        type,
-        issueDate,
-        expiryDate,
-        status,
-        companyPaid,
-        bondMonths,
-        bondStart,
-        bondEnd,
-        remarks,
-        certificationId,
-        employmentStatus,
-      } as CertificationRecord;
-    }).filter((r) => r.employee && r.certification);
+        return {
+          employeeNo,
+          employee,
+          department,
+          certification,
+          provider,
+          type,
+          issueDate,
+          expiryDate,
+          status,
+          companyPaid,
+          bondMonths,
+          bondStart,
+          bondEnd,
+          remarks,
+          certificationId,
+          employmentStatus,
+        } as CertificationRecord;
+      })
+      .filter((r) => r.employee && r.certification);
   }
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -247,7 +364,11 @@ export function CertificationUploadDialog({ onDataUploaded, trigger }: Certifica
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-sm">
-              Expected columns (auto-detected): Date Taken, Expiration Date, Employee No., Name, GBU (Department), Type, Certification, Certification ID Number, Remarks, Bond Expiration. Multi-sheet supported (e.g., SAP Certification Matrix, Other, Ops, Resigned, Trial). Provider is inferred from sheet name when missing.
+              Expected columns (auto-detected): Date Taken, Expiration Date,
+              Employee No., Name, GBU (Department), Type, Certification,
+              Certification ID Number, Remarks, Bond Expiration. Multi-sheet
+              supported (e.g., SAP Certification Matrix, Other, Ops, Resigned,
+              Trial). Provider is inferred from sheet name when missing.
             </AlertDescription>
           </Alert>
 
@@ -262,13 +383,23 @@ export function CertificationUploadDialog({ onDataUploaded, trigger }: Certifica
             <div className="space-y-2">
               <Upload className="h-8 w-8 mx-auto text-slate-400" />
               <div>
-                <p className="text-sm font-medium">Drop your Excel/CSV file here</p>
-                <p className="text-xs text-slate-600">Supports .xlsx, .xls, .csv</p>
+                <p className="text-sm font-medium">
+                  Drop your Excel/CSV file here
+                </p>
+                <p className="text-xs text-slate-600">
+                  Supports .xlsx, .xls, .csv
+                </p>
               </div>
             </div>
           </div>
 
-          <Input id="cert-upload" type="file" accept=".xlsx,.xls,.csv" onChange={handleFileInputChange} className="hidden" />
+          <Input
+            id="cert-upload"
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            onChange={handleFileInputChange}
+            className="hidden"
+          />
 
           {isUploading && (
             <div className="space-y-2">
@@ -285,7 +416,11 @@ export function CertificationUploadDialog({ onDataUploaded, trigger }: Certifica
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="flex items-center justify-between">
                 <span>{error}</span>
-                <Button variant="ghost" size="sm" onClick={() => setError(null)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setError(null)}
+                >
                   <X className="h-3 w-3" />
                 </Button>
               </AlertDescription>
