@@ -86,6 +86,83 @@ function toNumber(v: any): number {
   return isNaN(n) ? 0 : n;
 }
 
+function norm(s: any): string {
+  return String(s || "")
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function findHeaderRowAndObjects(ws: XLSX.WorkSheet): any[] | null {
+  const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, blankrows: false }) as any[][];
+  if (!rows || rows.length === 0) return null;
+
+  const groups: string[][] = [
+    ["employeeid", "empid", "id", "employeeno", "employee#"],
+    ["name", "employeename"],
+    ["team", "department", "dept", "bu/gbu", "businessunit", "gbu"],
+    ["otpremiumtype", "ottype", "type"],
+    ["otpremiumrate", "rate", "premiumrate"],
+    ["hourlyrate", "ratehour"],
+    ["numberofhours", "hours", "noofhours", "noofhour"],
+    ["amount", "phpamount", "totalamount"],
+    ["period"],
+    ["month"],
+    ["typedescription", "description"],
+  ];
+
+  let bestIndex = -1;
+  let bestScore = -1;
+
+  const maxScan = Math.min(rows.length, 30); // scan top 30 rows
+  for (let i = 0; i < maxScan; i++) {
+    const cells = rows[i] || [];
+    if (!cells.some((c) => String(c || "").trim())) continue;
+    const normalized = cells.map(norm);
+    const matched = new Set<number>();
+    groups.forEach((alts, gi) => {
+      for (const alt of alts) {
+        if (normalized.some((c) => c === alt)) {
+          matched.add(gi);
+          break;
+        }
+      }
+    });
+    const score = matched.size;
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = i;
+    }
+  }
+
+  if (bestIndex < 0 || bestScore < 3) return null;
+
+  // Build header strings from the detected header row, ensure uniqueness
+  const headerCells = (rows[bestIndex] || []).map((h, idx) => String(h || `col${idx + 1}`));
+  const seen = new Map<string, number>();
+  const headers = headerCells.map((h) => {
+    const base = h || "";
+    const key = base in Object.prototype ? String(base) : base;
+    const count = seen.get(key) || 0;
+    seen.set(key, count + 1);
+    return count ? `${key}_${count + 1}` : key;
+  });
+
+  const objs: any[] = [];
+  for (let r = bestIndex + 1; r < rows.length; r++) {
+    const row = rows[r] || [];
+    const hasValue = row.some((c) => String(c || "").trim() !== "");
+    if (!hasValue) continue;
+    const obj: any = {};
+    for (let c = 0; c < headers.length; c++) {
+      obj[headers[c]] = row[c];
+    }
+    objs.push(obj);
+  }
+
+  return objs;
+}
+
 export function aggregateOT(records: OTRecord[]): OTPivots {
   const byEmp: Record<string, { id: string; name: string; team: string; byType: Record<string, number>; byMonth: Record<string, number>; amountByType: Record<string, number>; totalHours: number; totalAmount: number }>= {};
   const byMonthType: Record<string, Record<string, number>> = {}; // month->type->hours
@@ -175,13 +252,17 @@ export function useOTUpload() {
     for (const sheetName of wb.SheetNames) {
       const ws = wb.Sheets[sheetName];
       if (!ws) continue;
-      const rows: any[] = XLSX.utils.sheet_to_json(ws);
+
+      // Try to auto-detect header row and build objects
+      const detected = findHeaderRowAndObjects(ws) || XLSX.utils.sheet_to_json(ws);
+      const rows: any[] = detected as any[];
+
       for (const row of rows) {
         const employeeId = String(row["Employee ID"] || row["EmployeeID"] || row["ID"] || "").trim();
         const name = String(row["Name"] || row["Employee Name"] || "").trim();
         const team = String(row["Team"] || row["Department"] || row["BU/GBU"] || "").trim();
         const otType = String(row["OT/Premium Type"] || row["OT Type"] || row["Type"] || "").trim();
-        const otTypeDescription = row["Type Description"] || row["OT Type Description"]; 
+        const otTypeDescription = row["Type Description"] || row["OT Type Description"];
         const rateLabel = row["OT/Premium\nRate"] || row["OT/Premium Rate"] || row["Rate"];
         const hourlyRate = toNumber(row["Hourly Rate"]);
         const hours = toNumber(row["Number of Hours"] || row["Hours"]);
@@ -191,7 +272,8 @@ export function useOTUpload() {
         const type = row["Type"] ? String(row["Type"]) : undefined;
         const typeDescription = row["Type Description"] ? String(row["Type Description"]) : undefined;
 
-        if (!name || hours === 0) continue;
+        if (!name && !employeeId) continue;
+        if (hours === 0 && amount === 0) continue;
         out.push({
           employeeId,
           name,
