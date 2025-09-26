@@ -40,8 +40,18 @@ export type LeaveAnalytics = {
     withPayDays: number;
     withoutPayDays: number;
   };
-  byType: Array<{ type: string; requests: number; withPayDays: number; withoutPayDays: number }>;
-  topEmployeesByDays: Array<{ name: string; totalDays: number; withPay: number; withoutPay: number }>;
+  byType: Array<{
+    type: string;
+    requests: number;
+    withPayDays: number;
+    withoutPayDays: number;
+  }>;
+  topEmployeesByDays: Array<{
+    name: string;
+    totalDays: number;
+    withPay: number;
+    withoutPay: number;
+  }>;
 };
 
 function toNumber(v: any): number {
@@ -60,9 +70,17 @@ export function useLeaveUpload() {
   const parseTransactions = (rows: any[]): LeaveTransaction[] => {
     const out: LeaveTransaction[] = [];
     for (const row of rows) {
-      const employeeId = String(row["EmployeeID"] || row["EMPLOYEE ID"] || row["Employee ID"] || row["ID"] || "").trim();
+      const employeeId = String(
+        row["EmployeeID"] ||
+          row["EMPLOYEE ID"] ||
+          row["Employee ID"] ||
+          row["ID"] ||
+          "",
+      ).trim();
       const name = String(row["Name"] || row["Employee Name"] || "").trim();
-      const leaveType = String(row["LeaveTypeName"] || row["Leave Type"] || row["LEAVE TYPE"] || "").trim();
+      const leaveType = String(
+        row["LeaveTypeName"] || row["Leave Type"] || row["LEAVE TYPE"] || "",
+      ).trim();
       if (!name && !employeeId) continue;
       out.push({
         employeeId,
@@ -72,12 +90,20 @@ export function useLeaveUpload() {
         dateFrom: row["DateFrom"] ? String(row["DateFrom"]) : undefined,
         dateTo: row["DateTo"] ? String(row["DateTo"]) : undefined,
         withPayDays: toNumber(row["WithPayNoOfdays"] || row["With Pay Days"]),
-        withoutPayDays: toNumber(row["WoutPayNoOfDays"] || row["Without Pay Days"]),
+        withoutPayDays: toNumber(
+          row["WoutPayNoOfDays"] || row["Without Pay Days"],
+        ),
         reason: row["Reason"] ? String(row["Reason"]) : undefined,
         status: row["LeaveStatus"] ? String(row["LeaveStatus"]) : undefined,
-        rejectReason: row["RejectReason"] ? String(row["RejectReason"]) : undefined,
-        dateApprovedSupervisor: row["DateApprovedSupervisor"] ? String(row["DateApprovedSupervisor"]) : undefined,
-        dateRejectedSupervisor: row["DateRejectedSupervisor"] ? String(row["DateRejectedSupervisor"]) : undefined,
+        rejectReason: row["RejectReason"]
+          ? String(row["RejectReason"])
+          : undefined,
+        dateApprovedSupervisor: row["DateApprovedSupervisor"]
+          ? String(row["DateApprovedSupervisor"])
+          : undefined,
+        dateRejectedSupervisor: row["DateRejectedSupervisor"]
+          ? String(row["DateRejectedSupervisor"])
+          : undefined,
       });
     }
     return out;
@@ -86,9 +112,15 @@ export function useLeaveUpload() {
   const parseSummary = (rows: any[]): LeaveSummary[] => {
     const out: LeaveSummary[] = [];
     for (const row of rows) {
-      const employeeId = String(row["EMPLOYEE ID"] || row["EmployeeID"] || row["Employee ID"] || "").trim();
-      const lastName = String(row["LAST NAME"] || row["Last Name"] || "").trim();
-      const firstName = String(row["FIRST NAME"] || row["First Name"] || "").trim();
+      const employeeId = String(
+        row["EMPLOYEE ID"] || row["EmployeeID"] || row["Employee ID"] || "",
+      ).trim();
+      const lastName = String(
+        row["LAST NAME"] || row["Last Name"] || "",
+      ).trim();
+      const firstName = String(
+        row["FIRST NAME"] || row["First Name"] || "",
+      ).trim();
       if (!employeeId && !lastName && !firstName) continue;
       out.push({
         employeeId,
@@ -97,10 +129,16 @@ export function useLeaveUpload() {
         middleName: row["MIDDLE NAME"] ? String(row["MIDDLE NAME"]) : undefined,
         department: row["DEPARTMENT"] ? String(row["DEPARTMENT"]) : undefined,
         hireDate: row["HIRE DATE"] ? String(row["HIRE DATE"]) : undefined,
-        regularizationDate: row["REGULARIZATION DATE"] ? String(row["REGULARIZATION DATE"]) : undefined,
+        regularizationDate: row["REGULARIZATION DATE"]
+          ? String(row["REGULARIZATION DATE"])
+          : undefined,
         leaveType: String(row["LEAVE TYPE"] || row["Leave Type"] || "").trim(),
-        usedDuringRange: toNumber(row["LEAVES USED DURING DATE RANGE"] || row["Leaves Used"]),
-        totalAvailableBalanceYtd: toNumber(row["Total Available Balance (YTD)"] || row["Available Balance"]),
+        usedDuringRange: toNumber(
+          row["LEAVES USED DURING DATE RANGE"] || row["Leaves Used"],
+        ),
+        totalAvailableBalanceYtd: toNumber(
+          row["Total Available Balance (YTD)"] || row["Available Balance"],
+        ),
         isActive: row["IS ACTIVE"] ? String(row["IS ACTIVE"]) : undefined,
       });
     }
@@ -119,7 +157,8 @@ export function useLeaveUpload() {
         all.push(...XLSX.utils.sheet_to_json(ws));
       }
       const parsed = parseTransactions(all);
-      if (parsed.length === 0) throw new Error("No leave transactions found. Check headers.");
+      if (parsed.length === 0)
+        throw new Error("No leave transactions found. Check headers.");
       setTransactions(parsed);
       return parsed;
     } catch (e: any) {
@@ -142,7 +181,8 @@ export function useLeaveUpload() {
         all.push(...XLSX.utils.sheet_to_json(ws));
       }
       const parsed = parseSummary(all);
-      if (parsed.length === 0) throw new Error("No summary rows found. Check headers.");
+      if (parsed.length === 0)
+        throw new Error("No summary rows found. Check headers.");
       setSummary(parsed);
       return parsed;
     } catch (e: any) {
@@ -161,16 +201,29 @@ export function useLeaveUpload() {
   const analytics: LeaveAnalytics = (() => {
     const totals = {
       requests: transactions.length,
-      approved: transactions.filter((t) => /approved/i.test(t.status || "")).length,
-      pending: transactions.filter((t) => /pending|await/i.test(t.status || "")).length,
-      rejected: transactions.filter((t) => /reject/i.test(t.status || "")).length,
+      approved: transactions.filter((t) => /approved/i.test(t.status || ""))
+        .length,
+      pending: transactions.filter((t) => /pending|await/i.test(t.status || ""))
+        .length,
+      rejected: transactions.filter((t) => /reject/i.test(t.status || ""))
+        .length,
       withPayDays: transactions.reduce((s, t) => s + t.withPayDays, 0),
       withoutPayDays: transactions.reduce((s, t) => s + t.withoutPayDays, 0),
     };
-    const byTypeMap = new Map<string, { requests: number; withPayDays: number; withoutPayDays: number }>();
-    const byEmpMap = new Map<string, { name: string; withPay: number; withoutPay: number }>();
+    const byTypeMap = new Map<
+      string,
+      { requests: number; withPayDays: number; withoutPayDays: number }
+    >();
+    const byEmpMap = new Map<
+      string,
+      { name: string; withPay: number; withoutPay: number }
+    >();
     for (const t of transactions) {
-      const bt = byTypeMap.get(t.leaveType) || { requests: 0, withPayDays: 0, withoutPayDays: 0 };
+      const bt = byTypeMap.get(t.leaveType) || {
+        requests: 0,
+        withPayDays: 0,
+        withoutPayDays: 0,
+      };
       bt.requests += 1;
       bt.withPayDays += t.withPayDays;
       bt.withoutPayDays += t.withoutPayDays;
@@ -182,14 +235,31 @@ export function useLeaveUpload() {
       be.withoutPay += t.withoutPayDays;
       byEmpMap.set(key, be);
     }
-    const byType = Array.from(byTypeMap.entries()).map(([type, v]) => ({ type, ...v }));
+    const byType = Array.from(byTypeMap.entries()).map(([type, v]) => ({
+      type,
+      ...v,
+    }));
     const topEmployeesByDays = Array.from(byEmpMap.values())
-      .map((v) => ({ name: v.name, totalDays: v.withPay + v.withoutPay, withPay: v.withPay, withoutPay: v.withoutPay }))
+      .map((v) => ({
+        name: v.name,
+        totalDays: v.withPay + v.withoutPay,
+        withPay: v.withPay,
+        withoutPay: v.withoutPay,
+      }))
       .sort((a, b) => b.totalDays - a.totalDays)
       .slice(0, 20);
 
     return { totals, byType, topEmployeesByDays };
   })();
 
-  return { transactions, summary, analytics, error, isUploading, uploadTransactions, uploadSummary, clear };
+  return {
+    transactions,
+    summary,
+    analytics,
+    error,
+    isUploading,
+    uploadTransactions,
+    uploadSummary,
+    clear,
+  };
 }

@@ -13,13 +13,7 @@ import {
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import {
-  Activity,
-  Users,
-  Clock,
-  Laptop,
-  GraduationCap,
-} from "lucide-react";
+import { Activity, Users, Clock, Laptop, GraduationCap } from "lucide-react";
 
 const menuItems = [
   {
@@ -61,8 +55,10 @@ export function Layout({ children }: LayoutProps) {
   const location = useLocation();
 
   const activeTitle = (() => {
-    const found = menuItems.find((item) =>
-      location.pathname === item.path || location.pathname.startsWith(String(item.path) + "/"),
+    const found = menuItems.find(
+      (item) =>
+        location.pathname === item.path ||
+        location.pathname.startsWith(String(item.path) + "/"),
     );
     if (!found) return "Dashboard";
     if (found.children) {
@@ -88,7 +84,10 @@ export function Layout({ children }: LayoutProps) {
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton
                     asChild
-                    isActive={location.pathname === item.path || location.pathname.startsWith(String(item.path) + "/")}
+                    isActive={
+                      location.pathname === item.path ||
+                      location.pathname.startsWith(String(item.path) + "/")
+                    }
                   >
                     <Link to={item.path}>
                       <item.icon className="h-4 w-4" />
@@ -99,8 +98,13 @@ export function Layout({ children }: LayoutProps) {
                     <SidebarMenuSub>
                       {item.children.map((c) => (
                         <li key={c.path}>
-                          <SidebarMenuSubButton asChild isActive={location.pathname === c.path}>
-                            <Link to={c.path}><span>{c.title}</span></Link>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={location.pathname === c.path}
+                          >
+                            <Link to={c.path}>
+                              <span>{c.title}</span>
+                            </Link>
                           </SidebarMenuSubButton>
                         </li>
                       ))}

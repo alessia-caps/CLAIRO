@@ -94,7 +94,11 @@ function norm(s: any): string {
 }
 
 function findHeaderRowAndObjects(ws: XLSX.WorkSheet): any[] | null {
-  const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, blankrows: false }) as any[][];
+  const rows: any[][] = XLSX.utils.sheet_to_json(ws, {
+    header: 1,
+    raw: true,
+    blankrows: false,
+  }) as any[][];
   if (!rows || rows.length === 0) return null;
 
   const groups: string[][] = [
@@ -138,7 +142,9 @@ function findHeaderRowAndObjects(ws: XLSX.WorkSheet): any[] | null {
   if (bestIndex < 0 || bestScore < 3) return null;
 
   // Build header strings from the detected header row, ensure uniqueness
-  const headerCells = (rows[bestIndex] || []).map((h, idx) => String(h || `col${idx + 1}`));
+  const headerCells = (rows[bestIndex] || []).map((h, idx) =>
+    String(h || `col${idx + 1}`),
+  );
   const seen = new Map<string, number>();
   const headers = headerCells.map((h) => {
     const base = h || "";
@@ -164,13 +170,26 @@ function findHeaderRowAndObjects(ws: XLSX.WorkSheet): any[] | null {
 }
 
 export function aggregateOT(records: OTRecord[]): OTPivots {
-  const byEmp: Record<string, { id: string; name: string; team: string; byType: Record<string, number>; byMonth: Record<string, number>; amountByType: Record<string, number>; totalHours: number; totalAmount: number }>= {};
+  const byEmp: Record<
+    string,
+    {
+      id: string;
+      name: string;
+      team: string;
+      byType: Record<string, number>;
+      byMonth: Record<string, number>;
+      amountByType: Record<string, number>;
+      totalHours: number;
+      totalAmount: number;
+    }
+  > = {};
   const byMonthType: Record<string, Record<string, number>> = {}; // month->type->hours
   const byTypeTotals: Record<string, { hours: number; amount: number }> = {};
   const empIds = new Set<string>();
 
   records.forEach((r) => {
-    const mon = parseMonthKey(r.monthKey)?.mon || parseMonthKey(r.period)?.mon || "";
+    const mon =
+      parseMonthKey(r.monthKey)?.mon || parseMonthKey(r.period)?.mon || "";
     const type = r.otType || "Unknown";
     empIds.add(r.employeeId || r.name);
 
@@ -196,14 +215,15 @@ export function aggregateOT(records: OTRecord[]): OTPivots {
       };
     }
     byEmp[key].byType[type] = (byEmp[key].byType[type] || 0) + r.hours;
-    byEmp[key].amountByType[type] = (byEmp[key].amountByType[type] || 0) + r.amount;
+    byEmp[key].amountByType[type] =
+      (byEmp[key].amountByType[type] || 0) + r.amount;
     if (m) byEmp[key].byMonth[m] = (byEmp[key].byMonth[m] || 0) + r.amount;
     byEmp[key].totalHours += r.hours;
     byEmp[key].totalAmount += r.amount;
   });
 
   const monthsPresent = Array.from(
-    new Set(Object.keys(byMonthType).filter(Boolean))
+    new Set(Object.keys(byMonthType).filter(Boolean)),
   ).sort((a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
 
   const hoursByMonthByType = monthsPresent.map((mon) => {
@@ -239,7 +259,12 @@ export function aggregateOT(records: OTRecord[]): OTPivots {
     byType: byTypeTotals,
   };
 
-  return { totalsYTD, hoursByMonthByType, amountByTypeByEmployee, amountByMonthByEmployee };
+  return {
+    totalsYTD,
+    hoursByMonthByType,
+    amountByTypeByEmployee,
+    amountByMonthByEmployee,
+  };
 }
 
 export function useOTUpload() {
@@ -254,23 +279,34 @@ export function useOTUpload() {
       if (!ws) continue;
 
       // Try to auto-detect header row and build objects
-      const detected = findHeaderRowAndObjects(ws) || XLSX.utils.sheet_to_json(ws);
+      const detected =
+        findHeaderRowAndObjects(ws) || XLSX.utils.sheet_to_json(ws);
       const rows: any[] = detected as any[];
 
       for (const row of rows) {
-        const employeeId = String(row["Employee ID"] || row["EmployeeID"] || row["ID"] || "").trim();
+        const employeeId = String(
+          row["Employee ID"] || row["EmployeeID"] || row["ID"] || "",
+        ).trim();
         const name = String(row["Name"] || row["Employee Name"] || "").trim();
-        const team = String(row["Team"] || row["Department"] || row["BU/GBU"] || "").trim();
-        const otType = String(row["OT/Premium Type"] || row["OT Type"] || row["Type"] || "").trim();
-        const otTypeDescription = row["Type Description"] || row["OT Type Description"];
-        const rateLabel = row["OT/Premium\nRate"] || row["OT/Premium Rate"] || row["Rate"];
+        const team = String(
+          row["Team"] || row["Department"] || row["BU/GBU"] || "",
+        ).trim();
+        const otType = String(
+          row["OT/Premium Type"] || row["OT Type"] || row["Type"] || "",
+        ).trim();
+        const otTypeDescription =
+          row["Type Description"] || row["OT Type Description"];
+        const rateLabel =
+          row["OT/Premium\nRate"] || row["OT/Premium Rate"] || row["Rate"];
         const hourlyRate = toNumber(row["Hourly Rate"]);
         const hours = toNumber(row["Number of Hours"] || row["Hours"]);
         const amount = toNumber(row["Amount"]);
         const period = row["Period"] ? String(row["Period"]) : undefined;
         const monthKey = row["Month"] ? String(row["Month"]) : undefined;
         const type = row["Type"] ? String(row["Type"]) : undefined;
-        const typeDescription = row["Type Description"] ? String(row["Type Description"]) : undefined;
+        const typeDescription = row["Type Description"]
+          ? String(row["Type Description"])
+          : undefined;
 
         if (!name && !employeeId) continue;
         if (hours === 0 && amount === 0) continue;
@@ -301,7 +337,10 @@ export function useOTUpload() {
       const buf = await file.arrayBuffer();
       const wb = XLSX.read(buf, { type: "array" });
       const parsed = parseWorkbook(wb);
-      if (parsed.length === 0) throw new Error("No valid OT rows found. Please check the column headers.");
+      if (parsed.length === 0)
+        throw new Error(
+          "No valid OT rows found. Please check the column headers.",
+        );
       setRecords(parsed);
       return parsed;
     } catch (e: any) {
