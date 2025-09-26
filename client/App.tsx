@@ -10,6 +10,8 @@ import { Layout } from "@/components/Layout";
 import Index from "./pages/Index";
 import RetentionTurnover from "./pages/RetentionTurnover";
 import OTLeaveClaims from "./pages/OTLeaveClaims";
+import OTReports from "./pages/OTReports";
+import LeaveReports from "./pages/LeaveReports";
 import LaptopInventory from "./pages/LaptopInventory";
 import CertificationTraining from "./pages/CertificationTraining";
 import NotFound from "./pages/NotFound";
@@ -27,6 +29,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/retention-turnover" element={<RetentionTurnover />} />
             <Route path="/ot-leave-claims" element={<OTLeaveClaims />} />
+            <Route path="/ot-leave-claims/ot" element={<OTReports />} />
+            <Route path="/ot-leave-claims/leave" element={<LeaveReports />} />
             <Route path="/laptop-inventory" element={<LaptopInventory />} />
             <Route
               path="/certification-training"
