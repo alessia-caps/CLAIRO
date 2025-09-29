@@ -284,29 +284,34 @@ export function useOTUpload() {
       const rows: any[] = detected as any[];
 
       for (const row of rows) {
-        const employeeId = String(
-          row["Employee ID"] || row["EmployeeID"] || row["ID"] || "",
-        ).trim();
-        const name = String(row["Name"] || row["Employee Name"] || "").trim();
-        const team = String(
-          row["Team"] || row["Department"] || row["BU/GBU"] || "",
-        ).trim();
-        const otType = String(
-          row["OT/Premium Type"] || row["OT Type"] || row["Type"] || "",
-        ).trim();
-        const otTypeDescription =
-          row["Type Description"] || row["OT Type Description"];
-        const rateLabel =
-          row["OT/Premium\nRate"] || row["OT/Premium Rate"] || row["Rate"];
-        const hourlyRate = toNumber(row["Hourly Rate"]);
-        const hours = toNumber(row["Number of Hours"] || row["Hours"]);
-        const amount = toNumber(row["Amount"]);
-        const period = row["Period"] ? String(row["Period"]) : undefined;
-        const monthKey = row["Month"] ? String(row["Month"]) : undefined;
-        const type = row["Type"] ? String(row["Type"]) : undefined;
-        const typeDescription = row["Type Description"]
-          ? String(row["Type Description"])
-          : undefined;
+        // Robust key matching: normalize keys from the incoming row and pick best matches
+        const keys = Object.keys(row || {});
+        const normMap: Record<string, string> = {};
+        for (const k of keys) normMap[norm(k)] = k;
+
+        const pick = (candidates: string[]) => {
+          for (const c of candidates) {
+            const n = norm(c);
+            if (n in normMap) return row[normMap[n]];
+          }
+          // fallback: try exact keys
+          for (const c of candidates) if (c in row) return row[c as any];
+          return undefined;
+        };
+
+        const employeeId = String(pick(["employee id", "employeeid", "empid", "id", "employeeno", "employee#"]) || "").trim();
+        const name = String(pick(["name", "employee name", "employeename"]) || "").trim();
+        const team = String(pick(["team", "department", "dept", "bu/gbu", "businessunit", "gbu"]) || "").trim();
+        const otType = String(pick(["ot/premium type", "ot premium type", "otpremiumtype", "ot type", "ottype", "type"]) || "").trim();
+        const otTypeDescription = pick(["type description", "typedescription", "ot type description"]);
+        const rateLabel = pick(["ot/premium rate", "ot/premium\nrate", "ot/premium\nrates", "rate", "premiumrate"]);
+        const hourlyRate = toNumber(pick(["hourly rate", "ratehour"]));
+        const hours = toNumber(pick(["number of hours", "noofhours", "hours", "noofhour"]));
+        const amount = toNumber(pick(["amount", "phpamount", "totalamount"]));
+        const period = pick(["period"])? String(pick(["period"])) : undefined;
+        const monthKey = pick(["month"])? String(pick(["month"])) : undefined;
+        const type = pick(["type"])? String(pick(["type"])) : undefined;
+        const typeDescription = pick(["type description", "description"]) ? String(pick(["type description", "description"])) : undefined;
 
         if (!name && !employeeId) continue;
         if (hours === 0 && amount === 0) continue;

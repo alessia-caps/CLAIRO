@@ -61,7 +61,7 @@ export function Layout({ children }: LayoutProps) {
         location.pathname.startsWith(String(item.path) + "/"),
     );
     if (!found) return "Dashboard";
-    if (found.children) {
+    if ("children" in found && found.children) {
       const child = found.children.find((c) => c.path === location.pathname);
       return child?.title || found.title;
     }
