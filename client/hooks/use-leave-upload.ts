@@ -54,6 +54,12 @@ export type LeaveAnalytics = {
   }>;
 };
 
+type SheetPreview = {
+  sheetName: string;
+  classification: "transactions" | "summary" | "unknown";
+  preview: any[];
+};
+
 function toNumber(v: any): number {
   if (v == null || v === "") return 0;
   const s = String(v).replace(/[^0-9.-]/g, "");
@@ -61,9 +67,105 @@ function toNumber(v: any): number {
   return isNaN(n) ? 0 : n;
 }
 
+// Convert Excel serial date (number) to ISO date string (YYYY-MM-DD)
+function excelSerialToIso(v: number): string {
+  const ms = (v - 25569) * 86400 * 1000;
+  const d = new Date(ms);
+  if (isNaN(d.getTime())) return String(v);
+  return d.toISOString().split("T")[0];
+}
+
+function parseDateCell(v: any): string | undefined {
+  if (v == null || v === "") return undefined;
+  if (typeof v === "number") return excelSerialToIso(v);
+  const s = String(v).trim();
+  if (/^\d+(?:\.\d+)?$/.test(s)) {
+    const n = Number(s);
+    if (n > 20000) return excelSerialToIso(n);
+  }
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) return d.toISOString().split("T")[0];
+  return s;
+}
+
+// Read a worksheet and auto-detect header row within the first few rows.
+function sheetToJsonAutoHeader(ws: XLSX.WorkSheet): any[] {
+  // get as arrays (rows)
+  const rows: any[] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" }) as any[];
+  if (!rows || rows.length === 0) return [];
+
+  const maxCheck = Math.min(10, rows.length);
+  let headerIdx = -1;
+
+  const normalize = (s: any) => String(s || "").trim().toLowerCase().replace(/\s+/g, "");
+
+  for (let i = 0; i < maxCheck; i++) {
+    const row = rows[i] as any[];
+    if (!row) continue;
+    const tokens = row.map((c) => normalize(c));
+
+    // summary header clues
+    const hasSummary = tokens.some((t) =>
+      [
+        "employeeid",
+        "lastname",
+        "firstname",
+        "department",
+        "totalavailablebalance(ytd)",
+        "totalavailablebalance",
+        "leavesusedduringdaterange",
+        "leavesused",
+      ].includes(t),
+    );
+
+    // transactions header clues
+    const hasTx = tokens.some((t) =>
+      [
+        "leavetypename",
+        "withpaynoofdays",
+        "woutpaynoofdays",
+        "datefiled",
+        "datefrom",
+        "dateto",
+      ].includes(t),
+    );
+
+    if (hasSummary || hasTx) {
+      headerIdx = i;
+      break;
+    }
+  }
+
+  if (headerIdx < 0) {
+    // fallback to standard behavior (first row header)
+    return XLSX.utils.sheet_to_json(ws, { defval: "" });
+  }
+
+  const headerRow = rows[headerIdx] as any[];
+  const headers = headerRow.map((h) => String(h || "").trim());
+  const out: any[] = [];
+
+  for (let r = headerIdx + 1; r < rows.length; r++) {
+    const row = rows[r] as any[];
+    if (!row) continue;
+    const obj: any = {};
+    let allEmpty = true;
+    for (let c = 0; c < headers.length; c++) {
+      const key = headers[c] || `col${c}`;
+      const val = row[c];
+      if (val !== undefined && val !== null && String(val).trim() !== "") allEmpty = false;
+      obj[key] = val;
+    }
+    if (!allEmpty) out.push(obj);
+  }
+
+  return out;
+}
+
 export function useLeaveUpload() {
   const [transactions, setTransactions] = useState<LeaveTransaction[]>([]);
   const [summary, setSummary] = useState<LeaveSummary[]>([]);
+  const [workbookPreview, setWorkbookPreview] = useState<SheetPreview[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -86,9 +188,9 @@ export function useLeaveUpload() {
         employeeId,
         name,
         leaveType,
-        dateFiled: row["DateFiled"] ? String(row["DateFiled"]) : undefined,
-        dateFrom: row["DateFrom"] ? String(row["DateFrom"]) : undefined,
-        dateTo: row["DateTo"] ? String(row["DateTo"]) : undefined,
+  dateFiled: parseDateCell(row["DateFiled"] || row["Date Filed"] || row["DateFiled"]),
+  dateFrom: parseDateCell(row["DateFrom"] || row["Date From"] || row["DateFrom"]),
+  dateTo: parseDateCell(row["DateTo"] || row["Date To"] || row["DateTo"]),
         withPayDays: toNumber(row["WithPayNoOfdays"] || row["With Pay Days"]),
         withoutPayDays: toNumber(
           row["WoutPayNoOfDays"] || row["Without Pay Days"],
@@ -128,10 +230,10 @@ export function useLeaveUpload() {
         firstName,
         middleName: row["MIDDLE NAME"] ? String(row["MIDDLE NAME"]) : undefined,
         department: row["DEPARTMENT"] ? String(row["DEPARTMENT"]) : undefined,
-        hireDate: row["HIRE DATE"] ? String(row["HIRE DATE"]) : undefined,
-        regularizationDate: row["REGULARIZATION DATE"]
-          ? String(row["REGULARIZATION DATE"])
-          : undefined,
+        hireDate: parseDateCell(row["HIRE DATE"] || row["Hire Date"] || row["HIRE DATE"]),
+        regularizationDate: parseDateCell(
+          row["REGULARIZATION DATE"] || row["Regularization Date"] || row["REGULARIZATION DATE"],
+        ),
         leaveType: String(row["LEAVE TYPE"] || row["Leave Type"] || "").trim(),
         usedDuringRange: toNumber(
           row["LEAVES USED DURING DATE RANGE"] || row["Leaves Used"],
@@ -154,7 +256,7 @@ export function useLeaveUpload() {
       for (const s of wb.SheetNames) {
         const ws = wb.Sheets[s];
         if (!ws) continue;
-        all.push(...XLSX.utils.sheet_to_json(ws));
+        all.push(...sheetToJsonAutoHeader(ws));
       }
       const parsed = parseTransactions(all);
       if (parsed.length === 0)
@@ -178,7 +280,7 @@ export function useLeaveUpload() {
       for (const s of wb.SheetNames) {
         const ws = wb.Sheets[s];
         if (!ws) continue;
-        all.push(...XLSX.utils.sheet_to_json(ws));
+        all.push(...sheetToJsonAutoHeader(ws));
       }
       const parsed = parseSummary(all);
       if (parsed.length === 0)
@@ -193,9 +295,95 @@ export function useLeaveUpload() {
     }
   };
 
+  const uploadWorkbook = async (file: File) => {
+    setIsUploading(true);
+    setError(null);
+    try {
+      const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
+  const txRows: any[] = [];
+  const sumRows: any[] = [];
+  const previews: SheetPreview[] = [];
+
+      for (const s of wb.SheetNames) {
+        const ws = wb.Sheets[s];
+        if (!ws) continue;
+        const rows: any[] = sheetToJsonAutoHeader(ws);
+        if (!rows || rows.length === 0) continue;
+
+        // Heuristic: if rows have LeaveTypeName or WithPayNoOfdays -> transactions
+        const sample = rows[0];
+        const keys = Object.keys(sample).map((k) => String(k).toLowerCase());
+        const isTx = keys.some((k) =>
+          ["leavetypename", "withpaynoofdays", "woutpaynoofdays", "datefiled"].includes(k.replace(/\s+/g, "")),
+        );
+        const isSum = keys.some((k) =>
+          ["leave type", "leaves used during date range", "total available balance (ytd)"]
+            .map((s) => s.replace(/\s+/g, "").toLowerCase())
+            .includes(k.replace(/\s+/g, "")),
+        );
+
+        if (isTx) {
+          txRows.push(...rows);
+          previews.push({ sheetName: s, classification: "transactions", preview: rows.slice(0, 3) });
+        } else if (isSum) {
+          sumRows.push(...rows);
+          previews.push({ sheetName: s, classification: "summary", preview: rows.slice(0, 3) });
+        } else {
+          // unknown: try to route by checking more rows
+          let hasTx = false;
+          let hasSum = false;
+          for (const r of rows.slice(0, 5)) {
+            const rk = Object.keys(r).map((k) => String(k).toLowerCase());
+            if (rk.some((k) => k.includes("leavetype") || k.includes("withpay"))) hasTx = true;
+            if (rk.some((k) => k.includes("leave type") || k.includes("leaves used") || k.includes("available balance"))) hasSum = true;
+          }
+          if (hasTx) {
+            txRows.push(...rows);
+            previews.push({ sheetName: s, classification: "transactions", preview: rows.slice(0, 3) });
+          } else if (hasSum) {
+            sumRows.push(...rows);
+            previews.push({ sheetName: s, classification: "summary", preview: rows.slice(0, 3) });
+          } else {
+            // fallback: if sheet name contains 'transaction' or 'summary'
+            const name = String(s).toLowerCase();
+            if (name.includes("trans")) {
+              txRows.push(...rows);
+              previews.push({ sheetName: s, classification: "transactions", preview: rows.slice(0, 3) });
+            } else if (name.includes("summ")) {
+              sumRows.push(...rows);
+              previews.push({ sheetName: s, classification: "summary", preview: rows.slice(0, 3) });
+            } else {
+              // if still unknown, place into transactions by default
+              txRows.push(...rows);
+              previews.push({ sheetName: s, classification: "unknown", preview: rows.slice(0, 3) });
+            }
+          }
+        }
+      }
+
+      const parsedTx = parseTransactions(txRows);
+      const parsedSum = parseSummary(sumRows);
+
+      if (parsedTx.length === 0 && parsedSum.length === 0) {
+        throw new Error("No recognizable transactions or summary sheets found in workbook.");
+      }
+
+  if (parsedTx.length > 0) setTransactions(parsedTx);
+  if (parsedSum.length > 0) setSummary(parsedSum);
+  setWorkbookPreview(previews);
+  return { transactions: parsedTx, summary: parsedSum };
+    } catch (e: any) {
+      setError(e?.message || "Failed to read workbook");
+      throw e;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const clear = () => {
     setTransactions([]);
     setSummary([]);
+    setWorkbookPreview([]);
   };
 
   const analytics: LeaveAnalytics = (() => {
@@ -260,6 +448,8 @@ export function useLeaveUpload() {
     isUploading,
     uploadTransactions,
     uploadSummary,
+    uploadWorkbook,
+    workbookPreview,
     clear,
   };
 }
