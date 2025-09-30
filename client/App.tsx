@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import Index from "./pages/Index";
+import DashboardsIndex from "./pages/DashboardsIndex";
 import RetentionTurnover from "./pages/RetentionTurnover";
 import OTLeaveClaims from "./pages/OTLeaveClaims";
 import OTReports from "./pages/OTReports";
@@ -26,7 +27,9 @@ const App = () => (
       <BrowserRouter>
         <Layout>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<DashboardsIndex />} />
+            <Route path="/dashboards" element={<DashboardsIndex />} />
+            <Route path="/engagement" element={<Index />} />
             <Route path="/retention-turnover" element={<RetentionTurnover />} />
             <Route path="/ot-leave-claims" element={<OTLeaveClaims />} />
             <Route path="/ot-leave-claims/ot" element={<OTReports />} />

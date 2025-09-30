@@ -13,13 +13,18 @@ import {
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Activity, Users, Clock, Laptop, GraduationCap } from "lucide-react";
+import { Activity, Users, Clock, Laptop, GraduationCap, Home } from "lucide-react";
 
 const menuItems = [
   {
+    title: "Home",
+    icon: Home,
+    path: "/dashboards",
+  },
+  {
     title: "Engagement Dashboard",
     icon: Activity,
-    path: "/",
+    path: "/engagement",
   },
   {
     title: "Laptop Inventory",
@@ -74,8 +79,10 @@ export function Layout({ children }: LayoutProps) {
         <Sidebar>
           <SidebarHeader>
             <div className="flex items-center gap-2 p-2">
-              <img src="/favicon.ico" alt="CLAIRO" className="h-6 w-6" />
-              <span className="text-xl font-bold">CLAIRO</span>
+              <Link to="/dashboards" className="flex items-center gap-2">
+                <img src="/favicon.ico" alt="CLAIRO" className="h-6 w-6" />
+                <span className="text-xl font-bold">CLAIRO</span>
+              </Link>
             </div>
           </SidebarHeader>
           <SidebarContent>
