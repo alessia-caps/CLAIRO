@@ -3,11 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, CalendarDays, CheckCircle2, XCircle, Hourglass } from "lucide-react";
+import {
+  Upload,
+  CalendarDays,
+  CheckCircle2,
+  XCircle,
+  Hourglass,
+} from "lucide-react";
 import { useLeaveUpload } from "@/hooks/use-leave-upload";
 
 function LineChart({ data }: { data: { x: string; y: number }[] }) {
-  if (!data || data.length === 0) return <div className="text-sm text-muted-foreground">No data</div>;
+  if (!data || data.length === 0)
+    return <div className="text-sm text-muted-foreground">No data</div>;
   const values = data.map((d) => d.y || 0);
   const max = Math.max(...values, 1);
   const w = 300;
@@ -21,17 +28,40 @@ function LineChart({ data }: { data: { x: string; y: number }[] }) {
     })
     .join(" ");
   return (
-    <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="block">
-      <polyline points={points} fill="none" stroke="#0ea5a4" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    <svg
+      width="100%"
+      viewBox={`0 0 ${w} ${h}`}
+      preserveAspectRatio="none"
+      className="block"
+    >
+      <polyline
+        points={points}
+        fill="none"
+        stroke="#0ea5a4"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
 
-function BarChart({ data, columns = 1 }: { data: { label: string; value: number }[]; columns?: number }) {
-  if (!data || data.length === 0) return <div className="text-sm text-muted-foreground">No data</div>;
+function BarChart({
+  data,
+  columns = 1,
+}: {
+  data: { label: string; value: number }[];
+  columns?: number;
+}) {
+  if (!data || data.length === 0)
+    return <div className="text-sm text-muted-foreground">No data</div>;
   const max = Math.max(...data.map((d) => d.value), 1);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
-  const [tooltip, setTooltip] = React.useState<{ left: number; top: number; text: string } | null>(null);
+  const [tooltip, setTooltip] = React.useState<{
+    left: number;
+    top: number;
+    text: string;
+  } | null>(null);
 
   const cols = Math.max(1, Math.floor(columns || 1));
   const rows = Math.ceil(data.length / cols);
@@ -54,26 +84,41 @@ function BarChart({ data, columns = 1 }: { data: { label: string; value: number 
                     style={{ width: `${(d.value / max) * 100}%` }}
                     className="h-4 bg-primary rounded"
                     onMouseEnter={(e) => {
-                      const rect = containerRef.current?.getBoundingClientRect();
+                      const rect =
+                        containerRef.current?.getBoundingClientRect();
                       if (!rect) return;
-                      setTooltip({ left: e.clientX - rect.left + 8, top: e.clientY - rect.top - 30, text: `${d.label}: ${d.value}` });
+                      setTooltip({
+                        left: e.clientX - rect.left + 8,
+                        top: e.clientY - rect.top - 30,
+                        text: `${d.label}: ${d.value}`,
+                      });
                     }}
                     onMouseMove={(e) => {
-                      const rect = containerRef.current?.getBoundingClientRect();
+                      const rect =
+                        containerRef.current?.getBoundingClientRect();
                       if (!rect) return;
-                      setTooltip({ left: e.clientX - rect.left + 8, top: e.clientY - rect.top - 30, text: `${d.label}: ${d.value}` });
+                      setTooltip({
+                        left: e.clientX - rect.left + 8,
+                        top: e.clientY - rect.top - 30,
+                        text: `${d.label}: ${d.value}`,
+                      });
                     }}
                     onMouseLeave={() => setTooltip(null)}
                   />
                 </div>
-                <div className="text-xs text-muted-foreground w-12 text-right">{Math.round(d.value * 100) / 100}</div>
+                <div className="text-xs text-muted-foreground w-12 text-right">
+                  {Math.round(d.value * 100) / 100}
+                </div>
               </div>
             ))}
           </div>
         ))}
       </div>
       {tooltip && (
-        <div className="absolute z-50 pointer-events-none bg-white border rounded px-2 py-1 text-xs shadow" style={{ left: tooltip.left, top: tooltip.top }}>
+        <div
+          className="absolute z-50 pointer-events-none bg-white border rounded px-2 py-1 text-xs shadow"
+          style={{ left: tooltip.left, top: tooltip.top }}
+        >
           {tooltip.text}
         </div>
       )}
@@ -82,7 +127,8 @@ function BarChart({ data, columns = 1 }: { data: { label: string; value: number 
 }
 
 function PieChart({ data }: { data: { label: string; value: number }[] }) {
-  if (!data || data.length === 0) return <div className="text-sm text-muted-foreground">No data</div>;
+  if (!data || data.length === 0)
+    return <div className="text-sm text-muted-foreground">No data</div>;
   const total = data.reduce((s, d) => s + d.value, 0) || 1;
   let angle = -90;
   const arcs = data.map((d) => {
@@ -102,10 +148,23 @@ function PieChart({ data }: { data: { label: string; value: number }[] }) {
     return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
   };
 
-  const colors = ["#1e40af", "#0ea5a4", "#2563eb", "#fb923c", "#ef4444", "#84cc16", "#7c3aed", "#06b6d4"];
+  const colors = [
+    "#1e40af",
+    "#0ea5a4",
+    "#2563eb",
+    "#fb923c",
+    "#ef4444",
+    "#84cc16",
+    "#7c3aed",
+    "#06b6d4",
+  ];
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const [hoverIdx, setHoverIdx] = React.useState<number | null>(null);
-  const [tooltip, setTooltip] = React.useState<{ left: number; top: number; text: string } | null>(null);
+  const [tooltip, setTooltip] = React.useState<{
+    left: number;
+    top: number;
+    text: string;
+  } | null>(null);
 
   return (
     <div className="flex items-center gap-4 relative" ref={containerRef}>
@@ -129,12 +188,20 @@ function PieChart({ data }: { data: { label: string; value: number }[] }) {
                 setHoverIdx(i);
                 const rect = containerRef.current?.getBoundingClientRect();
                 if (!rect) return;
-                setTooltip({ left: e.clientX - rect.left + 8, top: e.clientY - rect.top - 30, text: `${a.label}: ${Math.round((a.value + Number.EPSILON) * 100) / 100} (${Math.round(a.portion * 100)}%)` });
+                setTooltip({
+                  left: e.clientX - rect.left + 8,
+                  top: e.clientY - rect.top - 30,
+                  text: `${a.label}: ${Math.round((a.value + Number.EPSILON) * 100) / 100} (${Math.round(a.portion * 100)}%)`,
+                });
               }}
               onMouseMove={(e) => {
                 const rect = containerRef.current?.getBoundingClientRect();
                 if (!rect) return;
-                setTooltip({ left: e.clientX - rect.left + 8, top: e.clientY - rect.top - 30, text: `${a.label}: ${Math.round((a.value + Number.EPSILON) * 100) / 100} (${Math.round(a.portion * 100)}%)` });
+                setTooltip({
+                  left: e.clientX - rect.left + 8,
+                  top: e.clientY - rect.top - 30,
+                  text: `${a.label}: ${Math.round((a.value + Number.EPSILON) * 100) / 100} (${Math.round(a.portion * 100)}%)`,
+                });
               }}
               onMouseLeave={() => {
                 setHoverIdx(null);
@@ -147,15 +214,28 @@ function PieChart({ data }: { data: { label: string; value: number }[] }) {
       <div className="space-y-1">
         {data.map((d, i) => (
           <div key={d.label} className="flex items-center gap-2 text-sm">
-            <span style={{ width: 12, height: 12, backgroundColor: colors[i % colors.length] }} className="inline-block rounded-sm" />
+            <span
+              style={{
+                width: 12,
+                height: 12,
+                backgroundColor: colors[i % colors.length],
+              }}
+              className="inline-block rounded-sm"
+            />
             <span className="truncate w-40">{d.label}</span>
-            <span className="text-muted-foreground pl-2">{Math.round((d.value + Number.EPSILON) * 100) / 100} ({Math.round((d.value / total) * 100)}%)</span>
+            <span className="text-muted-foreground pl-2">
+              {Math.round((d.value + Number.EPSILON) * 100) / 100} (
+              {Math.round((d.value / total) * 100)}%)
+            </span>
           </div>
         ))}
       </div>
 
       {tooltip && (
-        <div className="absolute z-50 pointer-events-none bg-white border rounded px-2 py-1 text-xs shadow" style={{ left: tooltip.left, top: tooltip.top }}>
+        <div
+          className="absolute z-50 pointer-events-none bg-white border rounded px-2 py-1 text-xs shadow"
+          style={{ left: tooltip.left, top: tooltip.top }}
+        >
           {tooltip.text}
         </div>
       )}
@@ -164,9 +244,20 @@ function PieChart({ data }: { data: { label: string; value: number }[] }) {
 }
 
 export default function LeaveReports() {
-  const { transactions, summary, analytics, error, isUploading, uploadWorkbook, clear } = useLeaveUpload();
-  const [selectedDepartment, setSelectedDepartment] = React.useState<string>("All");
-  const [balanceMode, setBalanceMode] = React.useState<"total" | "VL" | "SL">("total");
+  const {
+    transactions,
+    summary,
+    analytics,
+    error,
+    isUploading,
+    uploadWorkbook,
+    clear,
+  } = useLeaveUpload();
+  const [selectedDepartment, setSelectedDepartment] =
+    React.useState<string>("All");
+  const [balanceMode, setBalanceMode] = React.useState<"total" | "VL" | "SL">(
+    "total",
+  );
 
   const parseDate = (v?: string) => {
     if (!v) return null;
@@ -187,7 +278,8 @@ export default function LeaveReports() {
 
   const filteredTransactions = React.useMemo(() => {
     if (!transactions || transactions.length === 0) return [] as any[];
-    if (!selectedDepartment || selectedDepartment === "All") return transactions;
+    if (!selectedDepartment || selectedDepartment === "All")
+      return transactions;
     return (transactions || []).filter((t: any) => {
       const dept = employeeDeptMap.get(t.employeeId) || "Unknown";
       return dept === selectedDepartment;
@@ -197,11 +289,16 @@ export default function LeaveReports() {
   const monthlyTrend = React.useMemo(() => {
     const map = new Map<string, { requests: number; days: number }>();
     for (const t of filteredTransactions || []) {
-      const d = parseDate((t as any).dateFrom || (t as any).dateFiled || (t as any).dateTo);
-      const key = d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` : "unknown";
+      const d = parseDate(
+        (t as any).dateFrom || (t as any).dateFiled || (t as any).dateTo,
+      );
+      const key = d
+        ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+        : "unknown";
       const cur = map.get(key) || { requests: 0, days: 0 };
       cur.requests += 1;
-      cur.days += ((t as any).withPayDays || 0) + ((t as any).withoutPayDays || 0);
+      cur.days +=
+        ((t as any).withPayDays || 0) + ((t as any).withoutPayDays || 0);
       map.set(key, cur);
     }
     return Array.from(map.entries())
@@ -222,16 +319,33 @@ export default function LeaveReports() {
     const totals = {
       requests: tx.length,
       approved: tx.filter((t: any) => /approved/i.test(t.status || "")).length,
-      pending: tx.filter((t: any) => /pending|await/i.test(t.status || "")).length,
+      pending: tx.filter((t: any) => /pending|await/i.test(t.status || ""))
+        .length,
       rejected: tx.filter((t: any) => /reject/i.test(t.status || "")).length,
-      withPayDays: tx.reduce((s: number, t: any) => s + (t.withPayDays || 0), 0),
-      withoutPayDays: tx.reduce((s: number, t: any) => s + (t.withoutPayDays || 0), 0),
+      withPayDays: tx.reduce(
+        (s: number, t: any) => s + (t.withPayDays || 0),
+        0,
+      ),
+      withoutPayDays: tx.reduce(
+        (s: number, t: any) => s + (t.withoutPayDays || 0),
+        0,
+      ),
     };
-    const byTypeMap = new Map<string, { requests: number; withPayDays: number; withoutPayDays: number }>();
-    const byEmpMap = new Map<string, { name: string; withPay: number; withoutPay: number }>();
+    const byTypeMap = new Map<
+      string,
+      { requests: number; withPayDays: number; withoutPayDays: number }
+    >();
+    const byEmpMap = new Map<
+      string,
+      { name: string; withPay: number; withoutPay: number }
+    >();
     for (const t of tx) {
       const type = (t as any).leaveType;
-      const bt = byTypeMap.get(type) || { requests: 0, withPayDays: 0, withoutPayDays: 0 };
+      const bt = byTypeMap.get(type) || {
+        requests: 0,
+        withPayDays: 0,
+        withoutPayDays: 0,
+      };
       bt.requests += 1;
       bt.withPayDays += (t as any).withPayDays || 0;
       bt.withoutPayDays += (t as any).withoutPayDays || 0;
@@ -243,9 +357,17 @@ export default function LeaveReports() {
       be.withoutPay += (t as any).withoutPayDays || 0;
       byEmpMap.set(key, be);
     }
-    const byType = Array.from(byTypeMap.entries()).map(([type, v]) => ({ type, ...v }));
+    const byType = Array.from(byTypeMap.entries()).map(([type, v]) => ({
+      type,
+      ...v,
+    }));
     const topEmployeesByDays = Array.from(byEmpMap.values())
-      .map((v) => ({ name: v.name, totalDays: v.withPay + v.withoutPay, withPay: v.withPay, withoutPay: v.withoutPay }))
+      .map((v) => ({
+        name: v.name,
+        totalDays: v.withPay + v.withoutPay,
+        withPay: v.withPay,
+        withoutPay: v.withoutPay,
+      }))
       .sort((a, b) => b.totalDays - a.totalDays)
       .slice(0, 20);
     return { totals, byType, topEmployeesByDays };
@@ -262,7 +384,12 @@ export default function LeaveReports() {
     const byEmp = new Map<string, any>();
     for (const s of summary || []) {
       const dept = (s as any).department || "Unknown";
-      if (selectedDepartment && selectedDepartment !== "All" && dept !== selectedDepartment) continue;
+      if (
+        selectedDepartment &&
+        selectedDepartment !== "All" &&
+        dept !== selectedDepartment
+      )
+        continue;
       const key = (s as any).employeeId;
       const cur = byEmp.get(key) || {
         employeeId: (s as any).employeeId,
@@ -298,11 +425,18 @@ export default function LeaveReports() {
     const items = balanceSummary || [];
     const uniqueEmployees = new Set(items.map((s: any) => s.employeeId));
     const vals = items.map((s: any) => s.totalAvailableBalanceYtd || 0);
-    const avgAvailable = vals.length ? vals.reduce((a: number, b: number) => a + b, 0) / vals.length : 0;
-    const lowCount = items.filter((s: any) => (s.totalAvailableBalanceYtd || 0) <= 5).length;
+    const avgAvailable = vals.length
+      ? vals.reduce((a: number, b: number) => a + b, 0) / vals.length
+      : 0;
+    const lowCount = items.filter(
+      (s: any) => (s.totalAvailableBalanceYtd || 0) <= 5,
+    ).length;
 
     const topEmployees = items
-      .map((s: any) => ({ label: `${s.lastName || ""}, ${s.firstName || ""}`, value: s.totalAvailableBalanceYtd || 0 }))
+      .map((s: any) => ({
+        label: `${s.lastName || ""}, ${s.firstName || ""}`,
+        value: s.totalAvailableBalanceYtd || 0,
+      }))
       .sort((a: any, b: any) => b.value - a.value)
       .slice(0, 8);
 
@@ -315,11 +449,20 @@ export default function LeaveReports() {
       deptMap.set(d, cur);
     }
     const deptAvg = Array.from(deptMap.entries())
-      .map(([dept, v]) => ({ label: dept, value: v.sum / Math.max(1, v.count) }))
+      .map(([dept, v]) => ({
+        label: dept,
+        value: v.sum / Math.max(1, v.count),
+      }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 8);
 
-    return { uniqueEmployees: uniqueEmployees.size, avgAvailable, lowCount, topEmployees, deptAvg };
+    return {
+      uniqueEmployees: uniqueEmployees.size,
+      avgAvailable,
+      lowCount,
+      topEmployees,
+      deptAvg,
+    };
   }, [balanceSummary]);
 
   const departments = React.useMemo(() => {
@@ -339,7 +482,9 @@ export default function LeaveReports() {
       const key = String(r).trim();
       map.set(key, (map.get(key) || 0) + 1);
     }
-    return Array.from(map.entries()).map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count);
+    return Array.from(map.entries())
+      .map(([reason, count]) => ({ reason, count }))
+      .sort((a, b) => b.count - a.count);
   }, [filteredTransactions]);
 
   // compute upcoming leaves (next 30 days), department-aware
@@ -348,15 +493,21 @@ export default function LeaveReports() {
     const cutoff = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const out: any[] = [];
     for (const t of filteredTransactions || []) {
-      const d = parseDate((t as any).dateFrom || (t as any).dateFiled || (t as any).dateTo);
+      const d = parseDate(
+        (t as any).dateFrom || (t as any).dateFiled || (t as any).dateTo,
+      );
       if (!d) continue;
       if (d >= now && d <= cutoff) {
         out.push(t);
       }
     }
     return out.sort((a, b) => {
-      const da = parseDate((a as any).dateFrom || (a as any).dateFiled || (a as any).dateTo) as any;
-      const db = parseDate((b as any).dateFrom || (b as any).dateFiled || (b as any).dateTo) as any;
+      const da = parseDate(
+        (a as any).dateFrom || (a as any).dateFiled || (a as any).dateTo,
+      ) as any;
+      const db = parseDate(
+        (b as any).dateFrom || (b as any).dateFiled || (b as any).dateTo,
+      ) as any;
       return new Date(da).getTime() - new Date(db).getTime();
     });
   }, [filteredTransactions]);
@@ -373,12 +524,21 @@ export default function LeaveReports() {
       department: s.department || "Unknown",
     }));
     // filter
-    const q = String(topFilter || "").trim().toLowerCase();
-    const filtered = q ? list.filter((l) => l.label.toLowerCase().includes(q) || (l.department || "").toLowerCase().includes(q)) : list;
+    const q = String(topFilter || "")
+      .trim()
+      .toLowerCase();
+    const filtered = q
+      ? list.filter(
+          (l) =>
+            l.label.toLowerCase().includes(q) ||
+            (l.department || "").toLowerCase().includes(q),
+        )
+      : list;
     // sort a copy (avoid mutating the original array)
     const sorted = filtered.slice().sort((a, b) => {
       if (topSort === "asc") return (a.value || 0) - (b.value || 0);
-      if (topSort === "name") return String(a.label || "").localeCompare(String(b.label || ""));
+      if (topSort === "name")
+        return String(a.label || "").localeCompare(String(b.label || ""));
       // default: desc by value
       return (b.value || 0) - (a.value || 0);
     });
@@ -396,7 +556,10 @@ export default function LeaveReports() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Leave Reports</h1>
-          <p className="text-muted-foreground">Upload a single Excel file containing both the Leave Transactions and Leave Summary sheets.</p>
+          <p className="text-muted-foreground">
+            Upload a single Excel file containing both the Leave Transactions
+            and Leave Summary sheets.
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -416,10 +579,14 @@ export default function LeaveReports() {
               e.currentTarget.value = "";
             }}
           />
-          <Button onClick={() => document.getElementById("workbook-upload")?.click()} disabled={isUploading}>
+          <Button
+            onClick={() => document.getElementById("workbook-upload")?.click()}
+            disabled={isUploading}
+          >
             <Upload className="h-4 w-4 mr-2" /> Upload Excel
           </Button>
-          {((transactions && transactions.length > 0) || (summary && summary.length > 0)) && (
+          {((transactions && transactions.length > 0) ||
+            (summary && summary.length > 0)) && (
             <Button variant="secondary" onClick={clear}>
               Clear
             </Button>
@@ -433,7 +600,8 @@ export default function LeaveReports() {
         </Alert>
       )}
 
-      {(!transactions || transactions.length === 0) && (!summary || summary.length === 0) ? (
+      {(!transactions || transactions.length === 0) &&
+      (!summary || summary.length === 0) ? (
         <Card>
           <CardHeader>
             <CardTitle>Expected Columns</CardTitle>
@@ -441,7 +609,9 @@ export default function LeaveReports() {
           <CardContent>
             <div className="grid md:grid-cols-2 gap-4 text-sm text-muted-foreground">
               <div>
-                <p className="font-medium text-foreground mb-1">Leave Transactions</p>
+                <p className="font-medium text-foreground mb-1">
+                  Leave Transactions
+                </p>
                 <ul className="list-disc pl-5 space-y-1">
                   <li>EmployeeID, Name, LeaveTypeName</li>
                   <li>DateFiled, DateFrom, DateTo</li>
@@ -451,7 +621,9 @@ export default function LeaveReports() {
                 </ul>
               </div>
               <div>
-                <p className="font-medium text-foreground mb-1">Leave Summary</p>
+                <p className="font-medium text-foreground mb-1">
+                  Leave Summary
+                </p>
                 <ul className="list-disc pl-5 space-y-1">
                   <li>EMPLOYEE ID, LAST NAME, FIRST NAME, MIDDLE NAME</li>
                   <li>DEPARTMENT, HIRE DATE, REGULARIZATION DATE</li>
@@ -478,45 +650,75 @@ export default function LeaveReports() {
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
+                      <CardTitle className="text-sm font-medium">
+                        Total Requests
+                      </CardTitle>
                       <CalendarDays className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{(deptAnalytics?.totals?.requests || 0).toLocaleString()}</div>
-                      <p className="text-xs text-muted-foreground">In transactions file</p>
+                      <div className="text-2xl font-bold">
+                        {(
+                          deptAnalytics?.totals?.requests || 0
+                        ).toLocaleString()}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        In transactions file
+                      </p>
                     </CardContent>
                   </Card>
 
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Approved</CardTitle>
+                      <CardTitle className="text-sm font-medium">
+                        Approved
+                      </CardTitle>
                       <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{(deptAnalytics?.totals?.approved || 0).toLocaleString()}</div>
-                      <p className="text-xs text-muted-foreground">Requests approved</p>
+                      <div className="text-2xl font-bold">
+                        {(
+                          deptAnalytics?.totals?.approved || 0
+                        ).toLocaleString()}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Requests approved
+                      </p>
                     </CardContent>
                   </Card>
 
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Pending</CardTitle>
+                      <CardTitle className="text-sm font-medium">
+                        Pending
+                      </CardTitle>
                       <Hourglass className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{(deptAnalytics?.totals?.pending || 0).toLocaleString()}</div>
-                      <p className="text-xs text-muted-foreground">Awaiting approval</p>
+                      <div className="text-2xl font-bold">
+                        {(deptAnalytics?.totals?.pending || 0).toLocaleString()}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Awaiting approval
+                      </p>
                     </CardContent>
                   </Card>
 
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+                      <CardTitle className="text-sm font-medium">
+                        Rejected
+                      </CardTitle>
                       <XCircle className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{(deptAnalytics?.totals?.rejected || 0).toLocaleString()}</div>
-                      <p className="text-xs text-muted-foreground">Requests rejected</p>
+                      <div className="text-2xl font-bold">
+                        {(
+                          deptAnalytics?.totals?.rejected || 0
+                        ).toLocaleString()}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Requests rejected
+                      </p>
                     </CardContent>
                   </Card>
                 </div>
@@ -528,7 +730,13 @@ export default function LeaveReports() {
                     </CardHeader>
                     <CardContent>
                       <div className="w-full h-40">
-                        <BarChart data={monthlyTrend.map((m) => ({ label: m.label, value: m.days }))} columns={2} />
+                        <BarChart
+                          data={monthlyTrend.map((m) => ({
+                            label: m.label,
+                            value: m.days,
+                          }))}
+                          columns={2}
+                        />
                       </div>
                     </CardContent>
                   </Card>
@@ -539,7 +747,13 @@ export default function LeaveReports() {
                     </CardHeader>
                     <CardContent>
                       <div className="w-full h-40">
-                        <BarChart data={(deptAnalytics?.byType || []).map((b: any) => ({ label: b.type, value: (b.withPayDays || 0) + (b.withoutPayDays || 0) }))} />
+                        <BarChart
+                          data={(deptAnalytics?.byType || []).map((b: any) => ({
+                            label: b.type,
+                            value:
+                              (b.withPayDays || 0) + (b.withoutPayDays || 0),
+                          }))}
+                        />
                       </div>
                     </CardContent>
                   </Card>
@@ -550,13 +764,20 @@ export default function LeaveReports() {
                     </CardHeader>
                     <CardContent>
                       {rejectReasons.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No reject reasons found.</p>
+                        <p className="text-sm text-muted-foreground">
+                          No reject reasons found.
+                        </p>
                       ) : (
                         <ul className="space-y-2 text-sm">
                           {rejectReasons.slice(0, 5).map((r: any) => (
-                            <li key={r.reason} className="flex items-center justify-between">
+                            <li
+                              key={r.reason}
+                              className="flex items-center justify-between"
+                            >
                               <span>{r.reason}</span>
-                              <span className="text-muted-foreground">{r.count}</span>
+                              <span className="text-muted-foreground">
+                                {r.count}
+                              </span>
                             </li>
                           ))}
                         </ul>
@@ -573,22 +794,32 @@ export default function LeaveReports() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-start gap-4">
                       <div className="flex items-center gap-2">
-                        <label className="text-sm text-muted-foreground">Department</label>
+                        <label className="text-sm text-muted-foreground">
+                          Department
+                        </label>
                         <select
                           value={selectedDepartment}
-                          onChange={(e) => setSelectedDepartment(e.target.value)}
+                          onChange={(e) =>
+                            setSelectedDepartment(e.target.value)
+                          }
                           className="border rounded px-2 py-1 text-sm"
                         >
                           {departments.map((d) => (
-                            <option key={d} value={d}>{d}</option>
+                            <option key={d} value={d}>
+                              {d}
+                            </option>
                           ))}
                         </select>
                       </div>
                       <div className="flex items-center gap-2">
-                        <label className="text-sm text-muted-foreground">Available Balance</label>
+                        <label className="text-sm text-muted-foreground">
+                          Available Balance
+                        </label>
                         <select
                           value={balanceMode}
-                          onChange={(e) => setBalanceMode(e.target.value as any)}
+                          onChange={(e) =>
+                            setBalanceMode(e.target.value as any)
+                          }
                           className="border rounded px-2 py-1 text-sm"
                         >
                           <option value="total">Total</option>
@@ -600,31 +831,49 @@ export default function LeaveReports() {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <Card>
                         <CardHeader>
-                          <CardTitle className="text-sm">Total Employees</CardTitle>
+                          <CardTitle className="text-sm">
+                            Total Employees
+                          </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-2xl font-bold">{balancesAnalytics.uniqueEmployees}</div>
-                          <p className="text-xs text-muted-foreground">Unique employees in summary</p>
+                          <div className="text-2xl font-bold">
+                            {balancesAnalytics.uniqueEmployees}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Unique employees in summary
+                          </p>
                         </CardContent>
                       </Card>
 
                       <Card>
                         <CardHeader>
-                          <CardTitle className="text-sm">Avg Available (YTD)</CardTitle>
+                          <CardTitle className="text-sm">
+                            Avg Available (YTD)
+                          </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-2xl font-bold">{balancesAnalytics.avgAvailable.toFixed(2)}</div>
-                          <p className="text-xs text-muted-foreground">Average available balance across employees</p>
+                          <div className="text-2xl font-bold">
+                            {balancesAnalytics.avgAvailable.toFixed(2)}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Average available balance across employees
+                          </p>
                         </CardContent>
                       </Card>
 
                       <Card>
                         <CardHeader>
-                          <CardTitle className="text-sm">Low Balance (≤5 days)</CardTitle>
+                          <CardTitle className="text-sm">
+                            Low Balance (≤5 days)
+                          </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-2xl font-bold">{balancesAnalytics.lowCount}</div>
-                          <p className="text-xs text-muted-foreground">Employees with a low available balance</p>
+                          <div className="text-2xl font-bold">
+                            {balancesAnalytics.lowCount}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Employees with a low available balance
+                          </p>
                         </CardContent>
                       </Card>
                     </div>
@@ -632,28 +881,56 @@ export default function LeaveReports() {
                     <div className="grid gap-6 md:grid-cols-2">
                       <Card>
                         <CardHeader className="flex items-center justify-between">
-                          <CardTitle>Top Employees by Available (YTD)</CardTitle>
+                          <CardTitle>
+                            Top Employees by Available (YTD)
+                          </CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="w-full h-40">
                             {/* two-column small bars */}
-                            <BarChart data={balancesAnalytics.topEmployees.map((t: any) => ({ label: t.label, value: t.value }))} columns={2} />
+                            <BarChart
+                              data={balancesAnalytics.topEmployees.map(
+                                (t: any) => ({
+                                  label: t.label,
+                                  value: t.value,
+                                }),
+                              )}
+                              columns={2}
+                            />
                           </div>
 
                           <div className="mt-3 flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <label className="text-sm text-muted-foreground">Show</label>
-                              <select id="top-show" value={topShow} onChange={(e) => setTopShow(e.target.value)} className="border rounded px-2 py-1 text-sm">
+                              <label className="text-sm text-muted-foreground">
+                                Show
+                              </label>
+                              <select
+                                id="top-show"
+                                value={topShow}
+                                onChange={(e) => setTopShow(e.target.value)}
+                                className="border rounded px-2 py-1 text-sm"
+                              >
                                 <option value="top5">Top 5</option>
                                 <option value="top10">Top 10</option>
                                 <option value="all">All</option>
                               </select>
                             </div>
                             <div className="flex items-center gap-2">
-                              <label className="text-sm text-muted-foreground">Sort</label>
-                              <select id="top-sort" value={topSort} onChange={(e) => setTopSort(e.target.value)} className="border rounded px-2 py-1 text-sm">
-                                <option value="desc">Available (high → low)</option>
-                                <option value="asc">Available (low → high)</option>
+                              <label className="text-sm text-muted-foreground">
+                                Sort
+                              </label>
+                              <select
+                                id="top-sort"
+                                value={topSort}
+                                onChange={(e) => setTopSort(e.target.value)}
+                                className="border rounded px-2 py-1 text-sm"
+                              >
+                                <option value="desc">
+                                  Available (high → low)
+                                </option>
+                                <option value="asc">
+                                  Available (low → high)
+                                </option>
                                 <option value="name">Name (A → Z)</option>
                               </select>
                             </div>
@@ -661,9 +938,16 @@ export default function LeaveReports() {
 
                           <div className="mt-3">
                             <div className="flex items-center justify-between">
-                              <div className="text-sm text-muted-foreground">Full list (filtered/sorted)</div>
+                              <div className="text-sm text-muted-foreground">
+                                Full list (filtered/sorted)
+                              </div>
                               <div className="flex items-center gap-2">
-                                <input value={topFilter} onChange={(e) => setTopFilter(e.target.value)} placeholder="filter name or dept" className="border px-2 py-1 text-sm rounded" />
+                                <input
+                                  value={topFilter}
+                                  onChange={(e) => setTopFilter(e.target.value)}
+                                  placeholder="filter name or dept"
+                                  className="border px-2 py-1 text-sm rounded"
+                                />
                               </div>
                             </div>
                             <div className="overflow-x-auto mt-2">
@@ -671,16 +955,30 @@ export default function LeaveReports() {
                                 <thead>
                                   <tr className="border-b">
                                     <th className="p-2 text-left">Employee</th>
-                                    <th className="p-2 text-left">Department</th>
-                                    <th className="p-2 text-right">Available (YTD)</th>
+                                    <th className="p-2 text-left">
+                                      Department
+                                    </th>
+                                    <th className="p-2 text-right">
+                                      Available (YTD)
+                                    </th>
                                   </tr>
                                 </thead>
                                 <tbody id="top-full-list">
                                   {visibleTop.map((r: any) => (
-                                    <tr key={r.label} className="border-b hover:bg-muted/50">
-                                      <td className="p-2 font-medium">{r.label}</td>
+                                    <tr
+                                      key={r.label}
+                                      className="border-b hover:bg-muted/50"
+                                    >
+                                      <td className="p-2 font-medium">
+                                        {r.label}
+                                      </td>
                                       <td className="p-2">{r.department}</td>
-                                      <td className="p-2 text-right">{(r.value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                                      <td className="p-2 text-right">
+                                        {(r.value || 0).toLocaleString(
+                                          undefined,
+                                          { maximumFractionDigits: 2 },
+                                        )}
+                                      </td>
                                     </tr>
                                   ))}
                                 </tbody>
@@ -696,7 +994,12 @@ export default function LeaveReports() {
                         </CardHeader>
                         <CardContent>
                           <div className="w-full h-40">
-                            <PieChart data={balancesAnalytics.deptAvg.map((d: any) => ({ label: d.label, value: d.value }))} />
+                            <PieChart
+                              data={balancesAnalytics.deptAvg.map((d: any) => ({
+                                label: d.label,
+                                value: d.value,
+                              }))}
+                            />
                           </div>
                         </CardContent>
                       </Card>
@@ -724,14 +1027,31 @@ export default function LeaveReports() {
                         </tr>
                       </thead>
                       <tbody>
-                        {(deptAnalytics?.topEmployeesByDays || []).map((r: any) => (
-                          <tr key={r.name} className="border-b hover:bg-muted/50">
-                            <td className="p-2 font-medium">{r.name}</td>
-                            <td className="p-2 text-right">{(r.totalDays || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                            <td className="p-2 text-right">{(r.withPay || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                            <td className="p-2 text-right">{(r.withoutPay || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                          </tr>
-                        ))}
+                        {(deptAnalytics?.topEmployeesByDays || []).map(
+                          (r: any) => (
+                            <tr
+                              key={r.name}
+                              className="border-b hover:bg-muted/50"
+                            >
+                              <td className="p-2 font-medium">{r.name}</td>
+                              <td className="p-2 text-right">
+                                {(r.totalDays || 0).toLocaleString(undefined, {
+                                  maximumFractionDigits: 2,
+                                })}
+                              </td>
+                              <td className="p-2 text-right">
+                                {(r.withPay || 0).toLocaleString(undefined, {
+                                  maximumFractionDigits: 2,
+                                })}
+                              </td>
+                              <td className="p-2 text-right">
+                                {(r.withoutPay || 0).toLocaleString(undefined, {
+                                  maximumFractionDigits: 2,
+                                })}
+                              </td>
+                            </tr>
+                          ),
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -746,7 +1066,9 @@ export default function LeaveReports() {
                 </CardHeader>
                 <CardContent>
                   {upcomingLeaves.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No upcoming leaves in the next 30 days.</p>
+                    <p className="text-sm text-muted-foreground">
+                      No upcoming leaves in the next 30 days.
+                    </p>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
@@ -755,20 +1077,29 @@ export default function LeaveReports() {
                             <th className="p-2 text-left">Date From</th>
                             <th className="p-2 text-left">Employee</th>
                             <th className="p-2 text-left">Leave Type</th>
-                            <th className="p-2 text-right">Days (with/without)</th>
+                            <th className="p-2 text-right">
+                              Days (with/without)
+                            </th>
                             <th className="p-2 text-left">Status</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {upcomingLeaves.slice(0, 200).map((t: any, i: number) => (
-                            <tr key={`${t.employeeId}-${i}`} className="border-b hover:bg-muted/50">
-                              <td className="p-2">{t.dateFrom}</td>
-                              <td className="p-2 font-medium">{t.name || t.employeeId}</td>
-                              <td className="p-2">{t.leaveType}</td>
-                              <td className="p-2 text-right">{`${t.withPayDays || 0}/${t.withoutPayDays || 0}`}</td>
-                              <td className="p-2">{t.status || "-"}</td>
-                            </tr>
-                          ))}
+                          {upcomingLeaves
+                            .slice(0, 200)
+                            .map((t: any, i: number) => (
+                              <tr
+                                key={`${t.employeeId}-${i}`}
+                                className="border-b hover:bg-muted/50"
+                              >
+                                <td className="p-2">{t.dateFrom}</td>
+                                <td className="p-2 font-medium">
+                                  {t.name || t.employeeId}
+                                </td>
+                                <td className="p-2">{t.leaveType}</td>
+                                <td className="p-2 text-right">{`${t.withPayDays || 0}/${t.withoutPayDays || 0}`}</td>
+                                <td className="p-2">{t.status || "-"}</td>
+                              </tr>
+                            ))}
                         </tbody>
                       </table>
                     </div>
