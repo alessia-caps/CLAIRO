@@ -166,6 +166,7 @@ function PieChart({ data }: { data: { label: string; value: number }[] }) {
 export default function LeaveReports() {
   const { transactions, summary, analytics, error, isUploading, uploadWorkbook, clear } = useLeaveUpload();
   const [selectedDepartment, setSelectedDepartment] = React.useState<string>("All");
+  const [balanceMode, setBalanceMode] = React.useState<"total" | "VL" | "SL">("total");
 
   const parseDate = (v?: string) => {
     if (!v) return null;
@@ -176,9 +177,26 @@ export default function LeaveReports() {
     return null;
   };
 
+  const employeeDeptMap = React.useMemo(() => {
+    const map = new Map<string, string>();
+    for (const s of summary || []) {
+      map.set((s as any).employeeId, (s as any).department || "Unknown");
+    }
+    return map;
+  }, [summary]);
+
+  const filteredTransactions = React.useMemo(() => {
+    if (!transactions || transactions.length === 0) return [] as any[];
+    if (!selectedDepartment || selectedDepartment === "All") return transactions;
+    return (transactions || []).filter((t: any) => {
+      const dept = employeeDeptMap.get(t.employeeId) || "Unknown";
+      return dept === selectedDepartment;
+    });
+  }, [transactions, selectedDepartment, employeeDeptMap]);
+
   const monthlyTrend = React.useMemo(() => {
     const map = new Map<string, { requests: number; days: number }>();
-    for (const t of transactions || []) {
+    for (const t of filteredTransactions || []) {
       const d = parseDate((t as any).dateFrom || (t as any).dateFiled || (t as any).dateTo);
       const key = d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` : "unknown";
       const cur = map.get(key) || { requests: 0, days: 0 };
@@ -197,16 +215,87 @@ export default function LeaveReports() {
         return { month: k, label, ...v };
       })
       .sort((a, b) => a.month.localeCompare(b.month));
-  }, [transactions]);
+  }, [filteredTransactions]);
 
-  const filteredSummary = React.useMemo(() => {
-    if (!summary || summary.length === 0) return [];
-    if (!selectedDepartment || selectedDepartment === "All") return summary;
-    return summary.filter((s: any) => (s.department || "Unknown") === selectedDepartment);
-  }, [summary, selectedDepartment]);
+  const deptAnalytics = React.useMemo(() => {
+    const tx = filteredTransactions || [];
+    const totals = {
+      requests: tx.length,
+      approved: tx.filter((t: any) => /approved/i.test(t.status || "")).length,
+      pending: tx.filter((t: any) => /pending|await/i.test(t.status || "")).length,
+      rejected: tx.filter((t: any) => /reject/i.test(t.status || "")).length,
+      withPayDays: tx.reduce((s: number, t: any) => s + (t.withPayDays || 0), 0),
+      withoutPayDays: tx.reduce((s: number, t: any) => s + (t.withoutPayDays || 0), 0),
+    };
+    const byTypeMap = new Map<string, { requests: number; withPayDays: number; withoutPayDays: number }>();
+    const byEmpMap = new Map<string, { name: string; withPay: number; withoutPay: number }>();
+    for (const t of tx) {
+      const type = (t as any).leaveType;
+      const bt = byTypeMap.get(type) || { requests: 0, withPayDays: 0, withoutPayDays: 0 };
+      bt.requests += 1;
+      bt.withPayDays += (t as any).withPayDays || 0;
+      bt.withoutPayDays += (t as any).withoutPayDays || 0;
+      byTypeMap.set(type, bt);
+
+      const key = (t as any).name || (t as any).employeeId;
+      const be = byEmpMap.get(key) || { name: key, withPay: 0, withoutPay: 0 };
+      be.withPay += (t as any).withPayDays || 0;
+      be.withoutPay += (t as any).withoutPayDays || 0;
+      byEmpMap.set(key, be);
+    }
+    const byType = Array.from(byTypeMap.entries()).map(([type, v]) => ({ type, ...v }));
+    const topEmployeesByDays = Array.from(byEmpMap.values())
+      .map((v) => ({ name: v.name, totalDays: v.withPay + v.withoutPay, withPay: v.withPay, withoutPay: v.withoutPay }))
+      .sort((a, b) => b.totalDays - a.totalDays)
+      .slice(0, 20);
+    return { totals, byType, topEmployeesByDays };
+  }, [filteredTransactions]);
+
+  const balanceSummary = React.useMemo(() => {
+    if (!summary || summary.length === 0) return [] as any[];
+    const norm = (t?: string) => {
+      const s = String(t || "").toLowerCase();
+      if (s.includes("vacation") || s === "vl" || /\bvl\b/.test(s)) return "VL";
+      if (s.includes("sick") || s === "sl" || /\bsl\b/.test(s)) return "SL";
+      return "OTHER";
+    };
+    const byEmp = new Map<string, any>();
+    for (const s of summary || []) {
+      const dept = (s as any).department || "Unknown";
+      if (selectedDepartment && selectedDepartment !== "All" && dept !== selectedDepartment) continue;
+      const key = (s as any).employeeId;
+      const cur = byEmp.get(key) || {
+        employeeId: (s as any).employeeId,
+        firstName: (s as any).firstName,
+        lastName: (s as any).lastName,
+        department: dept,
+        vl: 0,
+        sl: 0,
+        other: 0,
+      };
+      const code = norm((s as any).leaveType);
+      const val = (s as any).totalAvailableBalanceYtd || 0;
+      if (code === "VL") cur.vl += val;
+      else if (code === "SL") cur.sl += val;
+      else cur.other += val;
+      byEmp.set(key, cur);
+    }
+    return Array.from(byEmp.values()).map((e: any) => {
+      let value = e.vl + e.sl + e.other;
+      if (balanceMode === "VL") value = e.vl;
+      else if (balanceMode === "SL") value = e.sl;
+      return {
+        employeeId: e.employeeId,
+        firstName: e.firstName,
+        lastName: e.lastName,
+        department: e.department,
+        totalAvailableBalanceYtd: value,
+      };
+    });
+  }, [summary, selectedDepartment, balanceMode]);
 
   const balancesAnalytics = React.useMemo(() => {
-    const items = filteredSummary || [];
+    const items = balanceSummary || [];
     const uniqueEmployees = new Set(items.map((s: any) => s.employeeId));
     const vals = items.map((s: any) => s.totalAvailableBalanceYtd || 0);
     const avgAvailable = vals.length ? vals.reduce((a: number, b: number) => a + b, 0) / vals.length : 0;
@@ -231,7 +320,7 @@ export default function LeaveReports() {
       .slice(0, 8);
 
     return { uniqueEmployees: uniqueEmployees.size, avgAvailable, lowCount, topEmployees, deptAvg };
-  }, [filteredSummary]);
+  }, [balanceSummary]);
 
   const departments = React.useMemo(() => {
     const set = new Set<string>();
@@ -241,24 +330,24 @@ export default function LeaveReports() {
     return ["All", ...Array.from(set.values()).sort()];
   }, [summary]);
 
-  // compute reject reasons from transactions (hook doesn't currently provide this)
+  // compute reject reasons from transactions (department-aware)
   const rejectReasons = React.useMemo(() => {
     const map = new Map<string, number>();
-    for (const t of transactions || []) {
+    for (const t of filteredTransactions || []) {
       const r = (t as any).rejectReason || (t as any).reason || "";
       if (!r) continue;
       const key = String(r).trim();
       map.set(key, (map.get(key) || 0) + 1);
     }
     return Array.from(map.entries()).map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count);
-  }, [transactions]);
+  }, [filteredTransactions]);
 
-  // compute upcoming leaves (next 30 days)
+  // compute upcoming leaves (next 30 days), department-aware
   const upcomingLeaves = React.useMemo(() => {
     const now = new Date();
     const cutoff = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const out: any[] = [];
-    for (const t of transactions || []) {
+    for (const t of filteredTransactions || []) {
       const d = parseDate((t as any).dateFrom || (t as any).dateFiled || (t as any).dateTo);
       if (!d) continue;
       if (d >= now && d <= cutoff) {
@@ -270,7 +359,7 @@ export default function LeaveReports() {
       const db = parseDate((b as any).dateFrom || (b as any).dateFiled || (b as any).dateTo) as any;
       return new Date(da).getTime() - new Date(db).getTime();
     });
-  }, [transactions]);
+  }, [filteredTransactions]);
 
   // Top employees controls state
   const [topShow, setTopShow] = React.useState<string>("top5");
@@ -278,7 +367,7 @@ export default function LeaveReports() {
   const [topFilter, setTopFilter] = React.useState<string>("");
 
   const fullTopList = React.useMemo(() => {
-    const list = (filteredSummary || []).map((s: any) => ({
+    const list = (balanceSummary || []).map((s: any) => ({
       label: `${s.lastName || ""}, ${s.firstName || ""}`,
       value: s.totalAvailableBalanceYtd || 0,
       department: s.department || "Unknown",
@@ -294,7 +383,7 @@ export default function LeaveReports() {
       return (b.value || 0) - (a.value || 0);
     });
     return sorted;
-  }, [filteredSummary, topSort, topFilter]);
+  }, [balanceSummary, topSort, topFilter]);
 
   const visibleTop = React.useMemo(() => {
     if (topShow === "top5") return fullTopList.slice(0, 5);
@@ -393,7 +482,7 @@ export default function LeaveReports() {
                       <CalendarDays className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{(analytics?.totals?.requests || 0).toLocaleString()}</div>
+                      <div className="text-2xl font-bold">{(deptAnalytics?.totals?.requests || 0).toLocaleString()}</div>
                       <p className="text-xs text-muted-foreground">In transactions file</p>
                     </CardContent>
                   </Card>
@@ -404,7 +493,7 @@ export default function LeaveReports() {
                       <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{(analytics?.totals?.approved || 0).toLocaleString()}</div>
+                      <div className="text-2xl font-bold">{(deptAnalytics?.totals?.approved || 0).toLocaleString()}</div>
                       <p className="text-xs text-muted-foreground">Requests approved</p>
                     </CardContent>
                   </Card>
@@ -415,7 +504,7 @@ export default function LeaveReports() {
                       <Hourglass className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{(analytics?.totals?.pending || 0).toLocaleString()}</div>
+                      <div className="text-2xl font-bold">{(deptAnalytics?.totals?.pending || 0).toLocaleString()}</div>
                       <p className="text-xs text-muted-foreground">Awaiting approval</p>
                     </CardContent>
                   </Card>
@@ -426,7 +515,7 @@ export default function LeaveReports() {
                       <XCircle className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{(analytics?.totals?.rejected || 0).toLocaleString()}</div>
+                      <div className="text-2xl font-bold">{(deptAnalytics?.totals?.rejected || 0).toLocaleString()}</div>
                       <p className="text-xs text-muted-foreground">Requests rejected</p>
                     </CardContent>
                   </Card>
@@ -450,7 +539,7 @@ export default function LeaveReports() {
                     </CardHeader>
                     <CardContent>
                       <div className="w-full h-40">
-                        <BarChart data={(analytics?.byType || []).map((b: any) => ({ label: b.type, value: (b.withPayDays || 0) + (b.withoutPayDays || 0) }))} />
+                        <BarChart data={(deptAnalytics?.byType || []).map((b: any) => ({ label: b.type, value: (b.withPayDays || 0) + (b.withoutPayDays || 0) }))} />
                       </div>
                     </CardContent>
                   </Card>
@@ -493,6 +582,18 @@ export default function LeaveReports() {
                           {departments.map((d) => (
                             <option key={d} value={d}>{d}</option>
                           ))}
+                        </select>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm text-muted-foreground">Available Balance</label>
+                        <select
+                          value={balanceMode}
+                          onChange={(e) => setBalanceMode(e.target.value as any)}
+                          className="border rounded px-2 py-1 text-sm"
+                        >
+                          <option value="total">Total</option>
+                          <option value="VL">VL</option>
+                          <option value="SL">SL</option>
                         </select>
                       </div>
                     </div>
@@ -623,7 +724,7 @@ export default function LeaveReports() {
                         </tr>
                       </thead>
                       <tbody>
-                        {(analytics?.topEmployeesByDays || []).map((r: any) => (
+                        {(deptAnalytics?.topEmployeesByDays || []).map((r: any) => (
                           <tr key={r.name} className="border-b hover:bg-muted/50">
                             <td className="p-2 font-medium">{r.name}</td>
                             <td className="p-2 text-right">{(r.totalDays || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
@@ -681,4 +782,3 @@ export default function LeaveReports() {
     </div>
   );
 }
-
