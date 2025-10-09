@@ -91,13 +91,20 @@ function parseDateCell(v: any): string | undefined {
 // Read a worksheet and auto-detect header row within the first few rows.
 function sheetToJsonAutoHeader(ws: XLSX.WorkSheet): any[] {
   // get as arrays (rows)
-  const rows: any[] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" }) as any[];
+  const rows: any[] = XLSX.utils.sheet_to_json(ws, {
+    header: 1,
+    defval: "",
+  }) as any[];
   if (!rows || rows.length === 0) return [];
 
   const maxCheck = Math.min(10, rows.length);
   let headerIdx = -1;
 
-  const normalize = (s: any) => String(s || "").trim().toLowerCase().replace(/\s+/g, "");
+  const normalize = (s: any) =>
+    String(s || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "");
 
   for (let i = 0; i < maxCheck; i++) {
     const row = rows[i] as any[];
@@ -153,7 +160,8 @@ function sheetToJsonAutoHeader(ws: XLSX.WorkSheet): any[] {
     for (let c = 0; c < headers.length; c++) {
       const key = headers[c] || `col${c}`;
       const val = row[c];
-      if (val !== undefined && val !== null && String(val).trim() !== "") allEmpty = false;
+      if (val !== undefined && val !== null && String(val).trim() !== "")
+        allEmpty = false;
       obj[key] = val;
     }
     if (!allEmpty) out.push(obj);
@@ -188,9 +196,13 @@ export function useLeaveUpload() {
         employeeId,
         name,
         leaveType,
-  dateFiled: parseDateCell(row["DateFiled"] || row["Date Filed"] || row["DateFiled"]),
-  dateFrom: parseDateCell(row["DateFrom"] || row["Date From"] || row["DateFrom"]),
-  dateTo: parseDateCell(row["DateTo"] || row["Date To"] || row["DateTo"]),
+        dateFiled: parseDateCell(
+          row["DateFiled"] || row["Date Filed"] || row["DateFiled"],
+        ),
+        dateFrom: parseDateCell(
+          row["DateFrom"] || row["Date From"] || row["DateFrom"],
+        ),
+        dateTo: parseDateCell(row["DateTo"] || row["Date To"] || row["DateTo"]),
         withPayDays: toNumber(row["WithPayNoOfdays"] || row["With Pay Days"]),
         withoutPayDays: toNumber(
           row["WoutPayNoOfDays"] || row["Without Pay Days"],
@@ -229,10 +241,22 @@ export function useLeaveUpload() {
         lastName,
         firstName,
         middleName: row["MIDDLE NAME"] ? String(row["MIDDLE NAME"]) : undefined,
-        department: row["DEPARTMENT"] ? String(row["DEPARTMENT"]) : undefined,
-        hireDate: parseDateCell(row["HIRE DATE"] || row["Hire Date"] || row["HIRE DATE"]),
+        department: (() => {
+          const d =
+            row["DEPARTMENT"] ||
+            row["Department"] ||
+            row["Dept"] ||
+            row["Business Unit"] ||
+            row["BU/GBU"];
+          return d ? String(d).trim() : undefined;
+        })(),
+        hireDate: parseDateCell(
+          row["HIRE DATE"] || row["Hire Date"] || row["HIRE DATE"],
+        ),
         regularizationDate: parseDateCell(
-          row["REGULARIZATION DATE"] || row["Regularization Date"] || row["REGULARIZATION DATE"],
+          row["REGULARIZATION DATE"] ||
+            row["Regularization Date"] ||
+            row["REGULARIZATION DATE"],
         ),
         leaveType: String(row["LEAVE TYPE"] || row["Leave Type"] || "").trim(),
         usedDuringRange: toNumber(
@@ -300,9 +324,9 @@ export function useLeaveUpload() {
     setError(null);
     try {
       const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
-  const txRows: any[] = [];
-  const sumRows: any[] = [];
-  const previews: SheetPreview[] = [];
+      const txRows: any[] = [];
+      const sumRows: any[] = [];
+      const previews: SheetPreview[] = [];
 
       for (const s of wb.SheetNames) {
         const ws = wb.Sheets[s];
@@ -314,48 +338,96 @@ export function useLeaveUpload() {
         const sample = rows[0];
         const keys = Object.keys(sample).map((k) => String(k).toLowerCase());
         const isTx = keys.some((k) =>
-          ["leavetypename", "withpaynoofdays", "woutpaynoofdays", "datefiled"].includes(k.replace(/\s+/g, "")),
+          [
+            "leavetypename",
+            "withpaynoofdays",
+            "woutpaynoofdays",
+            "datefiled",
+          ].includes(k.replace(/\s+/g, "")),
         );
         const isSum = keys.some((k) =>
-          ["leave type", "leaves used during date range", "total available balance (ytd)"]
+          [
+            "leave type",
+            "leaves used during date range",
+            "total available balance (ytd)",
+          ]
             .map((s) => s.replace(/\s+/g, "").toLowerCase())
             .includes(k.replace(/\s+/g, "")),
         );
 
         if (isTx) {
           txRows.push(...rows);
-          previews.push({ sheetName: s, classification: "transactions", preview: rows.slice(0, 3) });
+          previews.push({
+            sheetName: s,
+            classification: "transactions",
+            preview: rows.slice(0, 3),
+          });
         } else if (isSum) {
           sumRows.push(...rows);
-          previews.push({ sheetName: s, classification: "summary", preview: rows.slice(0, 3) });
+          previews.push({
+            sheetName: s,
+            classification: "summary",
+            preview: rows.slice(0, 3),
+          });
         } else {
           // unknown: try to route by checking more rows
           let hasTx = false;
           let hasSum = false;
           for (const r of rows.slice(0, 5)) {
             const rk = Object.keys(r).map((k) => String(k).toLowerCase());
-            if (rk.some((k) => k.includes("leavetype") || k.includes("withpay"))) hasTx = true;
-            if (rk.some((k) => k.includes("leave type") || k.includes("leaves used") || k.includes("available balance"))) hasSum = true;
+            if (
+              rk.some((k) => k.includes("leavetype") || k.includes("withpay"))
+            )
+              hasTx = true;
+            if (
+              rk.some(
+                (k) =>
+                  k.includes("leave type") ||
+                  k.includes("leaves used") ||
+                  k.includes("available balance"),
+              )
+            )
+              hasSum = true;
           }
           if (hasTx) {
             txRows.push(...rows);
-            previews.push({ sheetName: s, classification: "transactions", preview: rows.slice(0, 3) });
+            previews.push({
+              sheetName: s,
+              classification: "transactions",
+              preview: rows.slice(0, 3),
+            });
           } else if (hasSum) {
             sumRows.push(...rows);
-            previews.push({ sheetName: s, classification: "summary", preview: rows.slice(0, 3) });
+            previews.push({
+              sheetName: s,
+              classification: "summary",
+              preview: rows.slice(0, 3),
+            });
           } else {
             // fallback: if sheet name contains 'transaction' or 'summary'
             const name = String(s).toLowerCase();
             if (name.includes("trans")) {
               txRows.push(...rows);
-              previews.push({ sheetName: s, classification: "transactions", preview: rows.slice(0, 3) });
+              previews.push({
+                sheetName: s,
+                classification: "transactions",
+                preview: rows.slice(0, 3),
+              });
             } else if (name.includes("summ")) {
               sumRows.push(...rows);
-              previews.push({ sheetName: s, classification: "summary", preview: rows.slice(0, 3) });
+              previews.push({
+                sheetName: s,
+                classification: "summary",
+                preview: rows.slice(0, 3),
+              });
             } else {
               // if still unknown, place into transactions by default
               txRows.push(...rows);
-              previews.push({ sheetName: s, classification: "unknown", preview: rows.slice(0, 3) });
+              previews.push({
+                sheetName: s,
+                classification: "unknown",
+                preview: rows.slice(0, 3),
+              });
             }
           }
         }
@@ -365,13 +437,15 @@ export function useLeaveUpload() {
       const parsedSum = parseSummary(sumRows);
 
       if (parsedTx.length === 0 && parsedSum.length === 0) {
-        throw new Error("No recognizable transactions or summary sheets found in workbook.");
+        throw new Error(
+          "No recognizable transactions or summary sheets found in workbook.",
+        );
       }
 
-  if (parsedTx.length > 0) setTransactions(parsedTx);
-  if (parsedSum.length > 0) setSummary(parsedSum);
-  setWorkbookPreview(previews);
-  return { transactions: parsedTx, summary: parsedSum };
+      if (parsedTx.length > 0) setTransactions(parsedTx);
+      if (parsedSum.length > 0) setSummary(parsedSum);
+      setWorkbookPreview(previews);
+      return { transactions: parsedTx, summary: parsedSum };
     } catch (e: any) {
       setError(e?.message || "Failed to read workbook");
       throw e;
