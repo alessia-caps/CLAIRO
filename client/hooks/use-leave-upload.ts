@@ -229,7 +229,10 @@ export function useLeaveUpload() {
         lastName,
         firstName,
         middleName: row["MIDDLE NAME"] ? String(row["MIDDLE NAME"]) : undefined,
-        department: row["DEPARTMENT"] ? String(row["DEPARTMENT"]) : undefined,
+        department: (() => {
+          const d = row["DEPARTMENT"] || row["Department"] || row["Dept"] || row["Business Unit"] || row["BU/GBU"];
+          return d ? String(d).trim() : undefined;
+        })(),
         hireDate: parseDateCell(row["HIRE DATE"] || row["Hire Date"] || row["HIRE DATE"]),
         regularizationDate: parseDateCell(
           row["REGULARIZATION DATE"] || row["Regularization Date"] || row["REGULARIZATION DATE"],
